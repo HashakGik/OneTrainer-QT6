@@ -16,6 +16,7 @@ class AbstractController:
 
         self.connectUIBehavior()
         self.connectInputValidation()
+        self.loadPresets()
 
     def _appendExtension(self, file, filter):
         patterns = filter.split("(")[1].split(")")[0].split(", ")
@@ -70,6 +71,9 @@ class AbstractController:
                 pass # TODO!
             controller.ui.cloneBtn.clicked.connect(__clone)
 
+    def _prettyPrint(self, str):
+        return str.replace("_", " ").title()
+
     def openWindow(self, controller, fixed_size=False):
         if fixed_size:
             controller.ui.setWindowFlag(Qt.WindowCloseButtonHint)
@@ -91,3 +95,8 @@ class AbstractController:
 
     def connectInputValidation(self):
         pass # TODO: this method handles field validation OTHER than the automatic field validations defined in ui files.
+
+    def loadPresets(self):
+        # TODO: load preset values for ui elements. For ComboBox load them with addItem(self._prettyPrint(enum), userData=enum). Then fetch the currentData()
+        # Unfortunately the static analysis for QtTranslator cannot extract dynamic strings and these values will remain untranslated until the original source is adapted.
+        pass

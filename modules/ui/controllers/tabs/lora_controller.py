@@ -1,9 +1,7 @@
 from PySide6.QtCore import QCoreApplication as QCA
 from modules.ui.controllers.controller_utils import AbstractController
 
-from PySide6.QtCore import Slot, Qt
-import functools
-
+from modules.util.enum.DataType import DataType
 
 class LoraController(AbstractController):
     def __init__(self, loader, state=None, parent=None):
@@ -22,3 +20,8 @@ class LoraController(AbstractController):
     def connectInputValidation(self):
         # Alpha cannot be higher than rank.
         self.ui.rankSbx.valueChanged.connect(lambda x: (self.ui.alphaSbx.setMaximum(x)))
+
+
+    def loadPresets(self):
+        for e in [DataType.FLOAT_32, DataType.BFLOAT_16]:
+            self.ui.weightDTypeCmb.addItem(self._prettyPrint(e.value), userData=e)

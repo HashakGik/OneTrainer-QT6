@@ -5,7 +5,7 @@ import PySide6.QtWidgets as QtW
 
 class ConceptController(AbstractController):
     def __init__(self, loader, concept_window, idx, state=None, parent=None):
-        super().__init__(loader, "modules/ui/widgets/concept.ui", state=state, name=None, parent=parent)
+        super().__init__(loader, "modules/ui/views/widgets/concept.ui", state=state, name=None, parent=parent)
 
         self.concept_window = concept_window
         self.idx = idx

@@ -15,6 +15,9 @@ from modules.ui.controllers.tabs.embeddings_controller import EmbeddingsControll
 
 from modules.ui.controllers.windows.save_controller import SaveController
 
+from modules.util.enum.TrainingMethod import TrainingMethod
+from modules.util.enum.ModelType import ModelType
+
 import webbrowser
 from PySide6.QtCore import QCoreApplication as QCA
 import PySide6.QtWidgets as QtW
@@ -46,6 +49,9 @@ class OnetrainerController(AbstractController):
             self.children[name] = {"controller": c, "index": len(self.children)}
             self.ui.tabWidget.addTab(c.ui, c.name)
 
+        self.ui.tabWidget.setTabVisible(self.children["lora"]["index"], False)
+        self.ui.tabWidget.setTabVisible(self.children["embedding"]["index"], False)
+
 
     def setState(self, config):
         pass
@@ -61,12 +67,17 @@ class OnetrainerController(AbstractController):
         self.ui.saveConfigBtn.clicked.connect(lambda: self.openWindow(self.save_window, fixed_size=True))
         self.ui.exportBtn.clicked.connect(lambda: self.__exportConfig())
 
-
-        # TODO: add/remove tab for Embedding/Lora: self.ui.tabWidget.setTabVisible(self.children["lora"]["index"], True/False)
+        self.ui.trainingTypeCmb.activated.connect(lambda _: self.__enableTabs())
         # TODO: connect child tab elements depending on training and model type
 
     def connectInputValidation(self):
         pass
+
+    def __enableTabs(self):
+        training_type = self.ui.trainingTypeCmb.currentData()
+        self.ui.tabWidget.setTabVisible(self.children["lora"]["index"], training_type == TrainingMethod.LORA)
+        self.ui.tabWidget.setTabVisible(self.children["embedding"]["index"], training_type == TrainingMethod.EMBEDDING)
+
 
     def __exportConfig(self):
         diag = QtW.QFileDialog()
@@ -75,4 +86,15 @@ class OnetrainerController(AbstractController):
         filename = self._appendExtension(txt, flt)
 
         # TODO: use filename
+        pass
+
+    def loadPresets(self):
+        for e in TrainingMethod:
+            self.ui.trainingTypeCmb.addItem(self._prettyPrint(e.value), userData=e)
+
+        for e in ModelType:
+            self.ui.modelTypeCmb.addItem(self._prettyPrint(e.value), userData=e)
+
+
+
         pass

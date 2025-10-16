@@ -1,6 +1,7 @@
 from PySide6.QtCore import QCoreApplication as QCA
 from modules.ui.controllers.controller_utils import AbstractController
 
+from modules.util.enum.DataType import DataType
 
 class EmbeddingsController(AbstractController):
     def __init__(self, loader, state=None, parent=None):
@@ -11,3 +12,7 @@ class EmbeddingsController(AbstractController):
         self.connectFileDialog(self.ui.baseEmbeddingBtn, self.ui.baseEmbeddingLed, is_dir=False, save=False,
                                title=QCA.translate("dialog_window", "Open base embeddings"),
                                filters=QCA.translate("filetype_filters", "Safetensors (*.safetensors);;Diffusers (model_index.json);;Checkpoints (*.ckpt, *.pt, *.bin);;All Files (*.*)")) # TODO: Maybe refactor filters in ENUM?
+
+    def loadPresets(self):
+        for e in [DataType.FLOAT_32, DataType.BFLOAT_16]:
+            self.ui.embeddingDTypeCmb.addItem(self._prettyPrint(e.value), userData=e)

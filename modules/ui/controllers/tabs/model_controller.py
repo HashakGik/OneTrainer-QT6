@@ -1,6 +1,7 @@
 from PySide6.QtCore import QCoreApplication as QCA
 from modules.ui.controllers.controller_utils import AbstractController
 
+from modules.util.enum.DataType import DataType
 
 class ModelController(AbstractController):
     def __init__(self, loader, state=None, parent=None):
@@ -18,3 +19,7 @@ class ModelController(AbstractController):
                                title=QCA.translate("dialog_window", "Save output model"),
                                filters=QCA.translate("filetype_filters",
                                                      "Safetensors (*.safetensors);;Diffusers (model_index.json);;Checkpoints (*.ckpt, *.pt, *.bin);;All Files (*.*)"))  # TODO: Maybe refactor filters in ENUM?
+
+    def loadPresets(self):
+        # TODO: Enum values depend on base model. Implement it after the state model
+        pass
