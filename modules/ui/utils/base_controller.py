@@ -7,7 +7,7 @@ from PySide6.QtCore import Slot, Qt
 
 import re
 
-from modules.ui.utils.sn_led import SNLineEdit
+from modules.ui.utils.sn_line_edit import SNLineEdit
 
 
 # Abstract controller with some utility methods.
@@ -16,6 +16,7 @@ class BaseController:
 
     def __init__(self, loader, ui_file, state=None, mutex=None, name=None, parent=None):
         self.loader = loader
+        self.parent = parent
         self.ui = loader.load(ui_file, parentWidget=parent.ui if parent is not None else None)
         self.name = name # TODO: When necessary, derived classes will set this with QCA.translate(context, "STATIC STRING") since lupdate is a static analyzer!
         self.state = state
@@ -39,28 +40,31 @@ class BaseController:
         if "*" not in patterns[0]: # The pattern is a fixed filename, returning it regardless of the user selected name.
             return patterns[0] # TODO: maybe returning folder/patterns[0] is more reasonable? In original code there is: path_modifier=lambda x: Path(x).parent.absolute() if x.endswith(".json") else x (removes file and returns base folder instead)
         else:
-            return "{}.{}".format(patterns[0].split("*.")[1], file) # Append the first valid extension to file.
+            return "{}.{}".format(file, patterns[0].split("*.")[1]) # Append the first valid extension to file.
 
 
     def __connectStateUi(self):
-        for var, ui_name in self.state_ui_connections.items():
-            ui_elem = self.ui.findChild(QtC.QObject, ui_name)
-            if ui_elem is None:
-                print("ERROR: {} not found.".format(ui_name))
-            else:
-                if isinstance(ui_elem, QtW.QCheckBox):
-                    ui_elem.stateChanged.connect(self.__readCbx(ui_elem, var))
-                elif isinstance(ui_elem, QtW.QComboBox):
-                    ui_elem.activated.connect(self.__readCbm(ui_elem, var))
-                elif isinstance(ui_elem, QtW.QSpinBox) or isinstance(ui_elem, QtW.QDoubleSpinBox):
-                    ui_elem.valueChanged.connect(self.__readSbx(ui_elem, var))
-                elif isinstance(ui_elem, SNLineEdit): # IMPORTANT: keep this above base class!
-                    ui_elem.editingFinished.connect(self.__readSNLed(ui_elem, var))
-                elif isinstance(ui_elem, QtW.QLineEdit):
-                    ui_elem.editingFinished.connect(self.__readLed(ui_elem, var))
+        for var, ui_names in self.state_ui_connections.items():
+            if isinstance(ui_names, str):
+                ui_names = [ui_names]
+            for ui_name in ui_names:
+                ui_elem = self.ui.findChild(QtC.QObject, ui_name)
+                if ui_elem is None:
+                    print("ERROR: {} not found.".format(ui_name))
+                else:
+                    if isinstance(ui_elem, QtW.QCheckBox):
+                        ui_elem.stateChanged.connect(self.__readCbx(ui_elem, var))
+                    elif isinstance(ui_elem, QtW.QComboBox):
+                        ui_elem.activated.connect(self.__readCbm(ui_elem, var))
+                    elif isinstance(ui_elem, QtW.QSpinBox) or isinstance(ui_elem, QtW.QDoubleSpinBox):
+                        ui_elem.valueChanged.connect(self.__readSbx(ui_elem, var))
+                    elif isinstance(ui_elem, SNLineEdit): # IMPORTANT: keep this above base class!
+                        ui_elem.editingFinished.connect(self.__readSNLed(ui_elem, var))
+                    elif isinstance(ui_elem, QtW.QLineEdit):
+                        ui_elem.editingFinished.connect(self.__readLed(ui_elem, var))
 
-                # TODO: TRIGGER THIS WITH: QtW.QApplication.instance().stateChanged.emit()
-                QtW.QApplication.instance().stateChanged.connect(self.__writeControl(ui_elem, var))
+                    # TODO: TRIGGER THIS WITH: QtW.QApplication.instance().stateChanged.emit()
+                    QtW.QApplication.instance().stateChanged.connect(self.__writeControl(ui_elem, var))
 
             # TODO: in derived classes also concept list, embedding list, etc. (the base widgets are handled by this, but list values need to be created
             # TODO: DYNAMIC CONTROLS CREATED AT RUNTIME CANNOT BE ATTACHED IN THIS WAY (unless they exist in the UI and are invisible...
@@ -74,7 +78,7 @@ class BaseController:
     def __readSbx(self, ui_elem, var):
         return lambda x: self.__setState(var, x)
     def __readSNLed(self, ui_elem, var):
-        return lambda: self.__setState(var, float(ui_elem.text()))
+        return lambda: self.__setState(var, float(ui_elem.text())) # BUG: THIS DOES NOT SERIALIZE CORRECTLY!
     def __readLed(self, ui_elem, var):
         return lambda: self.__setState(var, ui_elem.text())
 
@@ -82,18 +86,19 @@ class BaseController:
         def f():
             ui_elem.blockSignals(True)
             val = self.__getState(var)
-            if isinstance(ui_elem, QtW.QCheckBox):
-                ui_elem.setChecked(val)
-            elif isinstance(ui_elem, QtW.QComboBox):
-                idx = ui_elem.findData(val)
-                if idx != -1:
-                    ui_elem.setCurrentIndex(idx)
-            elif isinstance(ui_elem, QtW.QSpinBox) or isinstance(ui_elem, QtW.QDoubleSpinBox):
-                ui_elem.setValue(float(val))
-            elif isinstance(ui_elem, SNLineEdit): # IMPORTANT: keep this above base class!
-                ui_elem.setText(val)
-            elif isinstance(ui_elem, QtW.QLineEdit):
-                ui_elem.setText(val)
+            if val is not None:
+                if isinstance(ui_elem, QtW.QCheckBox):
+                    ui_elem.setChecked(val)
+                elif isinstance(ui_elem, QtW.QComboBox):
+                    idx = ui_elem.findData(val)
+                    if idx != -1:
+                        ui_elem.setCurrentIndex(idx)
+                elif isinstance(ui_elem, QtW.QSpinBox) or isinstance(ui_elem, QtW.QDoubleSpinBox):
+                    ui_elem.setValue(float(val))
+                elif isinstance(ui_elem, SNLineEdit): # IMPORTANT: keep this above base class!
+                    ui_elem.setText(str(val))
+                elif isinstance(ui_elem, QtW.QLineEdit):
+                    ui_elem.setText(val)
             ui_elem.blockSignals(False)
         return f
 
@@ -269,6 +274,7 @@ class BaseController:
         pass # TODO: this method handles field validation OTHER than the automatic field validations defined in ui files.
 
     def loadPresets(self):
-        # TODO: load preset values for ui elements. For ComboBox load them with addItem(self._prettyPrint(enum), userData=enum). Then fetch the currentData()
         # Unfortunately the static analysis for QtTranslator cannot extract dynamic strings and these values will remain untranslated until the original source is adapted.
+        # For now most derived classes implement this method inconsistently (some traverse a sorted list, others traverse an unsorted dictionary, others iterate over the enum).
+        # TODO: if we have a well structured and reliable enum format exposing a translable string, and allowing a traversal in order, it is possible to automate associations with a mechanism similar to state_ui_connections (a dict {ui_element: enum type} processed automatically)
         pass
