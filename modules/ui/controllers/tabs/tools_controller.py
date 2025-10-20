@@ -1,5 +1,5 @@
 from PySide6.QtCore import QCoreApplication as QCA
-from modules.ui.controllers.controller_utils import AbstractController
+from modules.ui.utils.base_controller import BaseController
 
 from modules.ui.controllers.windows.dataset_controller import DatasetController
 from modules.ui.controllers.windows.video_controller import VideoController
@@ -8,16 +8,16 @@ from modules.ui.controllers.windows.sample_controller import SampleController
 from modules.ui.controllers.windows.profile_controller import ProfileController
 
 
-class ToolsController(AbstractController):
-    def __init__(self, loader, state=None, parent=None):
-        super().__init__(loader, "modules/ui/views/tabs/tools.ui", state=state, name=QCA.translate("main_window_tabs", "Tools"), parent=parent)
+class ToolsController(BaseController):
+    def __init__(self, loader, state=None, mutex=None, parent=None):
+        super().__init__(loader, "modules/ui/views/tabs/tools.ui", state=state, mutex=mutex, name=QCA.translate("main_window_tabs", "Tools"), parent=parent)
 
 
-        self.children = {"dataset": DatasetController(loader, parent=None),
-                        "video": VideoController(loader, parent=None),
-                        "convert": ConvertController(loader, parent=None),
-                        "sample": SampleController(loader, parent=None),
-                        "profile": ProfileController(loader, parent=None)}
+        self.children = {"dataset": DatasetController(loader, parent=None, state=state, mutex=self.mutex),
+                        "video": VideoController(loader, parent=None, state=state, mutex=self.mutex),
+                        "convert": ConvertController(loader, parent=None, state=state, mutex=self.mutex),
+                        "sample": SampleController(loader, parent=None, state=state, mutex=self.mutex),
+                        "profile": ProfileController(loader, parent=None, state=state, mutex=self.mutex)}
 
 
     def __open(self, window):

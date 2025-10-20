@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>312</width>
-    <height>289</height>
+    <width>737</width>
+    <height>675</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -29,6 +29,13 @@
    <bool>true</bool>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="1">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Optimizer</string>
+     </property>
+    </widget>
+   </item>
    <item row="0" column="3">
     <widget class="QPushButton" name="loadDefaultsBtn">
      <property name="text">
@@ -39,22 +46,33 @@
    <item row="0" column="2">
     <widget class="QComboBox" name="optimizerCmb"/>
    </item>
-   <item row="0" column="1">
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>Optimizer</string>
-     </property>
-    </widget>
-   </item>
    <item row="1" column="1" colspan="3">
-    <widget class="QListWidget" name="listWidget"/>
+    <widget class="QScrollArea" name="scrollArea">
+     <property name="widgetResizable">
+      <bool>true</bool>
+     </property>
+     <widget class="QWidget" name="scrollAreaWidgetContents">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>717</width>
+        <height>623</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="SNLineEdit" name="pippo"/>
+       </item>
+      </layout>
+     </widget>
+    </widget>
    </item>
   </layout>
  </widget>
  <tabstops>
   <tabstop>optimizerCmb</tabstop>
   <tabstop>loadDefaultsBtn</tabstop>
-  <tabstop>listWidget</tabstop>
  </tabstops>
  <resources/>
  <connections/>

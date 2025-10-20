@@ -1,11 +1,11 @@
-from modules.ui.controllers.controller_utils import AbstractController
+from modules.ui.utils.base_controller import BaseController
 
 from PySide6.QtCore import QCoreApplication as QCA
-import PySide6.QtWidgets as QtW
 
-class ConceptController(AbstractController):
-    def __init__(self, loader, concept_window, idx, state=None, parent=None):
-        super().__init__(loader, "modules/ui/views/widgets/concept.ui", state=state, name=None, parent=parent)
+
+class ConceptController(BaseController):
+    def __init__(self, loader, concept_window, idx, state=None, mutex=None, parent=None):
+        super().__init__(loader, "modules/ui/views/widgets/concept.ui", state=state, mutex=mutex, name=None, parent=parent)
 
         self.concept_window = concept_window
         self.idx = idx

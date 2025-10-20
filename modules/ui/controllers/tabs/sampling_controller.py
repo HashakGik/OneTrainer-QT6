@@ -1,17 +1,17 @@
 from PySide6.QtCore import QCoreApplication as QCA
-from modules.ui.controllers.controller_utils import AbstractController
+from modules.ui.utils.base_controller import BaseController
 
 from modules.ui.controllers.widgets.sample_controller import SampleController
-from modules.ui.controllers.windows.sample_controller import SampleController as WinSampleController
+from modules.ui.controllers.windows.new_sample_controller import NewSampleController
 
 from modules.util.enum.TimeUnit import TimeUnit
 from modules.util.enum.ImageFormat import ImageFormat
 
-class SamplingController(AbstractController):
-    def __init__(self, loader, state=None, parent=None):
-        super().__init__(loader, "modules/ui/views/tabs/sampling.ui", state=state, name=QCA.translate("main_window_tabs", "Sampling"), parent=parent)
+class SamplingController(BaseController):
+    def __init__(self, loader, state=None, mutex=None, parent=None):
+        super().__init__(loader, "modules/ui/views/tabs/sampling.ui", state=state, mutex=mutex, name=QCA.translate("main_window_tabs", "Sampling"), parent=parent)
         self.children = {}
-        self.sample_window = WinSampleController(loader, state=state, parent=self)
+        self.sample_window = NewSampleController(loader, state=state, mutex=mutex, parent=self)
         pass
 
     def connectUIBehavior(self):

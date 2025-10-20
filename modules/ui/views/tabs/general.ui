@@ -77,7 +77,7 @@
           <string>Tensorboard Port</string>
          </property>
          <property name="buddy">
-          <cstring>tesorboardSbx</cstring>
+          <cstring>tensorboardSbx</cstring>
          </property>
         </widget>
        </item>
@@ -349,7 +349,7 @@
         </widget>
        </item>
        <item row="4" column="5" colspan="3">
-        <widget class="QSpinBox" name="tesorboardSbx">
+        <widget class="QSpinBox" name="tensorboardSbx">
          <property name="enabled">
           <bool>false</bool>
          </property>
@@ -407,7 +407,7 @@
   <tabstop>tensorboardCbx</tabstop>
   <tabstop>alwaysOnTensorboardCbx</tabstop>
   <tabstop>exposeTensorboardCbx</tabstop>
-  <tabstop>tesorboardSbx</tabstop>
+  <tabstop>tensorboardSbx</tabstop>
   <tabstop>validateCbx</tabstop>
   <tabstop>validateSbx</tabstop>
   <tabstop>validateCmb</tabstop>
@@ -475,7 +475,7 @@
   <connection>
    <sender>tensorboardCbx</sender>
    <signal>toggled(bool)</signal>
-   <receiver>tesorboardSbx</receiver>
+   <receiver>tensorboardSbx</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">

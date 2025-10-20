@@ -1,11 +1,11 @@
-from modules.ui.controllers.controller_utils import AbstractController
+from modules.ui.utils.base_controller import BaseController
 
 from PySide6.QtCore import QCoreApplication as QCA
-import PySide6.QtWidgets as QtW
 
-class SampleController(AbstractController):
-    def __init__(self, loader, sample_window, idx, state=None, parent=None):
-        super().__init__(loader, "modules/ui/views/widgets/sample.ui", state=state, name=None, parent=parent)
+
+class SampleController(BaseController):
+    def __init__(self, loader, sample_window, idx, state=None, mutex=None, parent=None):
+        super().__init__(loader, "modules/ui/views/widgets/sample.ui", state=state, mutex=mutex, name=None, parent=parent)
         self.idx = idx
         self.sample_window = sample_window
 

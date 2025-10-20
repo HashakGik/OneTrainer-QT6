@@ -30,10 +30,10 @@
       <bool>false</bool>
      </property>
      <property name="currentText">
-      <string>LoRA</string>
+      <string/>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>-1</number>
      </property>
      <property name="maxVisibleItems">
       <number>2</number>
@@ -41,16 +41,6 @@
      <property name="maxCount">
       <number>2</number>
      </property>
-     <item>
-      <property name="text">
-       <string>LoRA</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>LoHA</string>
-      </property>
-     </item>
     </widget>
    </item>
    <item row="1" column="0">

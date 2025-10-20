@@ -171,7 +171,7 @@
   </layout>
  </widget>
  <tabstops>
-  <tabstop>createNaskBtn</tabstop>
+  <tabstop>modelCmb</tabstop>
   <tabstop>folderLed</tabstop>
   <tabstop>folderBtn</tabstop>
   <tabstop>promptLed</tabstop>
@@ -180,8 +180,8 @@
   <tabstop>smoothSbx</tabstop>
   <tabstop>expandSbx</tabstop>
   <tabstop>alphaSbx</tabstop>
-  <tabstop>modelCmb</tabstop>
   <tabstop>includeSubfolderCbx</tabstop>
+  <tabstop>createNaskBtn</tabstop>
  </tabstops>
  <resources/>
  <connections/>

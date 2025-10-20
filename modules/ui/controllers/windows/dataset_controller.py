@@ -1,13 +1,13 @@
-from modules.ui.controllers.controller_utils import AbstractController
+from modules.ui.utils.base_controller import BaseController
 from PySide6.QtCore import QCoreApplication as QCA
 import PySide6.QtWidgets as QtW
 
 from modules.ui.controllers.windows.caption_controller import CaptionController
 from modules.ui.controllers.windows.mask_controller import MaskController
 
-class DatasetController(AbstractController):
-    def __init__(self, loader, state=None, parent=None):
-        super().__init__(loader, "modules/ui/views/windows/dataset.ui", state=state, name=None, parent=parent)
+class DatasetController(BaseController):
+    def __init__(self, loader, state=None, mutex=None, parent=None):
+        super().__init__(loader, "modules/ui/views/windows/dataset.ui", state=state, mutex=mutex, name=None, parent=parent)
 
 
         self.help_window = QtW.QMessageBox(QtW.QMessageBox.Icon.NoIcon, QCA.translate("dialog_window", "Dataset Tools Help"),
@@ -28,8 +28,8 @@ Mouse wheel: increase or decrease brush size
         self.help_window.setModal(False)
 
         self.dataset = None
-        self.mask_window = MaskController(loader, state=state, parent=self)
-        self.caption_window = CaptionController(loader, state=state, parent=self)
+        self.mask_window = MaskController(loader, state=state, mutex=mutex, parent=self)
+        self.caption_window = CaptionController(loader, state=state, mutex=mutex, parent=self)
 
     def __openDataset(self):
         diag = QtW.QFileDialog()

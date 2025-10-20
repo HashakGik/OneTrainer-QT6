@@ -1,4 +1,4 @@
-from modules.ui.controllers.controller_utils import AbstractController
+from modules.ui.utils.base_controller import BaseController
 
 from modules.ui.controllers.tabs.general_controller import GeneralController
 from modules.ui.controllers.tabs.model_controller import ModelController
@@ -23,10 +23,15 @@ from PySide6.QtCore import QCoreApplication as QCA
 import PySide6.QtWidgets as QtW
 
 # Main window.
-class OnetrainerController(AbstractController):
-    def __init__(self, loader, state=None):
-        super().__init__(loader, "modules/ui/views/windows/onetrainer.ui", state=state, name="OneTrainer", parent=None)
-        self.save_window = SaveController(self.loader, parent=self)
+class OnetrainerController(BaseController):
+    state_ui_connections = {
+        "model_type": "modelTypeCmb",
+        "training_method": "trainingTypeCmb"
+    }
+
+    def __init__(self, loader, state=None, mutex=None):
+        super().__init__(loader, "modules/ui/views/windows/onetrainer.ui", state=state, mutex=mutex, name="OneTrainer", parent=None)
+        self.save_window = SaveController(self.loader, parent=self, state=state, mutex=mutex)
         self.children = {}
         self.__createTabs()
 
@@ -45,7 +50,7 @@ class OnetrainerController(AbstractController):
             ("lora", LoraController),
             ("embedding", EmbeddingsController)
         ]:
-            c = controller(self.loader, parent=self)
+            c = controller(self.loader, parent=self, state=self.state, mutex=self.mutex)
             self.children[name] = {"controller": c, "index": len(self.children)}
             self.ui.tabWidget.addTab(c.ui, c.name)
 
@@ -53,39 +58,39 @@ class OnetrainerController(AbstractController):
         self.ui.tabWidget.setTabVisible(self.children["embedding"]["index"], False)
 
 
-    def setState(self, config):
-        pass
-
-    def getState(self):
-        pass
-
-    def getDefaultState(self):
-        pass
-
     def connectUIBehavior(self):
         self.ui.wikiBtn.clicked.connect(lambda: webbrowser.open("https://github.com/Nerogar/OneTrainer/wiki", new=0, autoraise=False))
         self.ui.saveConfigBtn.clicked.connect(lambda: self.openWindow(self.save_window, fixed_size=True))
         self.ui.exportBtn.clicked.connect(lambda: self.__exportConfig())
 
-        self.ui.trainingTypeCmb.activated.connect(lambda _: self.__enableTabs())
+        self.ui.trainingTypeCmb.activated.connect(lambda _: self.__changeModel())
+        self.ui.modelTypeCmb.activated.connect(lambda _: self.__changeModel())
         # TODO: connect child tab elements depending on training and model type
+
+        # TODO: when implementing the business logic of various windows, catch exceptions in alert windows!
 
     def connectInputValidation(self):
         pass
 
-    def __enableTabs(self):
+    def __changeModel(self):
+        model_type = self.ui.modelTypeCmb.currentData()
         training_type = self.ui.trainingTypeCmb.currentData()
         self.ui.tabWidget.setTabVisible(self.children["lora"]["index"], training_type == TrainingMethod.LORA)
         self.ui.tabWidget.setTabVisible(self.children["embedding"]["index"], training_type == TrainingMethod.EMBEDDING)
+
+        # TODO: also training_type allowed values must change here...
+
+        QtW.QApplication.instance().modelChanged.emit(model_type, training_type)
 
 
     def __exportConfig(self):
         diag = QtW.QFileDialog()
         txt, flt = diag.getSaveFileName(parent=None, caption=QCA.translate("dialog_window", "Save Config"), dir=None,
                                         filter=QCA.translate("filetype_filters", "JSON (*.json)"))
-        filename = self._appendExtension(txt, flt)
+        if txt != "":
+            filename = self._appendExtension(txt, flt)
 
-        # TODO: use filename
+            # TODO: use filename
         pass
 
     def loadPresets(self):

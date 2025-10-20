@@ -1,11 +1,11 @@
 from PySide6.QtCore import QCoreApplication as QCA
-from modules.ui.controllers.controller_utils import AbstractController
+from modules.ui.utils.base_controller import BaseController
 
 from modules.ui.controllers.widgets.embedding_controller import EmbeddingController
 
-class AdditionalEmbeddingsController(AbstractController):
-    def __init__(self, loader, state=None, parent=None):
-        super().__init__(loader, "modules/ui/views/tabs/additional_embeddings.ui", state=state, name=QCA.translate("main_window_tabs", "Additional Embeddings"), parent=parent)
+class AdditionalEmbeddingsController(BaseController):
+    def __init__(self, loader, state=None, mutex=None, parent=None):
+        super().__init__(loader, "modules/ui/views/tabs/additional_embeddings.ui", state=state, mutex=mutex, name=QCA.translate("main_window_tabs", "Additional Embeddings"), parent=parent)
         self.children = {}
 
     def connectUIBehavior(self):

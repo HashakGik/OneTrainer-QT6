@@ -6,145 +6,439 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1002</width>
-    <height>171</height>
+    <width>765</width>
+    <height>531</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="2" colspan="2">
-    <widget class="QLineEdit" name="huggingfaceLed"/>
-   </item>
-   <item row="4" column="3">
-    <widget class="QToolButton" name="modelOutputBtn">
-     <property name="text">
-      <string>...</string>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="0">
-    <widget class="QLabel" name="label_5">
-     <property name="text">
-      <string>Model Output Destination</string>
-     </property>
-     <property name="buddy">
-      <cstring>modelOutputLed</cstring>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="2">
-    <spacer name="verticalSpacer">
-     <property name="orientation">
-      <enum>Qt::Orientation::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>40</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="1" column="0">
-    <widget class="QLabel" name="label_2">
-     <property name="text">
-      <string>Base Model</string>
-     </property>
-     <property name="buddy">
-      <cstring>baseModelLed</cstring>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="5">
-    <widget class="QLabel" name="label_10">
-     <property name="text">
-      <string>Output Data Type</string>
-     </property>
-     <property name="buddy">
-      <cstring>outputDtypeCmb</cstring>
-     </property>
-    </widget>
-   </item>
    <item row="0" column="0">
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>Huggingface Token</string>
+    <widget class="QScrollArea" name="scrollArea">
+     <property name="widgetResizable">
+      <bool>true</bool>
      </property>
-     <property name="buddy">
-      <cstring>huggingfaceLed</cstring>
-     </property>
+     <widget class="QWidget" name="scrollAreaWidgetContents">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>745</width>
+        <height>511</height>
+       </rect>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="9" column="0">
+        <widget class="QLabel" name="effnetLbl">
+         <property name="text">
+          <string>Effnet Encoder Model</string>
+         </property>
+         <property name="buddy">
+          <cstring>effnetLed</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="4">
+        <widget class="QLabel" name="te4DTypeLbl">
+         <property name="text">
+          <string>Override Text Encoder 4 Data Type</string>
+         </property>
+         <property name="buddy">
+          <cstring>te4DTypeCmb</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="5">
+        <widget class="QComboBox" name="te2DTypeCmb"/>
+       </item>
+       <item row="15" column="1">
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Orientation::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>10</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="8" column="4">
+        <widget class="QLabel" name="vaeDTypeLbl">
+         <property name="text">
+          <string>Override VAE Data Type</string>
+         </property>
+         <property name="buddy">
+          <cstring>vaeDTypeCmb</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="9" column="4">
+        <widget class="QLabel" name="effnetDTypeLbl">
+         <property name="text">
+          <string>Override Effnet Encoder Data Type</string>
+         </property>
+         <property name="buddy">
+          <cstring>effnetDTypeCmb</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="5">
+        <widget class="QComboBox" name="te1DTypeCmb"/>
+       </item>
+       <item row="2" column="4">
+        <widget class="QLabel" name="unetDTypeLbl">
+         <property name="text">
+          <string>Override UNet Data Type</string>
+         </property>
+         <property name="buddy">
+          <cstring>unetDTypeCmb</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="14" column="0">
+        <widget class="QLabel" name="label_6">
+         <property name="text">
+          <string>Output Format</string>
+         </property>
+         <property name="buddy">
+          <cstring>outputFormatCmb</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="2">
+        <widget class="QToolButton" name="te4Btn">
+         <property name="text">
+          <string>...</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Huggingface Token</string>
+         </property>
+         <property name="buddy">
+          <cstring>huggingfaceLed</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="0">
+        <widget class="QLabel" name="vaeLbl">
+         <property name="text">
+          <string>VAE Override</string>
+         </property>
+         <property name="buddy">
+          <cstring>vaeLed</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="10" column="0">
+        <widget class="QLabel" name="decLbl">
+         <property name="text">
+          <string>Decoder Model</string>
+         </property>
+         <property name="buddy">
+          <cstring>decLed</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="12" column="4">
+        <widget class="QLabel" name="decTeDTypeLbl">
+         <property name="text">
+          <string>Override Decoder Text Encoder Data Type</string>
+         </property>
+         <property name="buddy">
+          <cstring>decTeDTypeCmb</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="5">
+        <widget class="QComboBox" name="te4DTypeCmb"/>
+       </item>
+       <item row="13" column="2">
+        <widget class="QToolButton" name="modelOutputBtn">
+         <property name="text">
+          <string>...</string>
+         </property>
+        </widget>
+       </item>
+       <item row="10" column="1">
+        <widget class="QLineEdit" name="decLed"/>
+       </item>
+       <item row="4" column="4">
+        <widget class="QLabel" name="te1DTypeLbl">
+         <property name="text">
+          <string>Override Text Encoder 1 Data Type</string>
+         </property>
+         <property name="buddy">
+          <cstring>te1DTypeCmb</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="14" column="4">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>Include Config</string>
+         </property>
+         <property name="buddy">
+          <cstring>configCmb</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="11" column="4">
+        <widget class="QLabel" name="vqganDTypeLbl">
+         <property name="text">
+          <string>Override Decoder VQGAN Data Type</string>
+         </property>
+         <property name="buddy">
+          <cstring>vqganDTypeCmb</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="13" column="1">
+        <widget class="QLineEdit" name="modelOutputLed"/>
+       </item>
+       <item row="14" column="5">
+        <widget class="QComboBox" name="configCmb"/>
+       </item>
+       <item row="10" column="5">
+        <widget class="QComboBox" name="decDTypeCmb"/>
+       </item>
+       <item row="14" column="1" colspan="2">
+        <widget class="QComboBox" name="outputFormatCmb"/>
+       </item>
+       <item row="5" column="4">
+        <widget class="QLabel" name="te2DTypeLbl">
+         <property name="text">
+          <string>Override Text Encoder 2 Data Type</string>
+         </property>
+         <property name="buddy">
+          <cstring>te2DTypeCmb</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1" colspan="2">
+        <widget class="QLineEdit" name="huggingfaceLed"/>
+       </item>
+       <item row="3" column="5">
+        <widget class="QComboBox" name="priorDTypeCmb"/>
+       </item>
+       <item row="8" column="5">
+        <widget class="QComboBox" name="vaeDTypeCmb"/>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="priorLbl">
+         <property name="text">
+          <string>Prior Model</string>
+         </property>
+         <property name="buddy">
+          <cstring>priorLed</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="13" column="5">
+        <widget class="QComboBox" name="outputDTypeCmb"/>
+       </item>
+       <item row="6" column="4">
+        <widget class="QLabel" name="te3DTypeLbl">
+         <property name="text">
+          <string>Override Text Encoder 3 Data Type</string>
+         </property>
+         <property name="buddy">
+          <cstring>te3DTypeCmb</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="10" column="4">
+        <widget class="QLabel" name="decDTypeLbl">
+         <property name="text">
+          <string>Override Decoder Data Type</string>
+         </property>
+         <property name="buddy">
+          <cstring>decDTypeCmb</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="0">
+        <widget class="QLabel" name="te4Lbl">
+         <property name="text">
+          <string>Text Encoder 4 Override</string>
+         </property>
+         <property name="buddy">
+          <cstring>te4Led</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLineEdit" name="priorLed"/>
+       </item>
+       <item row="1" column="2">
+        <widget class="QToolButton" name="baseModelBtn">
+         <property name="text">
+          <string>...</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="5">
+        <widget class="QComboBox" name="unetDTypeCmb"/>
+       </item>
+       <item row="11" column="5">
+        <widget class="QComboBox" name="vqganDTypeCmb"/>
+       </item>
+       <item row="7" column="1">
+        <widget class="QLineEdit" name="te4Led"/>
+       </item>
+       <item row="9" column="2">
+        <widget class="QToolButton" name="effnetBtn">
+         <property name="text">
+          <string>...</string>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="2">
+        <widget class="QToolButton" name="vaeBtn">
+         <property name="text">
+          <string>...</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="4">
+        <widget class="QLabel" name="label_11">
+         <property name="text">
+          <string>Weight Data Type</string>
+         </property>
+         <property name="buddy">
+          <cstring>weightDTypeCmb</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="4">
+        <widget class="QLabel" name="priorDTypeLbl">
+         <property name="text">
+          <string>Override Prior Data Type</string>
+         </property>
+         <property name="buddy">
+          <cstring>priorDTypeCmb</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="13" column="4">
+        <widget class="QLabel" name="label_10">
+         <property name="text">
+          <string>Output Data Type</string>
+         </property>
+         <property name="buddy">
+          <cstring>outputDTypeCmb</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="5">
+        <widget class="QComboBox" name="weightDTypeCmb"/>
+       </item>
+       <item row="13" column="0">
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>Model Output Destination</string>
+         </property>
+         <property name="buddy">
+          <cstring>modelOutputLed</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="9" column="1">
+        <widget class="QLineEdit" name="effnetLed"/>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Base Model</string>
+         </property>
+         <property name="buddy">
+          <cstring>baseModelLed</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="5">
+        <widget class="QComboBox" name="te3DTypeCmb"/>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="baseModelLed"/>
+       </item>
+       <item row="9" column="5">
+        <widget class="QComboBox" name="effnetDTypeCmb"/>
+       </item>
+       <item row="12" column="5">
+        <widget class="QComboBox" name="decTeDTypeCmb"/>
+       </item>
+       <item row="8" column="1">
+        <widget class="QLineEdit" name="vaeLed"/>
+       </item>
+       <item row="10" column="2">
+        <widget class="QToolButton" name="decBtn">
+         <property name="text">
+          <string>...</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="3">
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Orientation::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="3" column="2">
+        <widget class="QToolButton" name="priorBtn">
+         <property name="text">
+          <string>...</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
     </widget>
-   </item>
-   <item row="1" column="5">
-    <widget class="QLabel" name="label_11">
-     <property name="text">
-      <string>Weight Data Type</string>
-     </property>
-     <property name="buddy">
-      <cstring>weightDTypeCmb</cstring>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="2" colspan="2">
-    <widget class="QComboBox" name="outputFormatCmb"/>
-   </item>
-   <item row="5" column="0">
-    <widget class="QLabel" name="label_6">
-     <property name="text">
-      <string>Output Format</string>
-     </property>
-     <property name="buddy">
-      <cstring>outputFormatCmb</cstring>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="0" colspan="7">
-    <layout class="QGridLayout" name="dynamicElementsLay"/>
-   </item>
-   <item row="1" column="6">
-    <widget class="QComboBox" name="weightDTypeCmb"/>
-   </item>
-   <item row="4" column="2">
-    <widget class="QLineEdit" name="modelOutputLed"/>
-   </item>
-   <item row="1" column="3">
-    <widget class="QToolButton" name="baseModelBtn">
-     <property name="text">
-      <string>...</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="2">
-    <widget class="QLineEdit" name="baseModelLed"/>
-   </item>
-   <item row="4" column="6">
-    <widget class="QComboBox" name="outputDtypeCmb"/>
-   </item>
-   <item row="5" column="5">
-    <widget class="QLabel" name="label_3">
-     <property name="text">
-      <string>Include Config</string>
-     </property>
-     <property name="buddy">
-      <cstring>configCmb</cstring>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="6">
-    <widget class="QComboBox" name="configCmb"/>
    </item>
   </layout>
  </widget>
  <tabstops>
+  <tabstop>scrollArea</tabstop>
   <tabstop>huggingfaceLed</tabstop>
   <tabstop>baseModelLed</tabstop>
   <tabstop>baseModelBtn</tabstop>
   <tabstop>weightDTypeCmb</tabstop>
+  <tabstop>unetDTypeCmb</tabstop>
+  <tabstop>priorLed</tabstop>
+  <tabstop>priorBtn</tabstop>
+  <tabstop>priorDTypeCmb</tabstop>
+  <tabstop>te1DTypeCmb</tabstop>
+  <tabstop>te2DTypeCmb</tabstop>
+  <tabstop>te3DTypeCmb</tabstop>
+  <tabstop>te4Led</tabstop>
+  <tabstop>te4Btn</tabstop>
+  <tabstop>te4DTypeCmb</tabstop>
+  <tabstop>vaeLed</tabstop>
+  <tabstop>vaeBtn</tabstop>
+  <tabstop>vaeDTypeCmb</tabstop>
+  <tabstop>effnetLed</tabstop>
+  <tabstop>effnetBtn</tabstop>
+  <tabstop>effnetDTypeCmb</tabstop>
+  <tabstop>decLed</tabstop>
+  <tabstop>decBtn</tabstop>
+  <tabstop>decDTypeCmb</tabstop>
+  <tabstop>vqganDTypeCmb</tabstop>
+  <tabstop>decTeDTypeCmb</tabstop>
   <tabstop>modelOutputLed</tabstop>
   <tabstop>modelOutputBtn</tabstop>
-  <tabstop>outputDtypeCmb</tabstop>
+  <tabstop>outputDTypeCmb</tabstop>
   <tabstop>outputFormatCmb</tabstop>
   <tabstop>configCmb</tabstop>
  </tabstops>
