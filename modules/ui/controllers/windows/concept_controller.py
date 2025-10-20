@@ -13,7 +13,7 @@ class ConceptController(BaseController):
         super().__init__(loader, "modules/ui/views/windows/concept.ui", state=state, mutex=mutex, name=None, parent=parent)
 
         #self.canvas = FigureCanvas(Figure(figsize=(8, 3))) # TODO: refactor magic numbers. Possibly suggest a size in pixel for default rendering.
-        self.canvas = FigureWidget(parent=self.ui, zoom_tools=True)
+        self.canvas = FigureWidget(parent=self.ui, zoom_tools=True, navigation_tools=True, edit_tools=True)
         self.ui.histogramLay.addWidget(self.canvas.toolbar) # Matplotlib toolbar, in case we want the user to zoom in. TODO: add only relevant buttons (zoom, move, lin-log scale, etc.)
         self.ui.histogramLay.addWidget(self.canvas)
 
