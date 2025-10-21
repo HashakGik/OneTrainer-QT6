@@ -60,9 +60,9 @@
         <height>623</height>
        </rect>
       </property>
-      <layout class="QVBoxLayout" name="verticalLayout">
-       <item>
-        <widget class="SNLineEdit" name="pippo"/>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="0" column="0">
+        <layout class="QGridLayout" name="optimizerLay"/>
        </item>
       </layout>
      </widget>

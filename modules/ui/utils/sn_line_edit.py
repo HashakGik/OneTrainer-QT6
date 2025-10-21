@@ -4,11 +4,11 @@ import PySide6.QtGui as QtG
 
 # Scientific Notation Line Edit Widget.
 class SNLineEdit(QtW.QLineEdit):
-    def __init__(self, contents=None, parent=None, min=None, max=None):
-        super().__init__(contents, parent)
+    def __init__(self, contents=None, parent=None, objectName=None, min=None, max=None):
+        super().__init__(contents, parent, objectName=objectName)
 
         #self.setValidator(QtG.QDoubleValidator(parent)) # TODO: Validator does not work for locales which do not use the decimal point .
-        self.setValidator(QtG.QRegularExpressionValidator("[+-]?\d\.?\d*([eE][+-]?\d+)?", parent)) # A regular expression seems more reliable.
+        self.setValidator(QtG.QRegularExpressionValidator("[+-]?\d+\.?\d*([eE][+-]?\d+)?", parent)) # A regular expression seems more reliable.
         #self._min = min
         #self._max = max
 

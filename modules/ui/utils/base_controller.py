@@ -22,6 +22,7 @@ class BaseController:
         self.state = state
         self.mutex = mutex
 
+        self.setup()
 
         self.connectUIBehavior()
         self.connectInputValidation()
@@ -30,6 +31,10 @@ class BaseController:
 
         # TODO: IMPORTANT!!! For IO-bound calls use ASYNC SLOTS!: https://stackoverflow.com/questions/74196406/pyqt6-asyncio-connect-an-async-function-as-a-slot
 
+    # TODO: refactor to use this method for OptimizerControlelr and TrainingController, to make connections cleaner
+    # This is called before elements are connected together, therefore it can be used to create dynamic GUI elements programmatically.
+    def setup(self):
+        pass
 
     def _appendExtension(self, file, filter):
         patterns = filter.split("(")[1].split(")")[0].split(", ")
@@ -72,20 +77,20 @@ class BaseController:
 
     # These methods cannot use directly lambdas, because variable names would be reassigned within the loop.
     def __readCbx(self, ui_elem, var):
-        return lambda x: self.__setState(var, x == Qt.Checked)
+        return lambda x: self._setState(var, x == Qt.Checked)
     def __readCbm(self, ui_elem, var):
-        return lambda: self.__setState(var, ui_elem.currentData())
+        return lambda: self._setState(var, ui_elem.currentData())
     def __readSbx(self, ui_elem, var):
-        return lambda x: self.__setState(var, x)
+        return lambda x: self._setState(var, x)
     def __readSNLed(self, ui_elem, var):
-        return lambda: self.__setState(var, float(ui_elem.text())) # BUG: THIS DOES NOT SERIALIZE CORRECTLY!
+        return lambda: self._setState(var, float(ui_elem.text())) # BUG: THIS DOES NOT SERIALIZE CORRECTLY!
     def __readLed(self, ui_elem, var):
-        return lambda: self.__setState(var, ui_elem.text())
+        return lambda: self._setState(var, ui_elem.text())
 
     def __writeControl(self, ui_elem, var):
         def f():
             ui_elem.blockSignals(True)
-            val = self.__getState(var)
+            val = self._getState(var)
             if val is not None:
                 if isinstance(ui_elem, QtW.QCheckBox):
                     ui_elem.setChecked(val)
@@ -102,7 +107,7 @@ class BaseController:
             ui_elem.blockSignals(False)
         return f
 
-    def __getState(self, path):
+    def _getState(self, path):
         # Safe for dicts.
         # if self.state is not None:
         #     try:
@@ -151,7 +156,7 @@ class BaseController:
 
         return None
 
-    def __setState(self, path, value):
+    def _setState(self, path, value):
         # Safe for dicts.
         # if self.state is not None:
         #     try:

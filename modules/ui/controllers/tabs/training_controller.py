@@ -129,22 +129,26 @@ class TrainingController(BaseController):
 
     }
 
-
     def __init__(self, loader, state=None, mutex=None, parent=None):
         super().__init__(loader, "modules/ui/views/tabs/training.ui", state=state, mutex=mutex, name=QCA.translate("main_window_tabs", "Training"), parent=parent)
 
-        # TODO: dynamically fill modelSpecificGbx
-        # TODO: in UI define valid ranges.
-        # TODO: perhaps replace learning rate with lineEdit validated for scientific notation?
-
-        # TODO: changes in optimizer emit optimizerChanged signal
         self.optimizer_window = OptimizerController(loader, state=state, mutex=mutex, parent=self)
 
         callback = self.__updateModel()
         QtW.QApplication.instance().modelChanged.connect(callback)
 
+
+        self.__postConnectUIBehavior()
         # At the beginning invalidate the gui.
         callback(self.state.model_type, self.state.training_method)
+        self.optimizer_window.ui.optimizerCmb.setCurrentIndex(self.ui.optimizerCmb.currentIndex())
+
+
+    def __updateOptimizer(self):
+        def f(_):
+            self.optimizer_window.ui.optimizerCmb.setCurrentIndex(self.ui.optimizerCmb.currentIndex())
+            QtW.QApplication.instance().optimizerChanged.emit(self.ui.optimizerCmb.currentData())
+        return f
 
     def __updateModel(self):
         def f(model_type, training_method):
@@ -206,13 +210,23 @@ class TrainingController(BaseController):
         pass # TODO: resolutionLed validation, learningRateLed validation, minNoisingStrengthSbx <= maxNoisingStrengthSbx
 
     def connectUIBehavior(self):
-        self.ui.optimizerBtn.clicked.connect(lambda: self.openWindow(self.optimizer_window, fixed_size=True))
+
 
         self.ui.layerFilterCmb.activated.connect(lambda _: self.__connectLayerFilter())
+
 
         # TODO: schedulerCmb enable tableWidget and schedulerClassLed if "CUSTOM" is selected.
         # tableWidget should allow to insert new rows if <Enter> is pressed on a non empty last row
         pass
+
+    # This is called manually at the end of the constructor.
+    def __postConnectUIBehavior(self): # TODO: REFACTOR! this becomes setup()
+        self.ui.optimizerBtn.clicked.connect(lambda: self.openWindow(self.optimizer_window, fixed_size=True))
+        self.ui.optimizerCmb.activated.connect(self.__updateOptimizer())
+
+        for e in Optimizer:
+            self.optimizer_window.ui.optimizerCmb.addItem(self._prettyPrint(e.value), userData=e)
+
 
     def __connectLayerFilter(self):
         self.ui.layerFilterRegexCbx.setEnabled(self.ui.layerFilterCmb.currentText() == "custom")
