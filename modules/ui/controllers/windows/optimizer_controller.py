@@ -616,17 +616,15 @@ class OptimizerController(BaseController):
         QtW.QApplication.instance().stateChanged.connect(lambda: callback(self.state.optimizer.optimizer))
 
     def setup(self):
-        i = 0
+        row = 0
         for k in sorted(self.optimizer_params.keys()):
             v = self.optimizer_params[k]
-            row = i // 2
-            column = 2 * (i % 2)
 
             if v["type"] == "bool":
                 wdg_name = "{}{}".format(k, "Cbx")
                 wdg = QtW.QCheckBox(parent=self.ui, text=v["title"], objectName=wdg_name)
                 wdg.setToolTip(v["tooltip"])
-                self.ui.optimizerLay.addWidget(wdg, row, column, 1, 2)
+                self.ui.optimizerLay.addWidget(wdg, row, 0, 1, 2)
             else:
                 wdg_name = "{}{}".format(k, "Lbl")
                 lbl = QtW.QLabel(parent=self.ui, text=v["title"], objectName=wdg_name)
@@ -640,14 +638,10 @@ class OptimizerController(BaseController):
                     wdg = SNLineEdit(parent=self.ui, objectName=wdg_name)
                 wdg.setToolTip(v["tooltip"])
                 lbl.setBuddy(wdg)
-                self.ui.optimizerLay.addWidget(lbl, row, column, 1, 1)
-                self.ui.optimizerLay.addWidget(wdg, row, column + 1, 1, 1)
+                self.ui.optimizerLay.addWidget(lbl, row, 0, 1, 1)
+                self.ui.optimizerLay.addWidget(wdg, row, 1, 1, 1)
 
-            i += 1
-
-        # CREATE GUI ELEMENTS HERE AND PLACE THEM IN A 4 COLUMN GRID.
-        # CHECKBOXES TAKE 2 COLUMNS, SPINBOXES AND DOUBLE SPINBOXES HAVE A LABEL BUDDY
-        pass
+            row += 1
 
     def __updateOptimizer(self, from_index=False):
         def f(idx):
