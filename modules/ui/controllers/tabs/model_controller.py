@@ -128,40 +128,22 @@ class ModelController(BaseController):
         return f
 
     def loadPresets(self):
-        for k, v in {
-            "None": ConfigPart.NONE,
-            "Settings": ConfigPart.SETTINGS,
-            "All": ConfigPart.ALL
-        }.items():
-            self.ui.configCmb.addItem(k, userData=v)
-
+        for e in ConfigPart.enabled_values():
+            self.ui.configCmb.addItem(e.pretty_print(), userData=e)
 
         for ui_name in ["weightDTypeCmb", "unetDTypeCmb", "priorDTypeCmb", "te1DTypeCmb", "te2DTypeCmb", "te3DTypeCmb", "te4DTypeCmb",
                         "vaeDTypeCmb", "effnetDTypeCmb", "decDTypeCmb", "decTeDTypeCmb", "vqganDTypeCmb"]:
             ui_elem = self.ui.findChild(QtW.QComboBox, ui_name)
-            for k, v in self.__createDTypes(include_none=(ui_name=="weightDTypeCmb")):
-                ui_elem.addItem(k, userData=v)
+            for e in self.__createDTypes(include_none=(ui_name=="weightDTypeCmb")):
+                ui_elem.addItem(e.pretty_print(), userData=e)
 
-        for k, v in {
-            "float16": DataType.FLOAT_16,
-            "float32": DataType.FLOAT_32,
-            "bfloat16": DataType.BFLOAT_16,
-            "float8": DataType.FLOAT_8,
-            "nfloat4": DataType.NFLOAT_4
-        }.items():
-            self.ui.outputDTypeCmb.addItem(k, userData=v)
+        for e in DataType.enabled_values(context="output_dtype"):
+            self.ui.outputDTypeCmb.addItem(e.pretty_print(), userData=e)
 
     def __createDTypes(self, include_none=True):
-        options = [
-            ("float32", DataType.FLOAT_32),
-            ("bfloat16", DataType.BFLOAT_16),
-            ("float16", DataType.FLOAT_16),
-            ("float8", DataType.FLOAT_8),
-            # ("int8", DataType.INT_8),  # TODO: reactivate when the int8 implementation is fixed in bitsandbytes: https://github.com/bitsandbytes-foundation/bitsandbytes/issues/1332
-            ("nfloat4", DataType.NFLOAT_4),
-        ]
+        options = DataType.enabled_values(context="model_dtypes")
 
         if include_none:
-            options.insert(0, ("", DataType.NONE))
+            options.insert(0, DataType.NONE)
 
         return options

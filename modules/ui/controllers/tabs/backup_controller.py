@@ -25,8 +25,8 @@ class BackupController(BaseController):
         pass
 
     def loadPresets(self):
-        for e in TimeUnit:
-            self.ui.backupCmb.addItem(self._prettyPrint(e.value), userData=e)
-        for e in TimeUnit:
-            self.ui.saveCmb.addItem(self._prettyPrint(e.value), userData=e)
+        for e in TimeUnit.enabled_values():
+            self.ui.backupCmb.addItem(e.pretty_print(), userData=e)
+        for e in TimeUnit.enabled_values():
+            self.ui.saveCmb.addItem(e.pretty_print(), userData=e)
 

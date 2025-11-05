@@ -3,6 +3,7 @@ from modules.ui.utils.base_controller import BaseController
 
 from modules.util.enum.CloudAction import CloudAction
 from modules.util.enum.CloudType import CloudType
+from modules.util.enum.CloudSubtype import CloudSubtype
 from modules.util.enum.CloudFileSync import CloudFileSync
 
 class CloudController(BaseController):
@@ -48,15 +49,14 @@ class CloudController(BaseController):
 
     def loadPresets(self):
         for ctl in [self.ui.onFinishCmb, self.ui.onErrorCmb, self.ui.onDetachedCmb, self.ui.onDetachedErrorCmb]:
-            for e in CloudAction:
-                ctl.addItem(self._prettyPrint(e.value), userData=e)
+            for e in CloudAction.enabled_values():
+                ctl.addItem(e.pretty_print(), userData=e)
 
-        for e in CloudType:
-            self.ui.cloudTypeCmb.addItem(self._prettyPrint(e.value), userData=e)
+        for e in CloudType.enabled_values():
+            self.ui.cloudTypeCmb.addItem(e.pretty_print(), userData=e)
 
-        for e in CloudFileSync:
-            self.ui.fileSyncMethodCmb.addItem(self._prettyPrint(e.value), userData=e)
+        for e in CloudFileSync.enabled_values():
+            self.ui.fileSyncMethodCmb.addItem(e.pretty_print(), userData=e)
 
-        # subTypeCmb has no enum on original code. Adding manually.
-        for e in ["", "COMMUNITY", "SECURE"]:
-            self.ui.subTypeCmb.addItem(self._prettyPrint(e), userData=e)
+        for e in CloudSubtype.enabled_values():
+            self.ui.subTypeCmb.addItem(e.pretty_print(), userData=e)

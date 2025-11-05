@@ -20,16 +20,5 @@ class SampleParamsController(BaseController):
                                                      "Image (*.jpg, *.jpeg, *.tif, *.png, *.webp)"))
 
     def loadPresets(self):
-        for k, v in {
-            "DDIM": NoiseScheduler.DDIM,
-            "Euler": NoiseScheduler.EULER,
-            "Euler A": NoiseScheduler.EULER_A,
-            # "DPM++": NoiseScheduler.DPMPP, # TODO: produces noisy samples
-            # "DPM++ SDE": NoiseScheduler.DPMPP_SDE, # TODO: produces noisy samples
-            "UniPC": NoiseScheduler.UNIPC,
-            "Euler Karras": NoiseScheduler.EULER_KARRAS,
-            "DPM++ Karras": NoiseScheduler.DPMPP_KARRAS,
-            "DPM++ SDE Karras": NoiseScheduler.DPMPP_SDE_KARRAS,
-            # "UniPC Karras": NoiseScheduler.UNIPC_KARRAS # TODO: update diffusers to fix UNIPC_KARRAS (see https://github.com/huggingface/diffusers/pull/4581)
-        }.items():
-            self.ui.samplerCmb.addItem(k, userData=v)
+        for e in NoiseScheduler.enabled_values():
+            self.ui.samplerCmb.addItem(e.pretty_print(), userData=e)

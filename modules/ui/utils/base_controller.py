@@ -262,9 +262,6 @@ class BaseController:
                 pass # TODO!
             controller.ui.cloneBtn.clicked.connect(__clone)
 
-    def _prettyPrint(self, str):
-        return str.replace("_", " ").title() # TODO: EVERYTHING USING THIS SHOULD REDEFINE MANUALLY FOR NOW, LATER WE CAN MODIFY ENUMS AND PRETTY PRINT THEM
-
     def openWindow(self, controller, fixed_size=False):
         if fixed_size:
             controller.ui.setWindowFlag(Qt.WindowCloseButtonHint)
@@ -279,7 +276,4 @@ class BaseController:
         pass # TODO: this method handles field validation OTHER than the automatic field validations defined in ui files.
 
     def loadPresets(self):
-        # Unfortunately the static analysis for QtTranslator cannot extract dynamic strings and these values will remain untranslated until the original source is adapted.
-        # For now most derived classes implement this method inconsistently (some traverse a sorted list, others traverse an unsorted dictionary, others iterate over the enum).
-        # TODO: if we have a well structured and reliable enum format exposing a translable string, and allowing a traversal in order, it is possible to automate associations with a mechanism similar to state_ui_connections (a dict {ui_element: enum type} processed automatically)
         pass

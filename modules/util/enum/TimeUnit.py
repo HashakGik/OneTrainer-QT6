@@ -1,7 +1,6 @@
-from enum import Enum
+from modules.util.enum.BaseEnum import BaseEnum
 
-
-class TimeUnit(Enum):
+class TimeUnit(BaseEnum):
     EPOCH = 'EPOCH'
     STEP = 'STEP'
     SECOND = 'SECOND'
@@ -10,9 +9,6 @@ class TimeUnit(Enum):
 
     NEVER = 'NEVER'
     ALWAYS = 'ALWAYS'
-
-    def __str__(self):
-        return self.value
 
     def is_time_unit(self) -> bool:
         return self == TimeUnit.SECOND \

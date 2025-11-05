@@ -1,7 +1,6 @@
-from enum import Enum
+from modules.util.enum.BaseEnum import BaseEnum
 
-
-class LearningRateScheduler(Enum):
+class LearningRateScheduler(BaseEnum):
     CONSTANT = 'CONSTANT'
     LINEAR = 'LINEAR'
     COSINE = 'COSINE'
@@ -10,6 +9,3 @@ class LearningRateScheduler(Enum):
     REX = 'REX'
     ADAFACTOR = 'ADAFACTOR'
     CUSTOM = 'CUSTOM'
-
-    def __str__(self):
-        return self.value

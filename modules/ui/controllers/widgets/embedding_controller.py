@@ -16,5 +16,5 @@ class EmbeddingController(BaseController):
                                                      "Safetensors (*.safetensors);;Diffusers (model_index.json);;Checkpoints (*.ckpt, *.pt, *.bin);;All Files (*.*)"))
 
     def loadPresets(self):
-        for e in TimeUnit:
-            self.ui.stopTrainingCmb.addItem(self._prettyPrint(e.value), userData=e)
+        for e in TimeUnit.enabled_values():
+            self.ui.stopTrainingCmb.addItem(e.pretty_print(), userData=e)

@@ -44,9 +44,8 @@ class GeneralController(BaseController):
                                title=QCA.translate("dialog_window", "Open Debug directory"))
 
     def loadPresets(self):
-        for e in GradientReducePrecision:
-            self.ui.gradientReduceCmb.addItem(self._prettyPrint(e.value), userData=e)
+        for e in GradientReducePrecision.enabled_values():
+            self.ui.gradientReduceCmb.addItem(e.pretty_print(), userData=e)
 
-        for e in TimeUnit:
-            self.ui.validateCmb.addItem(self._prettyPrint(e.value), userData=e)
-        pass
+        for e in TimeUnit.enabled_values():
+            self.ui.validateCmb.addItem(e.pretty_print(), userData=e)

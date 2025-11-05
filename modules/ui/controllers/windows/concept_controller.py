@@ -3,9 +3,11 @@ from modules.ui.utils.base_controller import BaseController
 from modules.ui.utils.figure_widget import FigureWidget
 
 from PySide6.QtCore import QCoreApplication as QCA
+import PySide6.QtWidgets as QtW
 
 from modules.util.enum.BalancingStrategy import BalancingStrategy
 from modules.util.enum.ConceptType import ConceptType
+from modules.util.enum.TrainingMethod import TrainingMethod
 
 
 class ConceptController(BaseController):
@@ -65,6 +67,25 @@ class ConceptController(BaseController):
                                filters=QCA.translate("filetype_filters",
                                                      "Text (*.txt)"))
 
+        callback = self.__updateConceptType()
+        QtW.QApplication.instance().modelChanged.connect(callback)
+        callback(self._getState("model_type"), self._getState("training_method"))
+
+
+
+    def __updateConceptType(self):
+        # TODO: this enables prior prediction only when LORA is selected. However, this means that concepts may change type when training type is changed.
+        def f(model_type, training_type):
+            if training_type == TrainingMethod.LORA:
+                context = "prior_pred_enabled"
+            else:
+                context = "prior_pred_disabled"
+            self.ui.conceptTypeCmb.clear()
+            for e in ConceptType.enabled_values(context=context):
+                self.ui.conceptTypeCmb.addItem(e.pretty_print(), userData=e)
+
+        return f
+
     def connectInputValidation(self):
         self.ui.promptSourceCmb.activated.connect(self.__enablePromptSource)
 
@@ -82,8 +103,9 @@ class ConceptController(BaseController):
         self.ui.specialDropoutTagsCmb.addItem(QCA.translate("special_dropout_tags", "Blacklist"), userData="BLACKLIST")
         self.ui.specialDropoutTagsCmb.addItem(QCA.translate("special_dropout_tags", "Whitelist"), userData="WHITELIST")
 
-        for e in BalancingStrategy:
-            self.ui.balancingCmb.addItem(self._prettyPrint(e.value), userData=e)
+        for e in BalancingStrategy.enabled_values():
+            self.ui.balancingCmb.addItem(e.pretty_print(), userData=e)
 
-        for e in ConceptType:
-            self.ui.conceptTypeCmb.addItem(self._prettyPrint(e.value), userData=e) # TODO: Prior prediction only for lora training
+        # TODO: this always allows Prior Validation concepts, even when LORA is not selected.
+        #for e in ConceptType.enabled_values():
+        #    self.ui.conceptTypeCmb.addItem(e.pretty_print(), userData=e)

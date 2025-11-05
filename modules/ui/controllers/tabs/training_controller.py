@@ -224,8 +224,8 @@ class TrainingController(BaseController):
         self.ui.optimizerBtn.clicked.connect(lambda: self.openWindow(self.optimizer_window, fixed_size=True))
         self.ui.optimizerCmb.activated.connect(self.__updateOptimizer())
 
-        for e in Optimizer:
-            self.optimizer_window.ui.optimizerCmb.addItem(self._prettyPrint(e.value), userData=e)
+        for e in Optimizer.enabled_values():
+            self.optimizer_window.ui.optimizerCmb.addItem(e.pretty_print(), userData=e)
 
 
     def __connectLayerFilter(self):
@@ -236,43 +236,35 @@ class TrainingController(BaseController):
         for ui_name in ["unetStopCmb", "te1StopTrainingCmb", "te2StopTrainingCmb", "te3StopTrainingCmb", "te4StopTrainingCmb",
                         "priorStopCmb", "transformerStopCmb"]:
             ui_elem = self.ui.findChild(QtWidgets.QComboBox, ui_name)
-            for e in TimeUnit:
-                ui_elem.addItem(self._prettyPrint(e.value), userData=e)
+            for e in TimeUnit.enabled_values():
+                ui_elem.addItem(e.pretty_print(), userData=e)
 
-        for e in TimestepDistribution:
-            self.ui.timestepDistributionCmb.addItem(self._prettyPrint(e.value), userData=e)
+        for e in TimestepDistribution.enabled_values():
+            self.ui.timestepDistributionCmb.addItem(e.pretty_print(), userData=e)
 
-        for e in LossScaler:
-            self.ui.lossScalerCmb.addItem(self._prettyPrint(e.value), userData=e)
+        for e in LossScaler.enabled_values():
+            self.ui.lossScalerCmb.addItem(e.pretty_print(), userData=e)
 
-        for e in LossWeight:
-            self.ui.lossWeightFunctionCmb.addItem(self._prettyPrint(e.value), userData=e)
+        for e in LossWeight.enabled_values():
+            self.ui.lossWeightFunctionCmb.addItem(e.pretty_print(), userData=e)
 
-        for e in GradientCheckpointingMethod:
-            self.ui.gradientCheckpointingCmb.addItem(self._prettyPrint(e.value), userData=e)
+        for e in GradientCheckpointingMethod.enabled_values():
+            self.ui.gradientCheckpointingCmb.addItem(e.pretty_print(), userData=e)
 
-        for e in EMAMode:
-            self.ui.emaCmb.addItem(self._prettyPrint(e.value), userData=e)
+        for e in EMAMode.enabled_values():
+            self.ui.emaCmb.addItem(e.pretty_print(), userData=e)
 
-        for e in LearningRateScaler:
-            self.ui.scalerCmb.addItem(self._prettyPrint(e.value), userData=e)
+        for e in LearningRateScaler.enabled_values():
+            self.ui.scalerCmb.addItem(e.pretty_print(), userData=e)
 
-        for e in Optimizer:
-            self.ui.optimizerCmb.addItem(self._prettyPrint(e.value), userData=e)
+        for e in Optimizer.enabled_values():
+            self.ui.optimizerCmb.addItem(e.pretty_print(), userData=e)
 
-        for e in LearningRateScheduler:
-            self.ui.schedulerCmb.addItem(self._prettyPrint(e.value), userData=e)
+        for e in LearningRateScheduler.enabled_values():
+            self.ui.schedulerCmb.addItem(e.pretty_print(), userData=e)
 
-        for k, v in [
-            ("float32", DataType.FLOAT_32),
-            ("bfloat16", DataType.BFLOAT_16)
-        ]:
-            self.ui.fallbackDTypeCmb.addItem(k, userData=v)
+        for e in DataType.enabled_values(context="training_dtype"):
+            self.ui.trainDTypeCmb.addItem(e.pretty_print(), userData=e)
 
-        for k, v in [
-            ("float32", DataType.FLOAT_32),
-            ("float16", DataType.FLOAT_16),
-            ("bfloat16", DataType.BFLOAT_16),
-            ("tfloat32", DataType.TFLOAT_32)
-        ]:
-            self.ui.trainDTypeCmb.addItem(k, userData=v)
+        for e in DataType.enabled_values(context="training_fallback"):
+            self.ui.fallbackDTypeCmb.addItem(e.pretty_print(), userData=e)

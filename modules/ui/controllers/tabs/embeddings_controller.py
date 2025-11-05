@@ -14,5 +14,5 @@ class EmbeddingsController(BaseController):
                                filters=QCA.translate("filetype_filters", "Safetensors (*.safetensors);;Diffusers (model_index.json);;Checkpoints (*.ckpt, *.pt, *.bin);;All Files (*.*)")) # TODO: Maybe refactor filters in ENUM?
 
     def loadPresets(self):
-        for e in [DataType.FLOAT_32, DataType.BFLOAT_16]:
-            self.ui.embeddingDTypeCmb.addItem(self._prettyPrint(e.value), userData=e)
+        for e in DataType.enabled_values(context="embeddings"):
+            self.ui.embeddingDTypeCmb.addItem(e.pretty_print(), userData=e)

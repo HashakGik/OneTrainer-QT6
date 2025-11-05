@@ -23,7 +23,7 @@ class SamplingController(BaseController):
         self._appendWidget(self.ui.listWidget, wdg, self_delete_btn=True, self_clone_btn=True)
 
     def loadPresets(self):
-        for e in TimeUnit:
-            self.ui.sampleAfterCmb.addItem(self._prettyPrint(e.value), userData=e)
-        for e in ImageFormat:
-            self.ui.formatCmb.addItem(self._prettyPrint(e.value), userData=e)
+        for e in TimeUnit.enabled_values():
+            self.ui.sampleAfterCmb.addItem(e.pretty_print(), userData=e)
+        for e in ImageFormat.enabled_values():
+            self.ui.formatCmb.addItem(e.pretty_print(), userData=e)

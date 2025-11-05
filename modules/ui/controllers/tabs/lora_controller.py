@@ -37,8 +37,8 @@ class LoraController(BaseController):
 
 
     def loadPresets(self):
-        for e in PeftType:
-            self.ui.typeCmb.addItem(self._prettyPrint(e.value), userData=e)
+        for e in PeftType.enabled_values():
+            self.ui.typeCmb.addItem(e.pretty_print(), userData=e)
 
-        for e in [DataType.FLOAT_32, DataType.BFLOAT_16]:
-            self.ui.weightDTypeCmb.addItem(self._prettyPrint(e.value), userData=e)
+        for e in DataType.enabled_values(context="lora"):
+            self.ui.weightDTypeCmb.addItem(e.pretty_print(), userData=e)

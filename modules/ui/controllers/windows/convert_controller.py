@@ -19,47 +19,14 @@ class ConvertController(BaseController):
                                filters=QCA.translate("filetype_filters", "Safetensors (*.safetensors);;Diffusers (model_index.json)"))
 
     def loadPresets(self):
-        for k, v in {
-            "Stable Diffusion 1.5": ModelType.STABLE_DIFFUSION_15,
-            "Stable Diffusion 1.5 Inpainting": ModelType.STABLE_DIFFUSION_15_INPAINTING,
-            "Stable Diffusion 2.0": ModelType.STABLE_DIFFUSION_20,
-            "Stable Diffusion 2.0 Inpainting": ModelType.STABLE_DIFFUSION_20_INPAINTING,
-            "Stable Diffusion 2.1": ModelType.STABLE_DIFFUSION_21,
-            "Stable Diffusion 3": ModelType.STABLE_DIFFUSION_3,
-            "Stable Diffusion 3.5": ModelType.STABLE_DIFFUSION_35,
-            "Stable Diffusion XL 1.0 Base": ModelType.STABLE_DIFFUSION_XL_10_BASE,
-            "Stable Diffusion XL 1.0 Base Inpainting": ModelType.STABLE_DIFFUSION_XL_10_BASE_INPAINTING,
-            "Wuerstchen v2": ModelType.WUERSTCHEN_2,
-            "Stable Cascade": ModelType.STABLE_CASCADE_1,
-            "PixArt Alpha": ModelType.PIXART_ALPHA,
-            "PixArt Sigma": ModelType.PIXART_SIGMA,
-            "Flux Dev": ModelType.FLUX_DEV_1,
-            "Flux Fill Dev": ModelType.FLUX_FILL_DEV_1,
-            "Hunyuan Video": ModelType.HUNYUAN_VIDEO,
-            "Chroma1": ModelType.CHROMA_1,  # TODO does this just work? HiDream is not here
-            "QwenImage": ModelType.QWEN,  # TODO does this just work? HiDream is not here
-        }.items():
-            self.ui.modelTypeCmb.addItem(k, userData=v)
+        for e in ModelType.enabled_values(context="convert_window"):
+            self.ui.modelTypeCmb.addItem(e.pretty_print(), userData=e)
 
-        for k, v in {
-            "Base Model": TrainingMethod.FINE_TUNE,
-            "LoRA": TrainingMethod.LORA,
-            "Embedding": TrainingMethod.EMBEDDING
-        }.items():
-            self.ui.trainingMethodCmb.addItem(k, userData=v)
+        for e in TrainingMethod.enabled_values(context="convert_window"):
+            self.ui.trainingMethodCmb.addItem(e.pretty_print(), userData=e)
 
-        for k, v in {
-            "float32": DataType.FLOAT_32,
-            "float16": DataType.FLOAT_16,
-            "bfloat16": DataType.BFLOAT_16
-        }.items():
-            self.ui.outputDTypeCmb.addItem(k, userData=v)
+        for e in DataType.enabled_values(context="convert_window"):
+            self.ui.outputDTypeCmb.addItem(e.pretty_print(), userData=e)
 
-        for k, v in {
-            "Safetensors": ModelFormat.SAFETENSORS,
-            "Diffusers": ModelFormat.DIFFUSERS,
-        }.items():
-            self.ui.outputFormatCmb.addItem(k, userData=v)
-
-
-        pass
+        for e in ModelFormat.enabled_values(context="convert_window"):
+            self.ui.outputFormatCmb.addItem(e.pretty_print(), userData=e)
