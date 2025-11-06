@@ -7,6 +7,8 @@ import PySide6.QtWidgets as QtW
 from modules.ui.utils.sn_line_edit import SNLineEdit
 from modules.util.enum.Optimizer import Optimizer
 
+from modules.ui.models.StateModel import StateModel
+
 # TODO: FOR SOME REASON THIS GIVES IMPORT ERROR (circular import: modules.optimizer.utils -> modules.utils.create -> modules.modelSetup.ChromaEmbeddingSetup -> modules.util.optimizer_util)
 # from modules.util.optimizer_util import (
     # OPTIMIZER_DEFAULT_PARAMETERS,
@@ -607,13 +609,13 @@ class OptimizerController(BaseController):
         "optimizer.{}".format(k): "{}{}".format(k, "Cbx" if v["type"] == "bool" else ("Sbx" if v["type"] == "int" else "Led")) for k, v in optimizer_params.items()
     }
 
-    def __init__(self, loader, state=None, mutex=None, parent=None):
-        super().__init__(loader, "modules/ui/views/windows/optimizer.ui", state=state, mutex=mutex, name=None, parent=parent)
+    def __init__(self, loader, parent=None):
+        super().__init__(loader, "modules/ui/views/windows/optimizer.ui", name=None, parent=parent)
 
 
         callback = self.__updateOptimizer(from_index=False)
         QtW.QApplication.instance().optimizerChanged.connect(callback)
-        QtW.QApplication.instance().stateChanged.connect(lambda: callback(self.state.optimizer.optimizer))
+        QtW.QApplication.instance().stateChanged.connect(lambda: callback(StateModel.instance().getState("optimizer.optimizer")))
 
     def setup(self):
         row = 0
@@ -683,7 +685,7 @@ class OptimizerController(BaseController):
     def __loadDefaults(self):
         optimizer = self.ui.optimizerCmb.currentData()
         for k, v in OPTIMIZER_DEFAULT_PARAMETERS[optimizer].items():
-            self._setState("optimizer.{}".format(k), v)
+            StateModel.instance().setState("optimizer.{}".format(k), v)
         QtW.QApplication.instance().stateChanged.emit()
         QtW.QApplication.instance().optimizerChanged.emit(optimizer)
 

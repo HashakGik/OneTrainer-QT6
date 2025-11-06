@@ -18,8 +18,8 @@ class LoraController(BaseController):
         "bundle_additional_embeddings": "bundleCbx"
     }
 
-    def __init__(self, loader, state=None, mutex=None, parent=None):
-        super().__init__(loader, "modules/ui/views/tabs/lora.ui", state=state, mutex=mutex, name=QCA.translate("main_window_tabs", "Lora"), parent=parent)
+    def __init__(self, loader, parent=None):
+        super().__init__(loader, "modules/ui/views/tabs/lora.ui", name=QCA.translate("main_window_tabs", "Lora"), parent=parent)
 
 
     def connectUIBehavior(self):

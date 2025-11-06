@@ -31,8 +31,8 @@ class GeneralController(BaseController):
         "async_gradient_reduce_buffer": "bufferSbx",
     }
 
-    def __init__(self, loader, state=None, mutex=None, parent=None):
-        super().__init__(loader, "modules/ui/views/tabs/general.ui", state=state, mutex=mutex, name=QCA.translate("main_window_tabs", "General"), parent=parent)
+    def __init__(self, loader, parent=None):
+        super().__init__(loader, "modules/ui/views/tabs/general.ui", name=QCA.translate("main_window_tabs", "General"), parent=parent)
 
 
     def connectUIBehavior(self):

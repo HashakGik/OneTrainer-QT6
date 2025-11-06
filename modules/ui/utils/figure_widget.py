@@ -10,6 +10,15 @@ import PySide6.QtGui as QtG
 
 from PySide6.QtCore import QCoreApplication as QCA
 
+
+# TODO: NEW FEATURES:
+# Undo/redo mask
+# Multiple captions (combobox)
+# Filters on files: by caption/by filename
+# Image tools window
+# Bulk caption editor?
+# Browse button
+
 class MaskDrawingToolbar(NavigationToolbar):
     #toolitems = [
     #    ("Home", "This is the Home Button, don't forget to translate it", "home", "home"),

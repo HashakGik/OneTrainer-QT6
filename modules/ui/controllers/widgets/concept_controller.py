@@ -4,8 +4,8 @@ from PySide6.QtCore import QCoreApplication as QCA
 
 
 class ConceptController(BaseController):
-    def __init__(self, loader, concept_window, idx, state=None, mutex=None, parent=None):
-        super().__init__(loader, "modules/ui/views/widgets/concept.ui", state=state, mutex=mutex, name=None, parent=parent)
+    def __init__(self, loader, concept_window, idx, parent=None):
+        super().__init__(loader, "modules/ui/views/widgets/concept.ui", name=None, parent=parent)
 
         self.concept_window = concept_window
         self.idx = idx

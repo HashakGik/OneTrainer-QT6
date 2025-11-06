@@ -17,15 +17,11 @@ if __name__ == "__main__":
     loader = QUiLoader()
     loader.registerCustomWidget(SNLineEdit) # TODO: REMEMBER TO PROMOTE IN UI FILES! And to manually set min and max of controls (if present).
 
-    state = TrainConfig.default_values() # .to_dict() # TODO: Maybe this should become singleton?
-
-    mutex = QBasicMutex()
-
     # TODO: extract GUI agnostic functions (eg. start training, invalidate state, etc.) in modules.ui.models, grouped by logic family, not by ui element (FileModel, ConnectionModel, SamplerModel, etc.)
     # Otherwise, if the implementation remains like the current one, it becomes a Model-View architecture, instead of a Model-View-Controller and decoupling is incomplete.
     # Since the UI is relatively simple, models could be either singletons or static classes
 
-    onetrainer = OnetrainerController(loader, state=state, mutex=mutex)
+    onetrainer = OnetrainerController(loader)
 
     # Invalidate ui elements after the controllers are set up, but before showing them.
     app.stateChanged.emit() # TODO: BUG! Since only QWidget values are connected to this Signal, none of the connections for UI behavior defined in connectUIBehavior() is fired. Each controller should also attach those Slots to invalid

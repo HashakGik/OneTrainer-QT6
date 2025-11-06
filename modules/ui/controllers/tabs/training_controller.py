@@ -4,7 +4,7 @@ from modules.ui.utils.base_controller import BaseController
 
 from modules.ui.controllers.windows.optimizer_controller import OptimizerController
 
-from modules.ui.utils.ModelFlags import ModelFlags
+from modules.util.enum.ModelFlags import ModelFlags
 import PySide6.QtWidgets as QtW
 
 from modules.util.enum.TimeUnit import TimeUnit
@@ -17,6 +17,8 @@ from modules.util.enum.Optimizer import Optimizer
 from modules.util.enum.EMAMode import EMAMode
 from modules.util.enum.DataType import DataType
 from modules.util.enum.GradientCheckpointingMethod import GradientCheckpointingMethod
+
+from modules.ui.models.StateModel import StateModel
 
 class TrainingController(BaseController):
     state_ui_connections = {
@@ -129,10 +131,10 @@ class TrainingController(BaseController):
 
     }
 
-    def __init__(self, loader, state=None, mutex=None, parent=None):
-        super().__init__(loader, "modules/ui/views/tabs/training.ui", state=state, mutex=mutex, name=QCA.translate("main_window_tabs", "Training"), parent=parent)
+    def __init__(self, loader, parent=None):
+        super().__init__(loader, "modules/ui/views/tabs/training.ui", name=QCA.translate("main_window_tabs", "Training"), parent=parent)
 
-        self.optimizer_window = OptimizerController(loader, state=state, mutex=mutex, parent=self)
+        self.optimizer_window = OptimizerController(loader, parent=self)
 
         callback = self.__updateModel()
         QtW.QApplication.instance().modelChanged.connect(callback)
@@ -140,7 +142,7 @@ class TrainingController(BaseController):
 
         self.__postConnectUIBehavior()
         # At the beginning invalidate the gui.
-        callback(self.state.model_type, self.state.training_method)
+        callback(StateModel.instance().getState("model_type"), StateModel.instance().getState("training_method"))
         self.optimizer_window.ui.optimizerCmb.setCurrentIndex(self.ui.optimizerCmb.currentIndex())
 
 

@@ -43,8 +43,8 @@ class CloudController(BaseController):
         "cloud.on_detached_error": "onDetachedErrorCmb",
     }
 
-    def __init__(self, loader, state=None, mutex=None, parent=None):
-        super().__init__(loader, "modules/ui/views/tabs/cloud.ui", state=state, mutex=mutex, name=QCA.translate("main_window_tabs", "Cloud"), parent=parent)
+    def __init__(self, loader, parent=None):
+        super().__init__(loader, "modules/ui/views/tabs/cloud.ui", name=QCA.translate("main_window_tabs", "Cloud"), parent=parent)
 
 
     def loadPresets(self):

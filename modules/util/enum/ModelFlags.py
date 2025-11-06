@@ -1,5 +1,3 @@
-# TODO: after pull request is accepted, move this into modules.util.enum
-
 from enum import Flag, auto
 from modules.util.enum.TrainingMethod import TrainingMethod
 

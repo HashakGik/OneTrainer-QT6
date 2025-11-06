@@ -167,13 +167,8 @@
       <bool>true</bool>
      </property>
      <property name="currentText">
-      <string>samples</string>
+      <string/>
      </property>
-     <item>
-      <property name="text">
-       <string>samples</string>
-      </property>
-     </item>
     </widget>
    </item>
   </layout>

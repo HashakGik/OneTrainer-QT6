@@ -6,8 +6,8 @@ import webbrowser
 
 
 class VideoController(BaseController):
-    def __init__(self, loader, state=None, mutex=None, parent=None):
-        super().__init__(loader, "modules/ui/views/windows/video.ui", state=state, mutex=mutex, name=None, parent=parent)
+    def __init__(self, loader, parent=None):
+        super().__init__(loader, "modules/ui/views/windows/video.ui", name=None, parent=parent)
 
     def connectUIBehavior(self):
         self.connectFileDialog(self.ui.linkListBtn, self.ui.linkListLed, is_dir=False, save=False,

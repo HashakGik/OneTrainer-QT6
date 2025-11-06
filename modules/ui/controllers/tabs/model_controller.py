@@ -7,7 +7,9 @@ from modules.util.enum.ModelFormat import ModelFormat
 
 import PySide6.QtWidgets as QtW
 
-from modules.ui.utils.ModelFlags import ModelFlags
+from modules.util.enum.ModelFlags import ModelFlags
+
+from modules.ui.models.StateModel import StateModel
 
 class ModelController(BaseController):
     state_ui_connections = {
@@ -36,8 +38,8 @@ class ModelController(BaseController):
         "decoder.model_name": "decLed",
     }
 
-    def __init__(self, loader, state=None, mutex=None, parent=None):
-        super().__init__(loader, "modules/ui/views/tabs/model.ui", state=state, mutex=mutex, name=QCA.translate("main_window_tabs", "Model"), parent=parent)
+    def __init__(self, loader, parent=None):
+        super().__init__(loader, "modules/ui/views/tabs/model.ui", name=QCA.translate("main_window_tabs", "Model"), parent=parent)
 
     def connectUIBehavior(self):
         for ui_name in ["baseModel", "prior", "te4", "vae", "effnet", "dec"]:
@@ -58,7 +60,7 @@ class ModelController(BaseController):
         QtW.QApplication.instance().modelChanged.connect(callback)
 
         # At the beginning invalidate the gui.
-        callback(self.state.model_type, self.state.training_method)
+        callback(StateModel.instance().getState("model_type"), StateModel.instance().getState("training_method"))
 
     def __updateModel(self):
         def f(model_type, training_method):

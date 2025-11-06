@@ -1,17 +1,53 @@
 from PySide6.QtCore import QCoreApplication as QCA
 from modules.ui.utils.base_controller import BaseController
 
+import PySide6.QtWidgets as QtW
+
 from modules.ui.controllers.widgets.embedding_controller import EmbeddingController
 
+from modules.ui.models.StateModel import StateModel
+
 class AdditionalEmbeddingsController(BaseController):
-    def __init__(self, loader, state=None, mutex=None, parent=None):
-        super().__init__(loader, "modules/ui/views/tabs/additional_embeddings.ui", state=state, mutex=mutex, name=QCA.translate("main_window_tabs", "Additional Embeddings"), parent=parent)
-        self.children = {}
+    children = []
+    def __init__(self, loader, parent=None):
+        super().__init__(loader, "modules/ui/views/tabs/additional_embeddings.ui", name=QCA.translate("main_window_tabs", "Additional Embeddings"), parent=parent)
 
     def connectUIBehavior(self):
         self.ui.addEmbeddingBtn.clicked.connect(lambda: self.__appendEmbedding())
 
+        callback = self.__updateEmbeddings()
+        QtW.QApplication.instance().embeddingsChanged.connect(callback)
+        QtW.QApplication.instance().stateChanged.connect(callback)
+
+
+        # At the beginning invalidate the gui.
+        callback()
+
+
+    def __updateEmbeddings(self):
+        def f():
+            self.ui.listWidget.clear() # TODO: Problem: THIS DESTROYS C++ OBJECTS, BUT DOES NOT DISCONNECT SIGNALS
+            self.children = []
+
+            for idx, _ in enumerate(StateModel.instance().getState("additional_embeddings")):
+                wdg = EmbeddingController(self.loader, idx, parent=self)
+                self.children.append(wdg)
+                self._appendWidget(self.ui.listWidget, wdg, self_delete_fn=self.__deleteEmbedding(idx), self_clone_fn=self.__cloneEmbedding(idx))
+
+        return f
+
+    def __cloneEmbedding(self, idx):
+        def f():
+            StateModel.instance().clone_embedding(idx)
+            QtW.QApplication.instance().embeddingsChanged.emit()
+        return f
+
+    def __deleteEmbedding(self, idx):
+        def f():
+            StateModel.instance().delete_embedding(idx)
+            QtW.QApplication.instance().embeddingsChanged.emit()
+        return f
+
     def __appendEmbedding(self):
-        wdg = EmbeddingController(self.loader, len(self.children), state=self.state, parent=self)
-        self.children[len(self.children)] = wdg
-        self._appendWidget(self.ui.listWidget, wdg, self_delete_btn=True, self_clone_btn=True)
+        StateModel.instance().create_new_embedding()
+        QtW.QApplication.instance().embeddingsChanged.emit()

@@ -15,20 +15,17 @@ from modules.ui.controllers.tabs.embeddings_controller import EmbeddingsControll
 
 from modules.ui.controllers.windows.save_controller import SaveController
 
+from modules.ui.models.StateModel import StateModel
+
 from modules.util.enum.TrainingMethod import TrainingMethod
 from modules.util.enum.ModelType import ModelType
 
-from modules.ui.utils.ModelFlags import ModelFlags
+from modules.util.enum.ModelFlags import ModelFlags
 
 import webbrowser
 from PySide6.QtCore import QCoreApplication as QCA
 import PySide6.QtWidgets as QtW
 
-from modules.util import path_util
-from modules.util.path_util import write_json_atomic
-
-import json
-import os
 
 # Main window.
 class OnetrainerController(BaseController):
@@ -37,9 +34,9 @@ class OnetrainerController(BaseController):
         "training_method": "trainingTypeCmb"
     }
 
-    def __init__(self, loader, state=None, mutex=None):
-        super().__init__(loader, "modules/ui/views/windows/onetrainer.ui", state=state, mutex=mutex, name="OneTrainer", parent=None)
-        self.save_window = SaveController(self.loader, parent=self, state=state, mutex=mutex)
+    def __init__(self, loader):
+        super().__init__(loader, "modules/ui/views/windows/onetrainer.ui", name="OneTrainer", parent=None)
+        self.save_window = SaveController(self.loader, parent=self)
         self.children = {}
         self.__createTabs()
 
@@ -54,25 +51,9 @@ class OnetrainerController(BaseController):
         cb1()
         cb2()
 
-
-
-    def __load_available_config_names(self, dir="training_presets"):
-        configs = [("", path_util.canonical_join(dir, "#.json"))]
-        if os.path.isdir(dir):
-            for path in os.listdir(dir):
-                if path != "#.json":
-                    path = path_util.canonical_join(dir, path)
-                    if path.endswith(".json") and os.path.isfile(path):
-                        name = os.path.basename(path)
-                        name = os.path.splitext(name)[0]
-                        configs.append((name, path))
-            configs.sort()
-
-        return configs
-
     def __updateConfigs(self):
         def f():
-            configs = self.__load_available_config_names("training_presets") # TODO: refactor path
+            configs = StateModel.instance().load_available_config_names("training_presets")
             self.ui.configCmb.clear()
             self.save_window.ui.configCmb.clear()
             for k, v in configs:
@@ -115,7 +96,7 @@ class OnetrainerController(BaseController):
             ("lora", LoraController),
             ("embedding", EmbeddingsController)
         ]:
-            c = controller(self.loader, parent=self, state=self.state, mutex=self.mutex)
+            c = controller(self.loader, parent=self)
             self.children[name] = {"controller": c, "index": len(self.children)}
             self.ui.tabWidget.addTab(c.ui, c.name)
 
@@ -134,16 +115,9 @@ class OnetrainerController(BaseController):
         self.ui.configCmb.activated.connect(lambda idx: self.__loadConfig(self.ui.configCmb.currentData(), idx))
 
     def __loadConfig(self, config, idx=None):
-        try:
-            self.mutex.lock()
-            if os.path.exists(config):
-                with open(config, "r") as file:
-                    self.state.from_dict(json.load(file))
-        except Exception as e:
-            print(e)
-        finally:
-            self.mutex.unlock()
-        QtW.QApplication.instance().stateChanged.emit() # BUG: somehow this enters infinite loop?
+        StateModel.instance().load_config(config)
+        QtW.QApplication.instance().stateChanged.emit()
+        QtW.QApplication.instance().embeddingsChanged.emit()
         if idx is not None:
             self.ui.configCmb.setCurrentIndex(idx)
 
@@ -159,7 +133,7 @@ class OnetrainerController(BaseController):
         # TODO: also training_type allowed values must change here...
 
         QtW.QApplication.instance().modelChanged.emit(model_type, training_type)
-        QtW.QApplication.instance().aboutToQuit.connect(lambda: self.save_default()) # TODO: actually need to call __close() for tensorboard and workspace cleanup
+        QtW.QApplication.instance().aboutToQuit.connect(lambda: StateModel.instance().save_default()) # TODO: actually need to call __close() for tensorboard and workspace cleanup
 
 
     def __exportConfig(self):
@@ -168,28 +142,9 @@ class OnetrainerController(BaseController):
                                         filter=QCA.translate("filetype_filters", "JSON (*.json)"))
         if txt != "":
             filename = self._appendExtension(txt, flt)
-            self.mutex.lock()
-            with open(filename, "w") as f:
-                json.dump(self.state.to_pack_dict(secrets=False), f, indent=4)
-            self.mutex.unlock()
+            StateModel.instance().save_config(filename)
 
-    def _save_to_file(self, name):
-        name = path_util.safe_filename(name)
-        path = path_util.canonical_join("training_presets", f"{name}.json")
 
-        write_json_atomic(path, self.state.to_settings_dict(secrets=False))
-
-        return path
-
-    def __save_secrets(self, path):
-        write_json_atomic(path, self.state.secrets.to_dict())
-        return path
-
-    def save_default(self):
-        self.mutex.lock()
-        self._save_to_file("#")
-        self.__save_secrets("secrets.json")
-        self.mutex.unlock()
 
     def loadPresets(self):
         for e in ModelType.enabled_values(context="main_window"):

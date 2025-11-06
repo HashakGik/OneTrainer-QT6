@@ -9,5 +9,5 @@ class DataController(BaseController):
         "clear_cache_before_training": "clearCacheCbx"
     }
 
-    def __init__(self, loader, state=None, mutex=None, parent=None):
-        super().__init__(loader, "modules/ui/views/tabs/data.ui", state=state, mutex=mutex, name=QCA.translate("main_window_tabs", "Data"), parent=parent)
+    def __init__(self, loader, parent=None):
+        super().__init__(loader, "modules/ui/views/tabs/data.ui", name=QCA.translate("main_window_tabs", "Data"), parent=parent)

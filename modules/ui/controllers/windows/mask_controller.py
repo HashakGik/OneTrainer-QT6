@@ -5,8 +5,8 @@ from PySide6.QtCore import QCoreApplication as QCA
 from modules.util.enum.GenerateMasksModel import GenerateMasksModel, GenerateMasksAction
 
 class MaskController(BaseController):
-    def __init__(self, loader, state=None, mutex=None, parent=None):
-        super().__init__(loader, "modules/ui/views/windows/generate_mask.ui", state=state, mutex=mutex, name=None, parent=parent)
+    def __init__(self, loader, parent=None):
+        super().__init__(loader, "modules/ui/views/windows/generate_mask.ui", name=None, parent=parent)
 
     def connectUIBehavior(self):
         self.connectFileDialog(self.ui.folderBtn, self.ui.folderLed, is_dir=True, save=False, title=

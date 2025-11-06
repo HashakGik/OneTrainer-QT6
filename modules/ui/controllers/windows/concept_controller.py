@@ -9,10 +9,12 @@ from modules.util.enum.BalancingStrategy import BalancingStrategy
 from modules.util.enum.ConceptType import ConceptType
 from modules.util.enum.TrainingMethod import TrainingMethod
 
+from modules.ui.models.StateModel import StateModel
+
 
 class ConceptController(BaseController):
-    def __init__(self, loader, state=None, mutex=None, parent=None):
-        super().__init__(loader, "modules/ui/views/windows/concept.ui", state=state, mutex=mutex, name=None, parent=parent)
+    def __init__(self, loader, parent=None):
+        super().__init__(loader, "modules/ui/views/windows/concept.ui", name=None, parent=parent)
 
         #self.canvas = FigureCanvas(Figure(figsize=(8, 3))) # TODO: refactor magic numbers. Possibly suggest a size in pixel for default rendering.
         self.canvas = FigureWidget(parent=self.ui, zoom_tools=True, navigation_tools=True, edit_tools=True)
@@ -69,7 +71,7 @@ class ConceptController(BaseController):
 
         callback = self.__updateConceptType()
         QtW.QApplication.instance().modelChanged.connect(callback)
-        callback(self._getState("model_type"), self._getState("training_method"))
+        callback(StateModel.instance().getState("model_type"), StateModel.instance().getState("training_method"))
 
 
 

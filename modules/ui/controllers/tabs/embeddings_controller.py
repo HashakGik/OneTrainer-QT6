@@ -4,8 +4,17 @@ from modules.ui.utils.base_controller import BaseController
 from modules.util.enum.DataType import DataType
 
 class EmbeddingsController(BaseController):
-    def __init__(self, loader, state=None, mutex=None, parent=None):
-        super().__init__(loader, "modules/ui/views/tabs/embeddings.ui", state=state, mutex=mutex, name=QCA.translate("main_window_tabs", "Embeddings"), parent=parent)
+    state_ui_connections = {
+        "embedding.model_name": "baseEmbeddingLed",
+        "embedding.token_count": "tokenSbx",
+        "embedding.initial_embedding_text": "initialEmbeddingLed",
+        "embedding_weight_dtype": "embeddingDTypeCmb",
+        "embedding.placeholder": "placeholderLed",
+        "embedding.is_output_embedding": "outputCbx",
+    }
+
+    def __init__(self, loader, parent=None):
+        super().__init__(loader, "modules/ui/views/tabs/embeddings.ui", name=QCA.translate("main_window_tabs", "Embeddings"), parent=parent)
         pass
 
     def connectUIBehavior(self):

@@ -16,8 +16,8 @@ class BackupController(BaseController):
         "save_filename_prefix": "savePrefixLed"
     }
 
-    def __init__(self, loader, state=None, mutex=None, parent=None):
-        super().__init__(loader, "modules/ui/views/tabs/backup.ui", state=state, mutex=mutex, name=QCA.translate("main_window_tabs", "Backup"), parent=parent)
+    def __init__(self, loader, parent=None):
+        super().__init__(loader, "modules/ui/views/tabs/backup.ui", name=QCA.translate("main_window_tabs", "Backup"), parent=parent)
         pass
 
     def connectUIBehavior(self):

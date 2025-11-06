@@ -7,8 +7,8 @@ from modules.util.enum.DataType import DataType
 from modules.util.enum.ModelFormat import ModelFormat
 
 class ConvertController(BaseController):
-    def __init__(self, loader, state=None, mutex=None, parent=None):
-        super().__init__(loader, "modules/ui/views/windows/convert.ui", state=state, mutex=mutex, name=None, parent=parent)
+    def __init__(self, loader, parent=None):
+        super().__init__(loader, "modules/ui/views/windows/convert.ui", name=None, parent=parent)
 
     def connectUIBehavior(self):
         self.connectFileDialog(self.ui.inputBtn, self.ui.inputLed, is_dir=False, save=False,
