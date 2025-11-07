@@ -39,7 +39,7 @@ Mouse wheel: increase or decrease brush size
         self.dataset = dir
 
     def connectUIBehavior(self):
-        self.ui.openBtn.clicked.connect(self.__openDataset)
-        self.ui.generateMaskBtn.clicked.connect(lambda: self.openWindow(self.mask_window, fixed_size=True))
-        self.ui.generateCaptionsBtn.clicked.connect(lambda: self.openWindow(self.caption_window, fixed_size=True))
-        self.ui.helpBtn.clicked.connect(lambda: self.help_window.show())
+        self.connect(self.ui.openBtn.clicked, self.__openDataset)
+        self.connect(self.ui.generateMaskBtn.clicked, lambda: self.openWindow(self.mask_window, fixed_size=True))
+        self.connect(self.ui.generateCaptionsBtn.clicked, lambda: self.openWindow(self.caption_window, fixed_size=True))
+        self.connect(self.ui.helpBtn.clicked, lambda: self.help_window.show())

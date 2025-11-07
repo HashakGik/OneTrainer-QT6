@@ -614,8 +614,8 @@ class OptimizerController(BaseController):
 
 
         callback = self.__updateOptimizer(from_index=False)
-        QtW.QApplication.instance().optimizerChanged.connect(callback)
-        QtW.QApplication.instance().stateChanged.connect(lambda: callback(StateModel.instance().getState("optimizer.optimizer")))
+        self.connect(QtW.QApplication.instance().optimizerChanged, callback)
+        self.connect(QtW.QApplication.instance().stateChanged, lambda: callback(StateModel.instance().getState("optimizer.optimizer")))
 
     def setup(self):
         row = 0
@@ -690,5 +690,5 @@ class OptimizerController(BaseController):
         QtW.QApplication.instance().optimizerChanged.emit(optimizer)
 
     def connectUIBehavior(self):
-        self.ui.optimizerCmb.activated.connect(self.__updateOptimizer(from_index=True))
-        self.ui.loadDefaultsBtn.clicked.connect(lambda: self.__loadDefaults())
+        self.connect(self.ui.optimizerCmb.activated, self.__updateOptimizer(from_index=True))
+        self.connect(self.ui.loadDefaultsBtn.clicked, lambda: self.__loadDefaults())

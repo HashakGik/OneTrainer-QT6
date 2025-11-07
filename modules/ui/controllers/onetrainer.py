@@ -41,15 +41,17 @@ class OnetrainerController(BaseController):
         self.__createTabs()
 
         cb1 = self.__updateModel()
-        self.ui.modelTypeCmb.activated.connect(cb1)
+        self.connect(self.ui.modelTypeCmb.activated, cb1)
 
         cb2 = self.__updateConfigs()
-        QtW.QApplication.instance().stateChanged.connect(cb2)
+        self.connect(QtW.QApplication.instance().stateChanged, cb2)
 
 
         # At the beginning invalidate the gui.
         cb1()
         cb2()
+
+        # TODO: AT STARTUP LOAD #.json!
 
     def __updateConfigs(self):
         def f():
@@ -105,14 +107,14 @@ class OnetrainerController(BaseController):
 
 
     def connectUIBehavior(self):
-        self.ui.wikiBtn.clicked.connect(lambda: webbrowser.open("https://github.com/Nerogar/OneTrainer/wiki", new=0, autoraise=False))
-        self.ui.saveConfigBtn.clicked.connect(lambda: self.openWindow(self.save_window, fixed_size=True))
-        self.ui.exportBtn.clicked.connect(lambda: self.__exportConfig())
+        self.connect(self.ui.wikiBtn.clicked, lambda: webbrowser.open("https://github.com/Nerogar/OneTrainer/wiki", new=0, autoraise=False))
+        self.connect(self.ui.saveConfigBtn.clicked, lambda: self.openWindow(self.save_window, fixed_size=True))
+        self.connect(self.ui.exportBtn.clicked, lambda: self.__exportConfig())
 
-        self.ui.trainingTypeCmb.activated.connect(lambda _: self.__changeModel())
-        self.ui.modelTypeCmb.activated.connect(lambda _: self.__changeModel())
+        self.connect(self.ui.trainingTypeCmb.activated, lambda _: self.__changeModel())
+        self.connect(self.ui.modelTypeCmb.activated, lambda _: self.__changeModel())
 
-        self.ui.configCmb.activated.connect(lambda idx: self.__loadConfig(self.ui.configCmb.currentData(), idx))
+        self.connect(self.ui.configCmb.activated, lambda idx: self.__loadConfig(self.ui.configCmb.currentData(), idx))
 
     def __loadConfig(self, config, idx=None):
         StateModel.instance().load_config(config)
@@ -121,8 +123,6 @@ class OnetrainerController(BaseController):
         if idx is not None:
             self.ui.configCmb.setCurrentIndex(idx)
 
-        # TODO: remember to emit stateChanged
-        pass
 
     def __changeModel(self):
         model_type = self.ui.modelTypeCmb.currentData()
@@ -133,7 +133,7 @@ class OnetrainerController(BaseController):
         # TODO: also training_type allowed values must change here...
 
         QtW.QApplication.instance().modelChanged.emit(model_type, training_type)
-        QtW.QApplication.instance().aboutToQuit.connect(lambda: StateModel.instance().save_default()) # TODO: actually need to call __close() for tensorboard and workspace cleanup
+        self.connect(QtW.QApplication.instance().aboutToQuit, lambda: StateModel.instance().save_default()) # TODO: actually need to call __close() for tensorboard and workspace cleanup
 
 
     def __exportConfig(self):

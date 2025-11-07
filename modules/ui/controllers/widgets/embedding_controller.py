@@ -28,7 +28,7 @@ class EmbeddingController(BaseController):
         self._connectStateUi(self.dynamic_state_ui_connections, StateModel.instance(), signal=None, idx=self.idx)
 
         callback = self.__updateEmbedding()
-        QtW.QApplication.instance().embeddingsChanged.connect(callback)
+        self.connect(QtW.QApplication.instance().embeddingsChanged, callback)
         callback()
 
 

@@ -3,12 +3,11 @@ from modules.util import path_util
 
 import os
 
+# Base class for config models. It provides a Singleton interface and a single mutex shared across all the subclasses.
 class SingletonConfigModel:
     _instance = None
     config = None
-
-    def __init__(self):
-        self.mutex = QBasicMutex()
+    mutex = QBasicMutex()
 
     @classmethod
     def instance(cls):

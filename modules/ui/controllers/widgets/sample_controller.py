@@ -22,13 +22,13 @@ class SampleController(BaseController):
         self._connectStateUi(self.dynamic_state_ui_connections, SampleModel.instance(), signal=None, idx=self.idx)
 
         callback = self.__updateSample()
-        QtW.QApplication.instance().samplesChanged.connect(callback)
+        self.connect(QtW.QApplication.instance().samplesChanged, callback)
         callback()
 
         # TODO: TrainConfig.samples is always NONE -> Samples are serialized elsewhere!
 
     def connectUIBehavior(self):
-        self.ui.openWindowBtn.clicked.connect(lambda: self.__openSampleWindow())
+        self.connect(self.ui.openWindowBtn.clicked, lambda: self.__openSampleWindow())
 
     def __updateSample(self):
         def f():

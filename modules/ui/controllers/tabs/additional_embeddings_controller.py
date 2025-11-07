@@ -13,11 +13,11 @@ class AdditionalEmbeddingsController(BaseController):
         super().__init__(loader, "modules/ui/views/tabs/additional_embeddings.ui", name=QCA.translate("main_window_tabs", "Additional Embeddings"), parent=parent)
 
     def connectUIBehavior(self):
-        self.ui.addEmbeddingBtn.clicked.connect(lambda: self.__appendEmbedding())
+        self.connect(self.ui.addEmbeddingBtn.clicked, lambda: self.__appendEmbedding())
 
         callback = self.__updateEmbeddings()
-        QtW.QApplication.instance().embeddingsChanged.connect(callback)
-        QtW.QApplication.instance().stateChanged.connect(callback)
+        self.connect(QtW.QApplication.instance().embeddingsChanged, callback)
+        self.connect(QtW.QApplication.instance().stateChanged, callback)
 
 
         # At the beginning invalidate the gui.
@@ -26,7 +26,10 @@ class AdditionalEmbeddingsController(BaseController):
 
     def __updateEmbeddings(self):
         def f():
-            self.ui.listWidget.clear() # TODO: Problem: THIS DESTROYS C++ OBJECTS, BUT DOES NOT DISCONNECT SIGNALS
+            for c in self.children:
+                c.disconnectAll()
+
+            self.ui.listWidget.clear()
             self.children = []
 
             for idx, _ in enumerate(StateModel.instance().getState("additional_embeddings")):

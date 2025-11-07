@@ -23,7 +23,7 @@ class SampleParamsController(BaseController):
                                filters=QCA.translate("filetype_filters",
                                                      "Image (*.jpg, *.jpeg, *.tif, *.png, *.webp)"))
 
-        QtW.QApplication.instance().openSample.connect(self.__updateSample())
+        self.connect(QtW.QApplication.instance().openSample, self.__updateSample())
         # TODO: THIS IS A CLASSIC WINDOW, NO NEED TO CONNECT ANYTHING IN READ/WRITE. PARENTS WILL READ DATA AND DECIDE WHAT TO DO WITH IT
 
     def __updateSample(self):

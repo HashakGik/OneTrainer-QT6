@@ -16,8 +16,6 @@ import copy
 
 class StateModel(SingletonConfigModel):
     def __init__(self):
-        super().__init__()
-
         self.config = TrainConfig.default_values()
 
 
@@ -70,6 +68,19 @@ class StateModel(SingletonConfigModel):
     def __save_secrets(self, path):
         write_json_atomic(path, self.config.secrets.to_dict())
         return path
+
+    def setSchedulerParams(self, idx, key, value):
+        # TODO: Check that no two keys are shared?
+        try:
+            self.mutex.lock()
+
+            if len(self.config.scheduler_params) == idx:
+                self.config.scheduler_params.append({"key": key, "value": value})
+            elif len(self.config.scheduler_params) > idx:
+                self.config.scheduler_params[idx] = {"key": key, "value": value}
+
+        finally:
+            self.mutex.unlock()
 
     def create_new_embedding(self):
         try:

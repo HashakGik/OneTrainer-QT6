@@ -11,7 +11,7 @@ class OnetrainerApplication(QApplication):
 
     # Signals for dynamic widget lists and sub windows. The passed value is the currently selected element.
     conceptsChanged = Signal()
-    singleConceptChanged = Signal(int)
+    openConcept = Signal(int)
 
     samplesChanged = Signal()
     openSample = Signal(int)

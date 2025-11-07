@@ -20,6 +20,7 @@ from modules.util.enum.GradientCheckpointingMethod import GradientCheckpointingM
 
 from modules.ui.models.StateModel import StateModel
 
+
 class TrainingController(BaseController):
     state_ui_connections = {
         "optimizer.optimizer": "optimizerCmb",
@@ -129,6 +130,7 @@ class TrainingController(BaseController):
         "prior.attention_mask": "transformerAttnMaskCbx",
         "prior.guidance_scale": "transformerGuidanceSbx",
 
+        "custom_learning_rate_scheduler": "schedulerClassLed", # TODO: DOUBLE CHECK WHETHER THE STRING CAN BE PASSED AS IS OR MODIFIED
     }
 
     def __init__(self, loader, parent=None):
@@ -137,13 +139,19 @@ class TrainingController(BaseController):
         self.optimizer_window = OptimizerController(loader, parent=self)
 
         callback = self.__updateModel()
-        QtW.QApplication.instance().modelChanged.connect(callback)
+        self.connect(QtW.QApplication.instance().modelChanged, callback)
+
+        cb = self.__enableCustomScheduler() # This must be connected after __updateModel, otherwise it will not enable/disable custom parameters correctly
+        self.connect(self.ui.schedulerCmb.activated, cb)
+        self.connect(QtW.QApplication.instance().stateChanged, cb)
+
 
 
         self.__postConnectUIBehavior()
         # At the beginning invalidate the gui.
         callback(StateModel.instance().getState("model_type"), StateModel.instance().getState("training_method"))
         self.optimizer_window.ui.optimizerCmb.setCurrentIndex(self.ui.optimizerCmb.currentIndex())
+        cb()
 
 
     def __updateOptimizer(self):
@@ -205,7 +213,6 @@ class TrainingController(BaseController):
             self.ui.te4ClipSkipLbl.setVisible(ModelFlags.DISABLE_TE4_LAYER_SKIP not in flags)
             self.ui.te4ClipSkipSbx.setVisible(ModelFlags.DISABLE_TE4_LAYER_SKIP not in flags)
 
-            pass
         return f
 
     def connectInputValidation(self):
@@ -214,17 +221,60 @@ class TrainingController(BaseController):
     def connectUIBehavior(self):
 
 
-        self.ui.layerFilterCmb.activated.connect(lambda _: self.__connectLayerFilter())
+        self.connect(self.ui.layerFilterCmb.activated, lambda _: self.__connectLayerFilter())
 
 
-        # TODO: schedulerCmb enable tableWidget and schedulerClassLed if "CUSTOM" is selected.
-        # tableWidget should allow to insert new rows if <Enter> is pressed on a non empty last row
-        pass
+
+        cb2 = self.__updateSchedulerParams()
+        self.connect(QtW.QApplication.instance().stateChanged, cb2)
+
+        cb2()
+
+        self.connect(self.ui.tableWidget.currentCellChanged, self.__changeCell())
+
+
+    def __changeCell(self):
+        def f(currentRow, currentColumn, previousRow, previousColumn):
+            #row, column = self.ui.tableWidget.selectedIndexes()[0].row(), self.ui.tableWidget.selectedIndexes()[0].column()
+            total_rows = self.ui.tableWidget.rowCount()
+
+            key = self.ui.tableWidget.item(previousRow, 0)
+            value = self.ui.tableWidget.item(previousRow, 1)
+
+            if key is not None and value is not None and key.text() != "" and value.text() != "":
+                StateModel.instance().setSchedulerParams(previousRow, key.text(), value.text())
+
+                if previousRow == total_rows - 1 and previousColumn == 1:
+                    self.ui.tableWidget.insertRow(total_rows)
+                    self.ui.tableWidget.editItem(self.ui.tableWidget.item(total_rows, 0))
+                    self.ui.tableWidget.setCurrentCell(total_rows, 0)
+
+        return f
+
+    def __updateSchedulerParams(self):
+        def f():
+            param_dict = StateModel.instance().getState("scheduler_params")
+
+            self.ui.tableWidget.clearContents()
+            for idx, param in enumerate(param_dict):
+                self.ui.tableWidget.insertRow(idx)
+                self.ui.tableWidget.setItem(idx, 0, QtW.QTableWidgetItem(param["key"]))
+                self.ui.tableWidget.setItem(idx, 1, QtW.QTableWidgetItem(param["value"]))
+        return f
+
+    def __enableCustomScheduler(self):
+        def f():
+            # TODO: BUG: IT DOESN'T ALWAYS WORK
+            self.ui.tableWidget.setEnabled(self.ui.schedulerCmb.currentData() == LearningRateScheduler.CUSTOM)
+            self.ui.schedulerClassLed.setEnabled(self.ui.schedulerCmb.currentData() == LearningRateScheduler.CUSTOM)
+            self.ui.schedulerLbl.setEnabled(self.ui.schedulerCmb.currentData() == LearningRateScheduler.CUSTOM)
+        return f
+
 
     # This is called manually at the end of the constructor.
     def __postConnectUIBehavior(self): # TODO: REFACTOR! this becomes setup()
-        self.ui.optimizerBtn.clicked.connect(lambda: self.openWindow(self.optimizer_window, fixed_size=True))
-        self.ui.optimizerCmb.activated.connect(self.__updateOptimizer())
+        self.connect(self.ui.optimizerBtn.clicked, lambda: self.openWindow(self.optimizer_window, fixed_size=True))
+        self.connect(self.ui.optimizerCmb.activated, self.__updateOptimizer())
 
         for e in Optimizer.enabled_values():
             self.optimizer_window.ui.optimizerCmb.addItem(e.pretty_print(), userData=e)

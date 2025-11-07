@@ -23,7 +23,7 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>-518</y>
+        <y>0</y>
         <width>1271</width>
         <height>1561</height>
        </rect>
@@ -1047,10 +1047,13 @@
              <item row="4" column="0" colspan="3">
               <widget class="QTableWidget" name="tableWidget">
                <property name="enabled">
-                <bool>false</bool>
+                <bool>true</bool>
                </property>
-               <property name="sizeAdjustPolicy">
-                <enum>QAbstractScrollArea::SizeAdjustPolicy::AdjustToContents</enum>
+               <property name="editTriggers">
+                <set>QAbstractItemView::EditTrigger::AnyKeyPressed|QAbstractItemView::EditTrigger::EditKeyPressed|QAbstractItemView::EditTrigger::SelectedClicked</set>
+               </property>
+               <property name="selectionMode">
+                <enum>QAbstractItemView::SelectionMode::NoSelection</enum>
                </property>
                <property name="showGrid">
                 <bool>true</bool>
@@ -1126,7 +1129,7 @@
              <item row="3" column="0">
               <widget class="QLabel" name="schedulerLbl">
                <property name="enabled">
-                <bool>false</bool>
+                <bool>true</bool>
                </property>
                <property name="text">
                 <string>Class Name</string>
@@ -1205,7 +1208,7 @@
               </widget>
              </item>
              <item row="3" column="1" colspan="2">
-              <widget class="SNLineEdit" name="schedulerClassLed" native="true"/>
+              <widget class="QLineEdit" name="schedulerClassLed"/>
              </item>
              <item row="11" column="1" colspan="2">
               <widget class="QSpinBox" name="accumulationStepsSbx">

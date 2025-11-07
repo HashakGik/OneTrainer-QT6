@@ -31,8 +31,8 @@ class ToolsController(BaseController):
             self.children[window].ui.activateWindow()
 
     def connectUIBehavior(self):
-        self.ui.datasetBtn.clicked.connect(lambda: self.__open("dataset"))
-        self.ui.videoBtn.clicked.connect(lambda: self.__open("video"))
-        self.ui.convertBtn.clicked.connect(lambda: self.__open("convert"))
-        self.ui.samplingBtn.clicked.connect(lambda: self.__open("sample"))
-        self.ui.profilingBtn.clicked.connect(lambda: self.__open("profile"))
+        self.connect(self.ui.datasetBtn.clicked, lambda: self.__open("dataset"))
+        self.connect(self.ui.videoBtn.clicked, lambda: self.__open("video"))
+        self.connect(self.ui.convertBtn.clicked, lambda: self.__open("convert"))
+        self.connect(self.ui.samplingBtn.clicked, lambda: self.__open("sample"))
+        self.connect(self.ui.profilingBtn.clicked, lambda: self.__open("profile"))

@@ -15,7 +15,7 @@ class NewSampleController(BaseController):
         self.ui.paramsLay.addWidget(self.samplingParams.ui)
 
     def connectUIBehavior(self):
-        self.ui.okBtn.clicked.connect(self.__saveSample())
+        self.connect(self.ui.okBtn.clicked, self.__saveSample())
 
     def __saveSample(self):
         def f():

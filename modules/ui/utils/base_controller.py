@@ -12,20 +12,23 @@ from modules.ui.utils.sn_line_edit import SNLineEdit
 from modules.ui.models.StateModel import StateModel
 
 # TODO: CLEANUP:
+# 0) Move to models.ui.controllers
 # 1) Maybe it is cleaner to define callbacks always in __init__, instead of connectUIBehavior
 # 2) Naming convention is all over the place (camelCase, snake_case, inconsistent visibility __method vs _method vs method)
 # 3) Some callbacks are invoked as lambdas, others as self.__method() which returns a function f(). Choose one!
 # 4) Finite-state machine like behavior needs to be double checked/simplified.
+# 5) Replace mutex and blockSignals with context-management syntax ("with" block) for cleaner critical region management
 
 # Abstract controller with some utility methods.
 class BaseController:
-    state_ui_connections = {}
-
+    state_ui_connections = {} # Class attribute, but it will be overwritten by every subclass.
     def __init__(self, loader, ui_file, name=None, parent=None, **kwargs):
         self.loader = loader
         self.parent = parent
         self.ui = loader.load(ui_file, parentWidget=parent.ui if parent is not None else None)
         self.name = name # TODO: When necessary, derived classes will set this with QCA.translate(context, "STATIC STRING") since lupdate is a static analyzer!
+
+        self.connections = []
 
         self.setup()
 
@@ -34,13 +37,23 @@ class BaseController:
         self.loadPresets()
         self._connectStateUi(self.state_ui_connections, StateModel.instance(), signal=QtW.QApplication.instance().stateChanged, **kwargs)
 
+        # TODO: connect disconnectAll to some signal (eg aboutToClose) or not?
 
         # TODO: IMPORTANT!!! For IO-bound calls use ASYNC SLOTS!: https://stackoverflow.com/questions/74196406/pyqt6-asyncio-connect-an-async-function-as-a-slot
 
-    # TODO: refactor to use this method for OptimizerControlelr and TrainingController, to make connections cleaner
+    # TODO: refactor to use this method for OptimizerController and TrainingController, to make connections cleaner
     # This is called before elements are connected together, therefore it can be used to create dynamic GUI elements programmatically.
     def setup(self):
         pass
+
+    def connect(self, signal, slot): # TODO: REFACTOR EVERY CONNECTION TO USE THIS METHOD!
+        c = signal.connect(slot)
+        self.connections.append(c)
+
+    def disconnectAll(self):
+        for c in self.connections:
+            self.ui.disconnect(c)
+        self.connections = []
 
     def _appendExtension(self, file, filter):
         patterns = filter.split("(")[1].split(")")[0].split(", ")
@@ -65,19 +78,21 @@ class BaseController:
                 if ui_elem is None:
                     print("ERROR: {} not found.".format(ui_name))
                 else:
+                    c = None
                     if isinstance(ui_elem, QtW.QCheckBox):
-                        ui_elem.stateChanged.connect(self.__readCbx(ui_elem, var, model))
+                        self.connect(ui_elem.stateChanged, self.__readCbx(ui_elem, var, model))
                     elif isinstance(ui_elem, QtW.QComboBox):
-                        ui_elem.activated.connect(self.__readCbm(ui_elem, var, model))
+                        self.connect(ui_elem.activated, self.__readCbm(ui_elem, var, model))
                     elif isinstance(ui_elem, QtW.QSpinBox) or isinstance(ui_elem, QtW.QDoubleSpinBox):
-                        ui_elem.valueChanged.connect(self.__readSbx(ui_elem, var, model))
+                        self.connect(ui_elem.valueChanged, self.__readSbx(ui_elem, var, model))
                     elif isinstance(ui_elem, SNLineEdit): # IMPORTANT: keep this above base class!
-                        ui_elem.editingFinished.connect(self.__readSNLed(ui_elem, var, model))
+                        self.connect(ui_elem.editingFinished, self.__readSNLed(ui_elem, var, model))
                     elif isinstance(ui_elem, QtW.QLineEdit):
-                        ui_elem.editingFinished.connect(self.__readLed(ui_elem, var, model))
+                        self.connect(ui_elem.editingFinished, self.__readLed(ui_elem, var, model))
+
 
                     if signal is not None:
-                        signal.connect(functools.partial(self._writeControl,ui_elem, var, model))
+                        self.connect(signal, functools.partial(self._writeControl,ui_elem, var, model))
 
     # These methods cannot use directly lambdas, because variable names would be reassigned within the loop.
     @staticmethod
@@ -119,8 +134,8 @@ class BaseController:
                 elif isinstance(ui_elem, QtW.QLineEdit):
                     ui_elem.setText(val)
             ui_elem.blockSignals(False)
-        except RuntimeError as e:
-            #print(e)
+        except Exception as e:
+            print(e)
             pass
 
 
@@ -153,7 +168,7 @@ class BaseController:
                     if txt != "":
                         elem.setText(self._removeWorkingDir(txt))
 
-        tool_button.clicked.connect(functools.partial(f, edit_box))
+        self.connect(tool_button.clicked, functools.partial(f, edit_box))
 
     def _removeWorkingDir(self, txt):
         cwd = os.getcwd()
@@ -169,10 +184,10 @@ class BaseController:
         list_widget.setItemWidget(item, controller.ui)
 
         if self_delete_fn is not None:
-            controller.ui.deleteBtn.clicked.connect(self_delete_fn)
+            self.connect(controller.ui.deleteBtn.clicked, self_delete_fn)
 
         if self_clone_fn is not None:
-            controller.ui.cloneBtn.clicked.connect(self_clone_fn)
+            self.connect(controller.ui.cloneBtn.clicked, self_clone_fn)
 
     def openWindow(self, controller, fixed_size=False):
         if fixed_size:

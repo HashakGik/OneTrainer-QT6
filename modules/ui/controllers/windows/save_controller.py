@@ -10,8 +10,8 @@ class SaveController(BaseController):
 
 
     def connectUIBehavior(self):
-        self.ui.cancelBtn.clicked.connect(lambda: self.ui.hide())
-        self.ui.okBtn.clicked.connect(lambda: self.save())
+        self.connect(self.ui.cancelBtn.clicked, lambda: self.ui.hide())
+        self.connect(self.ui.okBtn.clicked, lambda: self.save())
 
 
     def save(self):
@@ -21,5 +21,8 @@ class SaveController(BaseController):
 
             QtW.QApplication.instance().stateChanged.emit()
             self.ui.hide()
+
+            # TODO: SET PARENT configCmb TO NEWLY SAVED NAME -> Probably requires new global signal configChanged(idx) because at this point, parent configCmb has not yet updated the content.
+
         #else: # TODO: alert empty file, check existing files.
         #    pass

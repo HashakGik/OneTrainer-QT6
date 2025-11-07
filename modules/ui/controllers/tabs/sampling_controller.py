@@ -28,17 +28,17 @@ class SamplingController(BaseController):
         self.sample_window = NewSampleController(loader, parent=self)
 
         cb = self.__updateSamples() # Requires self.sample_window
-        QtW.QApplication.instance().samplesChanged.connect(cb)
-        QtW.QApplication.instance().stateChanged.connect(cb)
+        self.connect(QtW.QApplication.instance().samplesChanged, cb)
+        self.connect(QtW.QApplication.instance().stateChanged, cb)
         cb()
 
         cb2 = self.__loadConfig()
-        self.ui.configCmb.textActivated.connect(cb2)
+        self.connect(self.ui.configCmb.textActivated, cb2)
         cb2(self.ui.configCmb.currentText())
 
     def connectUIBehavior(self):
-        self.ui.addSampleBtn.clicked.connect(lambda: self.__appendSample())
-        self.ui.disableBtn.clicked.connect(lambda: self.__disableSamples())
+        self.connect(self.ui.addSampleBtn.clicked, self.__appendSample())
+        self.connect(self.ui.disableBtn.clicked, self.__disableSamples())
 
         # TODO: sampleNowBtn, manualSampleBtn
         # TODO: configCmb read/write/ on stateChanged reload
@@ -48,11 +48,11 @@ class SamplingController(BaseController):
 
 
         cb3 = self.__updateConfigs()
-        QtW.QApplication.instance().stateChanged.connect(cb3)
+        self.connect(QtW.QApplication.instance().stateChanged, cb3)
 
         cb4 = self.__saveConfig()
-        QtW.QApplication.instance().aboutToQuit.connect(cb4)
-        QtW.QApplication.instance().samplesChanged.connect(cb4)
+        self.connect(QtW.QApplication.instance().aboutToQuit, cb4)
+        self.connect(QtW.QApplication.instance().samplesChanged, cb4)
         # TODO: this callback should also be invoked when training/sampling starts
 
         # At the beginning invalidate the gui.
@@ -63,13 +63,11 @@ class SamplingController(BaseController):
         def f(filename):
             SampleModel.instance().load_config(filename)
             QtW.QApplication.instance().samplesChanged.emit()
-            pass
         return f
 
     def __saveConfig(self):
         def f():
             SampleModel.instance().save_config()
-            pass
         return f
 
     def __updateConfigs(self):
@@ -78,7 +76,6 @@ class SamplingController(BaseController):
             if len(configs) == 0:
                 configs.append(("samples", "training_samples/samples.json"))
 
-
             self.ui.configCmb.clear()
             for k, v in configs:
                 self.ui.configCmb.addItem(k, userData=v)
@@ -86,7 +83,11 @@ class SamplingController(BaseController):
 
     def __updateSamples(self):
         def f():
-            self.ui.listWidget.clear() # TODO: Problem: THIS DESTROYS C++ OBJECTS, BUT DOES NOT DISCONNECT SIGNALS
+
+            for c in self.children:
+                c.disconnectAll()
+
+            self.ui.listWidget.clear()
             self.children = []
 
             for idx, _ in enumerate(SampleModel.instance().getState("")):
@@ -97,17 +98,16 @@ class SamplingController(BaseController):
         return f
 
     def __appendSample(self):
-        SampleModel.instance().create_new_sample()
-        QtW.QApplication.instance().samplesChanged.emit()
-        #wdg = SampleController(self.loader, self.sample_window, len(self.children), parent=self)
-        #self.children.append(wdg)
-        #self._appendWidget(self.ui.listWidget, wdg, self_delete_fn=True, self_clone_fn=True)
-        pass
+        def f():
+            SampleModel.instance().create_new_sample()
+            QtW.QApplication.instance().samplesChanged.emit()
+        return f
 
     def __disableSamples(self):
-        pass
-        SampleModel.instance().disable_samples()
-        QtW.QApplication.instance().samplesChanged.emit()
+        def f():
+            SampleModel.instance().disable_samples()
+            QtW.QApplication.instance().samplesChanged.emit()
+        return f
 
     def __cloneSample(self, idx):
         def f():

@@ -35,4 +35,4 @@ class VideoController(BaseController):
         self.connectFileDialog(self.ui.output3Btn, self.ui.output3Led, is_dir=True, save=True,
                                title=QCA.translate("dialog_window", "Save Video directory"))
 
-        self.ui.infoBtn.clicked.connect(lambda: webbrowser.open("https://github.com/yt-dlp/yt-dlp?tab=readme-ov-file#usage-and-options", new=0, autoraise=False))
+        self.connect(self.ui.infoBtn.clicked, lambda: webbrowser.open("https://github.com/yt-dlp/yt-dlp?tab=readme-ov-file#usage-and-options", new=0, autoraise=False))

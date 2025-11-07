@@ -27,13 +27,13 @@ class LoraController(BaseController):
                                title=QCA.translate("dialog_window", "Open LoRA/LoHA base model"),
                                filters=QCA.translate("filetype_filters", "Safetensors (*.safetensors);;Diffusers (model_index.json);;Checkpoints (*.ckpt, *.pt, *.bin);;All Files (*.*)")) # TODO: Maybe refactor filters in ENUM?
 
-        self.ui.typeCmb.activated.connect(lambda: self.ui.doraFrm.setEnabled(self.ui.typeCmb.currentData() == PeftType.LORA))
+        self.connect(self.ui.typeCmb.activated, lambda: self.ui.doraFrm.setEnabled(self.ui.typeCmb.currentData() == PeftType.LORA))
 
 
 
     def connectInputValidation(self):
         # Alpha cannot be higher than rank.
-        self.ui.rankSbx.valueChanged.connect(lambda x: (self.ui.alphaSbx.setMaximum(x)))
+        self.connect(self.ui.rankSbx.valueChanged, lambda x: (self.ui.alphaSbx.setMaximum(x)))
 
 
     def loadPresets(self):
