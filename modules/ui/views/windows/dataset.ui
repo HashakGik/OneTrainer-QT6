@@ -29,45 +29,20 @@
    <bool>true</bool>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="1" column="13">
-    <widget class="QToolButton" name="toolButton">
+   <item row="0" column="12">
+    <widget class="QPushButton" name="helpBtn">
      <property name="text">
-      <string>&lt;</string>
+      <string>Help</string>
      </property>
     </widget>
    </item>
-   <item row="3" column="0">
-    <widget class="QLabel" name="label_5">
-     <property name="text">
-      <string>Caption Filter</string>
-     </property>
-    </widget>
+   <item row="7" column="1">
+    <widget class="QLineEdit" name="lineEdit_2"/>
    </item>
-   <item row="2" column="0">
-    <widget class="QLabel" name="label_4">
+   <item row="0" column="7" colspan="2">
+    <widget class="QCheckBox" name="includeSubdirCbx">
      <property name="text">
-      <string>File/Path Filter</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="9">
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>Brush Alpha</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="11">
-    <widget class="QPushButton" name="pushButton_2">
-     <property name="text">
-      <string>Bulk Caption Edit</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="14">
-    <widget class="QToolButton" name="toolButton_2">
-     <property name="text">
-      <string>&gt;</string>
+      <string>Include Subdirectories</string>
      </property>
     </widget>
    </item>
@@ -78,37 +53,13 @@
      </property>
     </widget>
    </item>
-   <item row="2" column="3">
+   <item row="6" column="3">
     <widget class="QComboBox" name="comboBox"/>
    </item>
-   <item row="0" column="6">
-    <widget class="QPushButton" name="pushButton_3">
+   <item row="6" column="0">
+    <widget class="QLabel" name="label_4">
      <property name="text">
-      <string>Browse</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="12">
-    <widget class="QPushButton" name="pushButton_6">
-     <property name="text">
-      <string>Save</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="1">
-    <widget class="QLineEdit" name="lineEdit_2"/>
-   </item>
-   <item row="0" column="8" colspan="2">
-    <widget class="QCheckBox" name="includeSubdirCbx">
-     <property name="text">
-      <string>Include Subdirectories</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="5">
-    <widget class="QPushButton" name="drawBtn">
-     <property name="text">
-      <string>Draw</string>
+      <string>File/Path Filter</string>
      </property>
     </widget>
    </item>
@@ -119,57 +70,27 @@
      </property>
     </widget>
    </item>
-   <item row="4" column="0" rowspan="2" colspan="4">
+   <item row="7" column="0">
+    <widget class="QLabel" name="label_5">
+     <property name="text">
+      <string>Caption Filter</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="6">
+    <widget class="QPushButton" name="pushButton_3">
+     <property name="text">
+      <string>Browse</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="0" rowspan="2" colspan="4">
     <widget class="QListView" name="listView"/>
    </item>
-   <item row="2" column="1">
-    <widget class="QLineEdit" name="lineEdit"/>
-   </item>
-   <item row="0" column="15">
-    <widget class="QPushButton" name="helpBtn">
+   <item row="0" column="11">
+    <widget class="QPushButton" name="pushButton_2">
      <property name="text">
-      <string>Help</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="10">
-    <widget class="QPushButton" name="pushButton_4">
-     <property name="text">
-      <string>Clear all</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="0" colspan="2">
-    <widget class="QLabel" name="label_3">
-     <property name="text">
-      <string>NUMBER OF FILES</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="0">
-    <widget class="QPushButton" name="openBtn">
-     <property name="text">
-      <string>Open</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="7">
-    <spacer name="horizontalSpacer">
-     <property name="orientation">
-      <enum>Qt::Orientation::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>40</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="1" column="11">
-    <widget class="QPushButton" name="pushButton_5">
-     <property name="text">
-      <string>Reset</string>
+      <string>Bulk Caption Edit</string>
      </property>
     </widget>
    </item>
@@ -180,40 +101,33 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="15">
-    <widget class="QDoubleSpinBox" name="alphaSbx">
-     <property name="maximum">
-      <double>1.000000000000000</double>
+   <item row="5" column="0">
+    <widget class="QLabel" name="label_3">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
      </property>
-     <property name="singleStep">
-      <double>0.100000000000000</double>
-     </property>
-     <property name="value">
-      <double>1.000000000000000</double>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="3">
-    <widget class="QComboBox" name="comboBox_2"/>
-   </item>
-   <item row="1" column="6">
-    <widget class="QPushButton" name="fillBtn">
      <property name="text">
-      <string>Fill</string>
+      <string>NUMBER OF FILES</string>
      </property>
     </widget>
    </item>
-   <item row="1" column="8">
-    <widget class="QCheckBox" name="enableMaskEditCbx">
-     <property name="text">
-      <string>Enable Mask Editing</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="5" rowspan="3" colspan="11">
+   <item row="6" column="5" rowspan="3" colspan="8">
     <layout class="QVBoxLayout" name="canvasLay"/>
    </item>
-   <item row="5" column="5" colspan="11">
+   <item row="7" column="3">
+    <widget class="QComboBox" name="comboBox_2"/>
+   </item>
+   <item row="0" column="0">
+    <widget class="QPushButton" name="openBtn">
+     <property name="text">
+      <string>Open</string>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="5" colspan="8">
     <widget class="QPlainTextEdit" name="plainTextEdit">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -223,16 +137,15 @@
      </property>
     </widget>
    </item>
+   <item row="6" column="1">
+    <widget class="QLineEdit" name="lineEdit"/>
+   </item>
   </layout>
  </widget>
  <tabstops>
   <tabstop>openBtn</tabstop>
   <tabstop>includeSubdirCbx</tabstop>
   <tabstop>listView</tabstop>
-  <tabstop>enableMaskEditCbx</tabstop>
-  <tabstop>alphaSbx</tabstop>
-  <tabstop>drawBtn</tabstop>
-  <tabstop>fillBtn</tabstop>
   <tabstop>helpBtn</tabstop>
  </tabstops>
  <resources/>

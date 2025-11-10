@@ -1,4 +1,5 @@
 import sys
+import os
 from modules.ui.controllers.onetrainer import OnetrainerController
 
 from modules.ui.utils.onetrainer_application import OnetrainerApplication
@@ -7,6 +8,8 @@ from PySide6.QtUiTools import QUiLoader
 from modules.ui.utils.sn_line_edit import SNLineEdit
 
 if __name__ == "__main__":
+    os.environ["QT_QPA_PLATFORM"] = "xcb" # Suppress Wayland warnings on NVidia drivers.
+
     app = OnetrainerApplication(sys.argv)
     loader = QUiLoader()
     loader.registerCustomWidget(SNLineEdit) # TODO: REMEMBER TO PROMOTE IN UI FILES! And to manually set min and max of controls (if present).

@@ -5,9 +5,17 @@ import PySide6.QtWidgets as QtW
 from modules.ui.controllers.windows.caption_controller import CaptionController
 from modules.ui.controllers.windows.mask_controller import MaskController
 
+from modules.ui.utils.figure_widget import FigureWidget
+
 class DatasetController(BaseController):
     def __init__(self, loader, parent=None):
         super().__init__(loader, "modules/ui/views/windows/dataset.ui", name=None, parent=parent)
+
+        self.canvas = FigureWidget(parent=self.ui, width=7, height=5, zoom_tools=True, navigation_tools=True,
+                                   edit_tools=True)
+
+        self.ui.canvasLay.addWidget(self.canvas.toolbar)
+        self.ui.canvasLay.addWidget(self.canvas)
 
         # TODO: NEW UI:
         # File browser with filters: by filename, by caption

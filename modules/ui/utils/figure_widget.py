@@ -1,5 +1,6 @@
 import functools
 
+from PIL.ImageQt import QPixmap
 from matplotlib.backends.backend_qtagg import FigureCanvas
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.backends.qt_compat import QtWidgets
@@ -52,13 +53,16 @@ class MaskDrawingToolbar(NavigationToolbar):
         
         """
 
+        self.theme = "dark" if QtG.QGuiApplication.styleHints().colorScheme() == QtG.Qt.ColorScheme.Dark else "light"
 
         if navigation_tools:
             self.__appendTool(functools.partial(MaskDrawingToolbar.f, self),
-                              text=QCA.translate("toolbar_item", "Previous"),
+                              #text=QCA.translate("toolbar_item", "Previous"),
+                              icon="resources/icons/buttons/{}/arrow-left.svg".format(self.theme),
                               tooltip=QCA.translate("toolbar_item", "Previous image (shortcut: <Left Arrow>"), shortcut="Left")
             self.__appendTool(functools.partial(MaskDrawingToolbar.f, self),
-                              text=QCA.translate("toolbar_item", "Next"),
+                              #text=QCA.translate("toolbar_item", "Next"),
+                              icon="resources/icons/buttons/{}/arrow-right.svg".format(self.theme),
                               tooltip=QCA.translate("toolbar_item", "Next image (shortcut: <Right Arrow>"), shortcut="Right")
 
 
@@ -66,64 +70,75 @@ class MaskDrawingToolbar(NavigationToolbar):
                 self.addSeparator()
         if zoom_tools: # Default matplotlib tools. We can reuse their callbacks (but we won't attach their shortcuts during tool use like fixing one axis, etc.).
             self.__appendTool(self.home,
-                              text=QCA.translate("toolbar_item", "Home View"),
+                              #text=QCA.translate("toolbar_item", "Home View"),
+                              icon="resources/icons/buttons/{}/house.svg".format(self.theme),
                               tooltip=QCA.translate("toolbar_item", "Reset original view (CTRL+H)"), shortcut="Ctrl+H")
             self.__appendTool(self.pan,
-                              text=QCA.translate("toolbar_item", "Pan"),
+                              #text=QCA.translate("toolbar_item", "Pan"),
+                              icon="resources/icons/buttons/{}/move.svg".format(self.theme),
                               tooltip=QCA.translate("toolbar_item", "Left button pans, Right button zooms (CTRL+P)"), checkable=True, shortcut="Ctrl+P")
             self.__appendTool(self.zoom,
-                              text=QCA.translate("toolbar_item", "Zoom"),
+                              #text=QCA.translate("toolbar_item", "Zoom"),
+                              icon="resources/icons/buttons/{}/search.svg".format(self.theme),
                               tooltip=QCA.translate("toolbar_item", "Zoom to rectangle (CTRL+Z)"), checkable=True, shortcut="Ctrl+Z")
             if edit_tools:
                 self.addSeparator()
         if edit_tools:
+            # TODO: if possible, callbacks should be handled by DatasetModel (wrapped here for encapsulation of confirm dialog and to keep the model GUI agnostic)
+
             self.__appendTool(functools.partial(MaskDrawingToolbar.f, self),
-                              text=QCA.translate("toolbar_item", "Edit Mask"),
+                              #text=QCA.translate("toolbar_item", "Edit Mask"),
+                              icon="resources/icons/buttons/{}/brush.svg".format(self.theme),
                               tooltip=QCA.translate("toolbar_item", "Draw (<Left click>) or Erase (<Right click>) mask (CTRL+E)"), checkable=True, shortcut="Ctrl+E")
             self.__appendTool(functools.partial(MaskDrawingToolbar.f, self),
-                              text=QCA.translate("toolbar_item", "Fill Mask"),
+                              #text=QCA.translate("toolbar_item", "Fill Mask"),
+                              icon="resources/icons/buttons/{}/paint-bucket.svg".format(self.theme),
                               tooltip=QCA.translate("toolbar_item",
                                                     "Fill (<Left click>) or Erase-fill (<Right click>) mask (CTRL+F)"), checkable=True, shortcut="Ctrl+F")
             self.__appendTool(functools.partial(MaskDrawingToolbar.f, self),
-                              text=QCA.translate("toolbar_item", "Brush"),
+                              text=QCA.translate("toolbar_item", "Brush size"),
                               tooltip=QCA.translate("toolbar_item",
                                                     "Brush size (shortcut: <Mouse wheel up> or <Mouse wheel down>)"),
                                                     is_spinbox=True, spinbox_range=(0.05, 1.0, 0.05)) # TODO: CHECK
+            self.__appendTool(functools.partial(MaskDrawingToolbar.f, self),
+                              text=QCA.translate("toolbar_item", "Brush opacity"),
+                              tooltip=QCA.translate("toolbar_item",
+                                                    "Brush opacity"),
+                              is_spinbox=True, spinbox_range=(0.05, 1.0, 0.05))  # TODO: CHECK
             self.addSeparator()
+
+
+            self.addSeparator()
+            self.__appendTool(functools.partial(MaskDrawingToolbar.f, self),
+                              text=QCA.translate("toolbar_item", "Clear All"),
+                              tooltip=QCA.translate("toolbar_item",
+                                                    "Clear all (CTRL+Del)"), shortcut="Ctrl+Del") # TODO: the callback should ask for confirmation
             self.__appendTool(functools.partial(MaskDrawingToolbar.f, self),
                               text=QCA.translate("toolbar_item", "Reset Mask"),
                               tooltip=QCA.translate("toolbar_item",
-                                                    "Reset mask (CTRL+R)"), shortcut="Ctrl+R")
+                                                    "Reset mask (CTRL+R)"), shortcut="Ctrl+R") # TODO: the callback should ask for confirmation
+
+            self.addSeparator()
             self.__appendTool(functools.partial(MaskDrawingToolbar.f, self),
-                              text=QCA.translate("toolbar_item", "Save Mask"),
+                              #text=QCA.translate("toolbar_item", "Save Mask"),
+                              icon="resources/icons/buttons/{}/save.svg".format(self.theme),
                               tooltip=QCA.translate("toolbar_item",
                                                     "Save mask (CTRL+S)"), shortcut="Ctrl+S")
+            self.__appendTool(functools.partial(MaskDrawingToolbar.f, self),
+                              # text=QCA.translate("toolbar_item", "Undo"),
+                              icon="resources/icons/buttons/{}/undo.svg".format(self.theme),
+                              tooltip=QCA.translate("toolbar_item",
+                                                    "Undo (CTRL+Z)"), shortcut="Ctrl+Z")
+            self.__appendTool(functools.partial(MaskDrawingToolbar.f, self),
+                              # text=QCA.translate("toolbar_item", "Redo"),
+                              icon="resources/icons/buttons/{}/redo.svg".format(self.theme),
+                              tooltip=QCA.translate("toolbar_item",
+                                                    "Undo (CTRL+Y)"), shortcut="Ctrl+Y")
 
             # TODO: add manual shortcuts for spinbox up/down.
 
 
 
-            # TODO: Decide whether we prefer icons to text.
-            """
-            OPTIONS:
-            - Standard QT icons: https://www.pythonguis.com/faq/built-in-qicons-pyqt/
-                setIcon(self.style().standardIcon(QtW.QStyle.StandardPixmap.SP_ArrowRight))
-                Pros: Available everywhere
-                Cons: Few and ugly
-            - Custom images:
-                setIcon(PySide6.QtGui.QIcon("resources/icons/icon_small.png"))
-                Pros: We can make them from scratch or download them
-                Cons: Licensing issues, need to switch between light/dark themes
-            - Icon themes:
-                setIcon(PySide6.QtGui.QIcon.fromTheme("document-new"))
-                Pros: On Linux every Free-Desktop icon is available. A theme collection can be loaded from a font file (e.g., Google's Material icon pack)
-                Cons: Portability (Win/Mac don't use Free-Desktop names), Licensing
-            - Unicode:
-                setText("🗑️") or setText("\U0001f527")
-                Pros: Available everywhere. Can be either emojis or monochrome (uses automatically font color, solving light/dark theme issues)
-                Cons: Sometimes hard to find an icon suiting our needs
-
-            """
 
 
     def __appendTool(self, callback, text=None, icon=None, tooltip=None, is_spinbox=False, spinbox_range=(0.05, 1.0, 0.05), checkable=False, shortcut=None):
@@ -137,7 +152,7 @@ class MaskDrawingToolbar(NavigationToolbar):
 
             wdg.setBuddy(wdg2)
             if icon is not None:
-                wdg.setIcon(icon)
+                wdg.setIcon(QtG.QIcon(icon))
             if tooltip is not None:
                 wdg2.setToolTip(tooltip)
             self.addWidget(wdg)
@@ -179,7 +194,7 @@ class MaskDrawingToolbar(NavigationToolbar):
                 wdg.setText(text)
 
             if icon is not None:
-                wdg.setIcon(icon)
+                wdg.setIcon(QtG.QIcon(icon))
 
             if tooltip is not None:
                 wdg.setToolTip(tooltip)
