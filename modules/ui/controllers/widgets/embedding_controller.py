@@ -25,11 +25,8 @@ class EmbeddingController(BaseController):
             "additional_embeddings.{idx}.initial_embedding_text": "initialEmbeddingLed",
         }
 
-        self._connectStateUi(self.dynamic_state_ui_connections, StateModel.instance(), signal=None, idx=self.idx)
+        self._connectStateUi(self.dynamic_state_ui_connections, StateModel.instance(), signal=QtW.QApplication.instance().embeddingsChanged, update_after_connect=True, idx=self.idx)
 
-        callback = self.__updateEmbedding()
-        self.connect(QtW.QApplication.instance().embeddingsChanged, callback)
-        callback()
 
 
 
@@ -40,17 +37,6 @@ class EmbeddingController(BaseController):
                                                      "Safetensors (*.safetensors);;Diffusers (model_index.json);;Checkpoints (*.ckpt, *.pt, *.bin);;All Files (*.*)"))
 
 
-    def __updateEmbedding(self):
-        def f():
-            self._writeControl(self.ui.baseEmbeddingLed, "additional_embeddings.{}.model_name".format(self.idx), StateModel.instance())
-            self._writeControl(self.ui.placeholderLed, "additional_embeddings.{}.placeholder".format(self.idx), StateModel.instance())
-            self._writeControl(self.ui.tokenSbx, "additional_embeddings.{}.token_count".format(self.idx), StateModel.instance())
-            self._writeControl(self.ui.outputEmbeddingCbx, "additional_embeddings.{}.is_output_embedding".format(self.idx), StateModel.instance())
-            self._writeControl(self.ui.stopTrainingSbx, "additional_embeddings.{}.stop_training_after".format(self.idx), StateModel.instance())
-            self._writeControl(self.ui.stopTrainingCmb, "additional_embeddings.{}.stop_training_after_unit".format(self.idx), StateModel.instance())
-            self._writeControl(self.ui.initialEmbeddingLed, "additional_embeddings.{}.initial_embedding_text".format(self.idx), StateModel.instance())
-
-        return f
 
     def loadPresets(self):
         for e in TimeUnit.enabled_values():

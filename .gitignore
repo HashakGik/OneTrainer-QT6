@@ -3,3 +3,7 @@ __pycache__
 .venv
 *.BAK
 venv
+training_concepts/*
+training_presets/*
+training_samples/*
+secrets.json

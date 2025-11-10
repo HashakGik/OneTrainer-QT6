@@ -1,5 +1,3 @@
-from PySide6.QtCore import QBasicMutex
-
 from modules.ui.models.SingletonConfigModel import SingletonConfigModel
 from modules.util.config.SampleConfig import SampleConfig
 import copy
@@ -23,62 +21,33 @@ class SampleModel(SingletonConfigModel):
         return SampleConfig.default_values().to_dict()
 
     def create_new_sample(self):
-        try:
-            self.mutex.lock()
+        with self.critical_region():
             smp_cfg = SampleConfig.default_values()
             self.config.append(smp_cfg)
-        except Exception as e:
-            print(e)
-        finally:
-            self.mutex.unlock()
 
     def clone_sample(self, idx):
-        try:
-            self.mutex.lock()
+        with self.critical_region():
             new_element = copy.deepcopy(self.config[idx])
-
             self.config.append(new_element)
-        except Exception as e:
-            print(e)
-        finally:
-            self.mutex.unlock()
 
     def delete_sample(self, idx):
-        try:
-            self.mutex.lock()
+        with self.critical_region():
             self.config.pop(idx)
 
-        except Exception as e:
-            print(e)
-        finally:
-            self.mutex.unlock()
 
     def disable_samples(self):
-        try:
-            self.mutex.lock()
+        with self.critical_region():
             for smp in self.config:
                 smp.enabled = False
-
-        except Exception as e:
-            print(e)
-        finally:
-            self.mutex.unlock()
 
     def save_config(self, path="training_samples"):
         if not os.path.exists(path):
             os.mkdir(path)
 
-        try:
-            config_path = StateModel.instance().getState("sample_definition_file_name") # IMPORTANT! The mutex is shared because it is defined in the base class, this must be called before the lock!
+        config_path = StateModel.instance().getState("sample_definition_file_name")
+        with self.critical_region():
+            write_json_atomic(config_path, [element.to_dict() for element in self.config])
 
-            self.mutex.lock()
-            write_json_atomic(config_path,
-                              [element.to_dict() for element in self.config])
-
-        except Exception as e:
-            print(e)
-        finally:
-            self.mutex.unlock()
 
     def load_config(self, filename, path="training_samples"):
         if not os.path.exists(path):
@@ -87,22 +56,14 @@ class SampleModel(SingletonConfigModel):
         if filename == "":
             filename = "samples"
 
-        try:
-            config_file = path_util.canonical_join(path, "{}.json".format(filename))
-            StateModel.instance().setState("sample_definition_file_name", config_file)
-
-            self.mutex.lock()
+        config_file = path_util.canonical_join(path, "{}.json".format(filename))
+        StateModel.instance().setState("sample_definition_file_name", config_file)
+        with self.critical_region():
             self.config = []
 
             if os.path.exists(config_file):
-
                 with open(config_file, "r") as f:
                     loaded_config_json = json.load(f)
                     for element_json in loaded_config_json:
                         element = SampleConfig.default_values().from_dict(element_json)
                         self.config.append(element)
-
-        except Exception as e:
-            print(e)
-        finally:
-            self.mutex.unlock()

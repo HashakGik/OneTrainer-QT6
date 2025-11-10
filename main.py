@@ -1,17 +1,10 @@
 import sys
-import os
 from modules.ui.controllers.onetrainer import OnetrainerController
 
 from modules.ui.utils.onetrainer_application import OnetrainerApplication
 from PySide6.QtUiTools import QUiLoader
 
-from PySide6.QtCore import QBasicMutex
-
 from modules.ui.utils.sn_line_edit import SNLineEdit
-
-from modules.util.config.TrainConfig import TrainConfig
-
-from PySide6.QtCore import Qt
 
 if __name__ == "__main__":
     app = OnetrainerApplication(sys.argv)

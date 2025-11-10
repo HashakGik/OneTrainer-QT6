@@ -17,7 +17,6 @@ from modules.ui.models.StateModel import StateModel
 # 2) Naming convention is all over the place (camelCase, snake_case, inconsistent visibility __method vs _method vs method)
 # 3) Some callbacks are invoked as lambdas, others as self.__method() which returns a function f(). Choose one!
 # 4) Finite-state machine like behavior needs to be double checked/simplified.
-# 5) Replace mutex and blockSignals with context-management syntax ("with" block) for cleaner critical region management
 
 # Abstract controller with some utility methods.
 class BaseController:
@@ -28,7 +27,7 @@ class BaseController:
         self.ui = loader.load(ui_file, parentWidget=parent.ui if parent is not None else None)
         self.name = name # TODO: When necessary, derived classes will set this with QCA.translate(context, "STATIC STRING") since lupdate is a static analyzer!
 
-        self.connections = []
+        self.connections = {}
 
         self.setup()
 
@@ -46,14 +45,24 @@ class BaseController:
     def setup(self):
         pass
 
-    def connect(self, signal, slot): # TODO: REFACTOR EVERY CONNECTION TO USE THIS METHOD!
+    def connect(self, signal, slot, key="global"):
         c = signal.connect(slot)
-        self.connections.append(c)
+        if key not in self.connections:
+            self.connections[key] = []
+        self.connections[key].append(c)
 
     def disconnectAll(self):
-        for c in self.connections:
-            self.ui.disconnect(c)
-        self.connections = []
+        for k, v in self.connections.items():
+            for c in v:
+                self.ui.disconnect(c)
+
+        self.connections = {}
+
+    def disconnectGroup(self, key):
+        if key in self.connections:
+            for c in self.connections[key]:
+                self.ui.disconnect(c)
+            self.connections[key] = []
 
     def _appendExtension(self, file, filter):
         patterns = filter.split("(")[1].split(")")[0].split(", ")
@@ -67,10 +76,11 @@ class BaseController:
             return "{}.{}".format(file, patterns[0].split("*.")[1]) # Append the first valid extension to file.
 
 
-    def _connectStateUi(self, connection_dict, model, signal=None, **kwargs): # TODO: RENAME TO _connectStateUi to invoke it multiple times in child classes
+    def _connectStateUi(self, connection_dict, model, signal=None, update_after_connect=False, group="global", **kwargs):
         for var, ui_names in connection_dict.items():
             if len(kwargs) > 0:
                 var = var.format(**kwargs)
+
             if isinstance(ui_names, str):
                 ui_names = [ui_names]
             for ui_name in ui_names:
@@ -80,19 +90,21 @@ class BaseController:
                 else:
                     c = None
                     if isinstance(ui_elem, QtW.QCheckBox):
-                        self.connect(ui_elem.stateChanged, self.__readCbx(ui_elem, var, model))
+                        self.connect(ui_elem.stateChanged, self.__readCbx(ui_elem, var, model), group)
                     elif isinstance(ui_elem, QtW.QComboBox):
-                        self.connect(ui_elem.activated, self.__readCbm(ui_elem, var, model))
+                        self.connect(ui_elem.activated, self.__readCbm(ui_elem, var, model), group)
                     elif isinstance(ui_elem, QtW.QSpinBox) or isinstance(ui_elem, QtW.QDoubleSpinBox):
-                        self.connect(ui_elem.valueChanged, self.__readSbx(ui_elem, var, model))
+                        self.connect(ui_elem.valueChanged, self.__readSbx(ui_elem, var, model), group)
                     elif isinstance(ui_elem, SNLineEdit): # IMPORTANT: keep this above base class!
-                        self.connect(ui_elem.editingFinished, self.__readSNLed(ui_elem, var, model))
+                        self.connect(ui_elem.editingFinished, self.__readSNLed(ui_elem, var, model), group)
                     elif isinstance(ui_elem, QtW.QLineEdit):
-                        self.connect(ui_elem.editingFinished, self.__readLed(ui_elem, var, model))
+                        self.connect(ui_elem.editingFinished, self.__readLed(ui_elem, var, model), group)
 
-
+                    callback = functools.partial(self._writeControl, ui_elem, var, model)
                     if signal is not None:
-                        self.connect(signal, functools.partial(self._writeControl,ui_elem, var, model))
+                        self.connect(signal, callback)
+                    if update_after_connect:
+                        callback()
 
     # These methods cannot use directly lambdas, because variable names would be reassigned within the loop.
     @staticmethod

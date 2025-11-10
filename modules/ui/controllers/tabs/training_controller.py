@@ -7,6 +7,9 @@ from modules.ui.controllers.windows.optimizer_controller import OptimizerControl
 from modules.util.enum.ModelFlags import ModelFlags
 import PySide6.QtWidgets as QtW
 
+import random
+
+
 from modules.util.enum.TimeUnit import TimeUnit
 from modules.util.enum.TimestepDistribution import TimestepDistribution
 from modules.util.enum.LearningRateScaler import LearningRateScaler
@@ -19,6 +22,10 @@ from modules.util.enum.DataType import DataType
 from modules.util.enum.GradientCheckpointingMethod import GradientCheckpointingMethod
 
 from modules.ui.models.StateModel import StateModel
+from modules.ui.models.TimestepGenerator import TimestepGenerator
+
+from modules.ui.utils.figure_widget import FigureWidget
+from matplotlib import pyplot as plt
 
 
 class TrainingController(BaseController):
@@ -145,13 +152,44 @@ class TrainingController(BaseController):
         self.connect(self.ui.schedulerCmb.activated, cb)
         self.connect(QtW.QApplication.instance().stateChanged, cb)
 
+        plt.set_loglevel('WARNING')  # suppress errors about data type in bar chart
 
+        self.canvas = FigureWidget(parent=self.ui, width=4, height=4, zoom_tools=True, navigation_tools=False,
+                                   edit_tools=False)
+        self.canvas.setFixedHeight(300)
+
+        self.ax = self.canvas.figure.subplots()
+        self.ui.previewLay.addWidget(self.canvas.toolbar)  # Matplotlib toolbar, in case we want the user to zoom in.
+        self.ui.previewLay.addWidget(self.canvas)
+
+        self.ax.tick_params(axis='x', which="both")
+        self.ax.tick_params(axis='y', which="both")
 
         self.__postConnectUIBehavior()
         # At the beginning invalidate the gui.
         callback(StateModel.instance().getState("model_type"), StateModel.instance().getState("training_method"))
         self.optimizer_window.ui.optimizerCmb.setCurrentIndex(self.ui.optimizerCmb.currentIndex())
         cb()
+
+    def __updatePreview(self):
+        def f():
+            resolution = random.randint(512, 1024)
+            generator = TimestepGenerator(
+                timestep_distribution=StateModel.instance().getState("timestep_distribution"),
+                min_noising_strength=StateModel.instance().getState("min_noising_strength"),
+                max_noising_strength=StateModel.instance().getState("max_noising_strength"),
+                noising_weight=StateModel.instance().getState("noising_weight"),
+                noising_bias=StateModel.instance().getState("noising_bias"),
+                timestep_shift=StateModel.instance().getState("timestep_shift"),
+                dynamic_timestep_shifting=StateModel.instance().getState("dynamic_timestep_shifting"),
+                latent_width=resolution // 8,
+                latent_height=resolution // 8,
+            )
+
+            self.ax.cla()
+            self.ax.hist(generator.generate(), bins=1000, range=(0, 999))
+            self.canvas.draw()
+        return f
 
 
     def __updateOptimizer(self):
@@ -231,6 +269,7 @@ class TrainingController(BaseController):
         cb2()
 
         self.connect(self.ui.tableWidget.currentCellChanged, self.__changeCell())
+        self.connect(self.ui.updatePreviewBtn.clicked, self.__updatePreview())
 
 
     def __changeCell(self):

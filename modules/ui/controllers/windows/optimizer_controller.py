@@ -664,7 +664,6 @@ class OptimizerController(BaseController):
         return f if from_index else g
 
     def __updateOptimizerControls(self, optimizer):
-        # TODO: setVisible inside a QGridLayout does not rearrange objects. So either create and connect them here, or subclass the layout and make one dynamic.
         # QGridLayout has no direct children, therefore, we must retrieve them in a different way.
         for k, v in self.optimizer_params.items():
             if v["type"] == "bool":

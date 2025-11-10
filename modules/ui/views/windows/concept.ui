@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>720</width>
-    <height>667</height>
+    <width>764</width>
+    <height>730</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -482,10 +482,31 @@
           <string>Preview</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_5">
-          <item row="3" column="0" colspan="3">
-           <widget class="QLabel" name="filenameLbl">
+          <item row="0" column="0" colspan="3">
+           <widget class="QLabel" name="previewLbl">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>300</width>
+              <height>300</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>300</width>
+              <height>300</height>
+             </size>
+            </property>
             <property name="text">
-             <string>FILENAME</string>
+             <string/>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignCenter</set>
             </property>
            </widget>
           </item>
@@ -496,24 +517,10 @@
             </property>
            </widget>
           </item>
-          <item row="4" column="0" colspan="3">
-           <widget class="QPlainTextEdit" name="promptTed">
-            <property name="readOnly">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
           <item row="1" column="1">
            <widget class="QPushButton" name="updatePreviewBtn">
             <property name="text">
              <string>Update Preview</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0" colspan="3">
-           <widget class="QCheckBox" name="showAugmentationsCbx">
-            <property name="text">
-             <string>Show Augmentations</string>
             </property>
            </widget>
           </item>
@@ -524,8 +531,26 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="0" colspan="3">
-           <layout class="QVBoxLayout" name="previewLay"/>
+          <item row="2" column="0" colspan="2">
+           <widget class="QCheckBox" name="showAugmentationsCbx">
+            <property name="text">
+             <string>Show Augmentations</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0" colspan="2">
+           <widget class="QLabel" name="filenameLbl">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0" colspan="3">
+           <widget class="QPlainTextEdit" name="promptTed">
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -697,6 +722,386 @@
        <string>Statistics</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_6">
+       <item row="1" column="0" colspan="4">
+        <widget class="QScrollArea" name="scrollArea">
+         <property name="widgetResizable">
+          <bool>true</bool>
+         </property>
+         <widget class="QWidget" name="scrollAreaWidgetContents">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>722</width>
+            <height>543</height>
+           </rect>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout">
+           <item>
+            <widget class="QGroupBox" name="groupBox_2">
+             <property name="title">
+              <string>Basic Stats</string>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_7">
+              <item row="0" column="1">
+               <widget class="QLabel" name="label_22">
+                <property name="text">
+                 <string>Directories:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="1">
+               <widget class="QLabel" name="videoCountLbl">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="label_33">
+                <property name="text">
+                 <string>Total Images:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QLabel" name="label_34">
+                <property name="text">
+                 <string>Total Videos:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="fileSizeLbl">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="2">
+               <widget class="QLabel" name="maskCountLbl">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QLabel" name="dirCountLbl">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="3">
+               <widget class="QLabel" name="captionCountLbl">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="imageCountLbl">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="3">
+               <widget class="QLabel" name="label_36">
+                <property name="text">
+                 <string>Total Captions:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_21">
+                <property name="text">
+                 <string>Total Size:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="2">
+               <widget class="QLabel" name="label_35">
+                <property name="text">
+                 <string>Total Masks:</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QGroupBox" name="groupBox_3">
+             <property name="title">
+              <string>Advanced Stats</string>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_8">
+              <item row="6" column="2">
+               <widget class="QLabel" name="label_53">
+                <property name="text">
+                 <string>Min Pixels:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="6" column="1">
+               <widget class="QLabel" name="label_52">
+                <property name="text">
+                 <string>Avg Pixels:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="imageCountMaskLbl">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="7" column="1">
+               <widget class="QLabel" name="avgPixelsLbl">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="12" column="0">
+               <widget class="QLabel" name="label_69">
+                <property name="text">
+                 <string>Max Caption Length:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="0">
+               <widget class="QLabel" name="imageCountCaptionLbl">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="0">
+               <widget class="QLabel" name="label_46">
+                <property name="text">
+                 <string>Images with Captions:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="14" column="0">
+               <widget class="QLabel" name="captionMaxLbl">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="2">
+               <widget class="QLabel" name="label_48">
+                <property name="text">
+                 <string>Unpaired Captions:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="14" column="2">
+               <widget class="QLabel" name="captionMinLbl">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="1">
+               <widget class="QLabel" name="videoCountCaptionLbl">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="6" column="0">
+               <widget class="QLabel" name="label_51">
+                <property name="text">
+                 <string>Max Pixels:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="9" column="0">
+               <widget class="QLabel" name="lengthMaxLbl">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="1">
+               <widget class="QLabel" name="maskCountUnpairedLbl">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="10" column="1">
+               <widget class="QLabel" name="label_64">
+                <property name="text">
+                 <string>Avg FPS:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="10" column="0">
+               <widget class="QLabel" name="label_63">
+                <property name="text">
+                 <string>Max FPS:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="7" column="0">
+               <widget class="QLabel" name="maxPixelsLbl">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="8" column="1">
+               <widget class="QLabel" name="label_58">
+                <property name="text">
+                 <string>Avg Length:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="11" column="1">
+               <widget class="QLabel" name="fpsAvgLbl">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="8" column="0">
+               <widget class="QLabel" name="label_57">
+                <property name="text">
+                 <string>Max Length:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="9" column="2">
+               <widget class="QLabel" name="lengthMinLbl">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="12" column="1">
+               <widget class="QLabel" name="label_70">
+                <property name="text">
+                 <string>Avg Caption Length:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="9" column="1">
+               <widget class="QLabel" name="lengthAvgLbl">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="11" column="2">
+               <widget class="QLabel" name="fpsMinLbl">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="8" column="2">
+               <widget class="QLabel" name="label_59">
+                <property name="text">
+                 <string>Min Length:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="10" column="2">
+               <widget class="QLabel" name="label_65">
+                <property name="text">
+                 <string>Min FPS:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="label_41">
+                <property name="text">
+                 <string>Images with Masks:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="15" column="0">
+               <widget class="QLabel" name="label_75">
+                <property name="text">
+                 <string>Smallest Buckets:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QLabel" name="label_42">
+                <property name="text">
+                 <string>Unpaired Masks:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="11" column="0">
+               <widget class="QLabel" name="fpsMaxLbl">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="12" column="2">
+               <widget class="QLabel" name="label_71">
+                <property name="text">
+                 <string>Min Caption Length:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="14" column="1">
+               <widget class="QLabel" name="captionAvgLbl">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="2">
+               <widget class="QLabel" name="unpairedCaptionsLbl">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="7" column="2">
+               <widget class="QLabel" name="minPixelsLbl">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="1">
+               <widget class="QLabel" name="label_47">
+                <property name="text">
+                 <string>Videos with Captions:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="16" column="0">
+               <widget class="QLabel" name="smallBucketLbl">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <widget class="QPushButton" name="abortScanBtn">
+         <property name="text">
+          <string>Abort Scan</string>
+         </property>
+        </widget>
+       </item>
        <item row="0" column="0">
         <widget class="QPushButton" name="refreshBasicBtn">
          <property name="text">
@@ -705,59 +1110,28 @@
         </widget>
        </item>
        <item row="2" column="0" colspan="4">
-        <widget class="QGroupBox" name="groupBox_3">
+        <widget class="QGroupBox" name="groupBox_4">
          <property name="title">
-          <string>Advanced Stats</string>
+          <string>Aspect Bucketing</string>
          </property>
-         <layout class="QGridLayout" name="gridLayout_8">
-          <item row="0" column="0">
-           <widget class="QListWidget" name="advancedStatListWidget"/>
-          </item>
-          <item row="1" column="0">
-           <widget class="QGroupBox" name="groupBox_4">
-            <property name="title">
-             <string>Histogram</string>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_2">
-             <item>
-              <layout class="QVBoxLayout" name="histogramLay"/>
-             </item>
-            </layout>
-           </widget>
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <item>
+           <layout class="QVBoxLayout" name="histogramLay"/>
           </item>
          </layout>
         </widget>
        </item>
-       <item row="1" column="0" colspan="4">
-        <widget class="QGroupBox" name="groupBox_2">
-         <property name="title">
-          <string>Basic Stats</string>
+       <item row="0" column="3">
+        <widget class="QLabel" name="processingTimeLbl">
+         <property name="text">
+          <string/>
          </property>
-         <layout class="QGridLayout" name="gridLayout_7">
-          <item row="0" column="0">
-           <widget class="QListWidget" name="basicStatListWidget"/>
-          </item>
-         </layout>
         </widget>
        </item>
        <item row="0" column="1">
         <widget class="QPushButton" name="refreshAdvancedBtn">
          <property name="text">
           <string>Refresh Advanced</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="3">
-        <widget class="QLabel" name="label_30">
-         <property name="text">
-          <string>0.0 s</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="2">
-        <widget class="QPushButton" name="abortScanBtn">
-         <property name="text">
-          <string>Abort Scan</string>
          </property>
         </widget>
        </item>
@@ -826,8 +1200,6 @@
   <tabstop>refreshBasicBtn</tabstop>
   <tabstop>refreshAdvancedBtn</tabstop>
   <tabstop>abortScanBtn</tabstop>
-  <tabstop>basicStatListWidget</tabstop>
-  <tabstop>advancedStatListWidget</tabstop>
   <tabstop>okBtn</tabstop>
   <tabstop>promptTed</tabstop>
  </tabstops>

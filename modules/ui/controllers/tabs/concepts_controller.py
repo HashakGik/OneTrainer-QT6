@@ -100,13 +100,11 @@ class ConceptsController(BaseController):
 
     def __deleteConcept(self, idx):
         def f():
-            ConceptModel.instance().delete_sample(idx)
+            ConceptModel.instance().delete_concept(idx)
             QtW.QApplication.instance().conceptsChanged.emit()
 
         return f
 
-    # TODO: StateModel: concept_file_name
-    # TODO: ConceptModel: ...
 
     # presetCmb -> Load/save json OK
     # addConceptBtn -> New concept OK

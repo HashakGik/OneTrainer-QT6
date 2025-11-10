@@ -1,13 +1,15 @@
-from PySide6.QtCore import QBasicMutex
 from modules.util import path_util
 
 import os
+import threading
+import traceback
+from contextlib import contextmanager
 
 # Base class for config models. It provides a Singleton interface and a single mutex shared across all the subclasses.
 class SingletonConfigModel:
     _instance = None
     config = None
-    mutex = QBasicMutex()
+    mutex = threading.RLock() # QBasicMutex and QMutex are both non-reentrant. We need this to allow the same thread to enter the critical region multiple times without deadlocks.
 
     @classmethod
     def instance(cls):
@@ -17,36 +19,28 @@ class SingletonConfigModel:
 
     def getState(self, path):
         if self.config is not None:
-            try:
-                if self.mutex is not None:
-                    self.mutex.lock()
+            with self.critical_region():
                 ref = self.config
                 if path == "":
                     return ref
-                for key in path.split("."):
+
+                for key in str(path).split("."):
                     if isinstance(ref, list):
                         ref = ref[int(key)]
                     elif hasattr(ref, key):
                         ref = getattr(ref, key)
                     else:
                         print("DEBUG: key {} not found in config".format(key))
-                        break
+                        return None
                 return ref
-            except Exception as e:
-                print("QUERY: {}. ERROR: {}".format(path, e))
-            finally:
-                if self.mutex is not None:
-                    self.mutex.unlock()
 
         return None
 
     def setState(self, path, value):
         if self.config is not None:
-            try:
-                if self.mutex is not None:
-                    self.mutex.lock()
+            with self.critical_region():
                 ref = self.config
-                for ptr in path.split(".")[:-1]:
+                for ptr in str(path).split(".")[:-1]:
                     if isinstance(ref, list):
                         ref = ref[int(ptr)]
                     elif hasattr(ref, ptr):
@@ -57,19 +51,12 @@ class SingletonConfigModel:
                     setattr(ref, path.split(".")[-1], value)
                 else:
                     print("DEBUG: key {} not found in config".format(path))
-            except Exception as e:
-                print("ERROR: {}".format(e))
-                pass
-            finally:
-                if self.mutex is not None:
-                    self.mutex.unlock()
 
     def load_available_config_names(self, dir="training_presets", include_default=True):
         if include_default:
             configs = [("", path_util.canonical_join(dir, "#.json"))]
         else:
             configs = []
-
 
         if os.path.isdir(dir):
             for path in os.listdir(dir):
@@ -82,3 +69,15 @@ class SingletonConfigModel:
             configs.sort()
 
         return configs
+
+    @contextmanager
+    def critical_region(self):
+        try:
+            if self.mutex is not None:
+                self.mutex.acquire()
+            yield
+        except Exception:
+            traceback.print_exc()
+        finally:
+            if self.mutex is not None:
+                self.mutex.release()

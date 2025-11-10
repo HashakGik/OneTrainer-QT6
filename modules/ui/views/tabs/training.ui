@@ -22,8 +22,8 @@
      <widget class="QWidget" name="scrollAreaWidgetContents">
       <property name="geometry">
        <rect>
-        <x>0</x>
-        <y>0</y>
+        <x>-346</x>
+        <y>-856</y>
         <width>1271</width>
         <height>1561</height>
        </rect>
@@ -884,59 +884,13 @@
              <string>Noise</string>
             </property>
             <layout class="QGridLayout" name="gridLayout_5">
-             <item row="8" column="0">
-              <widget class="QLabel" name="label_21">
+             <item row="3" column="0">
+              <widget class="QLabel" name="label_16">
                <property name="text">
-                <string>Timestep Shift</string>
+                <string>Timestep Distribution</string>
                </property>
                <property name="buddy">
-                <cstring>timestepShiftSbx</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="8" column="1">
-              <widget class="QDoubleSpinBox" name="timestepShiftSbx"/>
-             </item>
-             <item row="6" column="1">
-              <widget class="QDoubleSpinBox" name="noisingWeightSbx"/>
-             </item>
-             <item row="4" column="1">
-              <widget class="QDoubleSpinBox" name="minNoisingStrengthSbx"/>
-             </item>
-             <item row="5" column="1">
-              <widget class="QDoubleSpinBox" name="maxNoisingStrengthSbx"/>
-             </item>
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_14">
-               <property name="text">
-                <string>Offset Noise Weight</string>
-               </property>
-               <property name="buddy">
-                <cstring>offsetNoiseWeightSbx</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="0">
-              <widget class="QLabel" name="label_15">
-               <property name="text">
-                <string>Perturbation Noise Weight</string>
-               </property>
-               <property name="buddy">
-                <cstring>perturbationNoiseWeightSbx</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="0" colspan="2">
-              <widget class="QCheckBox" name="generalizedOffsetNoiseCbx">
-               <property name="text">
-                <string>Generalized Offset Noise</string>
-               </property>
-              </widget>
-             </item>
-             <item row="10" column="0" colspan="2">
-              <widget class="QCheckBox" name="dynamicTimestepShiftingCbx">
-               <property name="text">
-                <string>Dynamic Timestep Shifting</string>
+                <cstring>timestepDistributionCmb</cstring>
                </property>
               </widget>
              </item>
@@ -950,34 +904,21 @@
                </property>
               </widget>
              </item>
-             <item row="2" column="1">
-              <widget class="QDoubleSpinBox" name="perturbationNoiseWeightSbx"/>
-             </item>
-             <item row="0" column="1">
-              <widget class="QDoubleSpinBox" name="offsetNoiseWeightSbx"/>
-             </item>
-             <item row="3" column="0">
-              <widget class="QLabel" name="label_16">
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_15">
                <property name="text">
-                <string>Timestep Distribution</string>
+                <string>Perturbation Noise Weight</string>
                </property>
                <property name="buddy">
-                <cstring>timestepDistributionCmb</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="7" column="0">
-              <widget class="QLabel" name="label_20">
-               <property name="text">
-                <string>Noising Bias</string>
-               </property>
-               <property name="buddy">
-                <cstring>noisingBiasSbx</cstring>
+                <cstring>perturbationNoiseWeightSbx</cstring>
                </property>
               </widget>
              </item>
              <item row="3" column="1">
               <widget class="QComboBox" name="timestepDistributionCmb"/>
+             </item>
+             <item row="5" column="1">
+              <widget class="QDoubleSpinBox" name="maxNoisingStrengthSbx"/>
              </item>
              <item row="4" column="0">
               <widget class="QLabel" name="label_17">
@@ -999,8 +940,41 @@
                </property>
               </widget>
              </item>
+             <item row="1" column="0" colspan="2">
+              <widget class="QCheckBox" name="generalizedOffsetNoiseCbx">
+               <property name="text">
+                <string>Generalized Offset Noise</string>
+               </property>
+              </widget>
+             </item>
+             <item row="8" column="0">
+              <widget class="QLabel" name="label_21">
+               <property name="text">
+                <string>Timestep Shift</string>
+               </property>
+               <property name="buddy">
+                <cstring>timestepShiftSbx</cstring>
+               </property>
+              </widget>
+             </item>
              <item row="7" column="1">
               <widget class="QDoubleSpinBox" name="noisingBiasSbx"/>
+             </item>
+             <item row="6" column="1">
+              <widget class="QDoubleSpinBox" name="noisingWeightSbx"/>
+             </item>
+             <item row="0" column="1">
+              <widget class="QDoubleSpinBox" name="offsetNoiseWeightSbx"/>
+             </item>
+             <item row="7" column="0">
+              <widget class="QLabel" name="label_20">
+               <property name="text">
+                <string>Noising Bias</string>
+               </property>
+               <property name="buddy">
+                <cstring>noisingBiasSbx</cstring>
+               </property>
+              </widget>
              </item>
              <item row="12" column="0" colspan="2">
               <widget class="QPushButton" name="updatePreviewBtn">
@@ -1009,12 +983,34 @@
                </property>
               </widget>
              </item>
-             <item row="11" column="0" colspan="2">
-              <widget class="QLabel" name="label_22">
+             <item row="4" column="1">
+              <widget class="QDoubleSpinBox" name="minNoisingStrengthSbx"/>
+             </item>
+             <item row="2" column="1">
+              <widget class="QDoubleSpinBox" name="perturbationNoiseWeightSbx"/>
+             </item>
+             <item row="8" column="1">
+              <widget class="QDoubleSpinBox" name="timestepShiftSbx"/>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_14">
                <property name="text">
-                <string>PREVIEW</string>
+                <string>Offset Noise Weight</string>
+               </property>
+               <property name="buddy">
+                <cstring>offsetNoiseWeightSbx</cstring>
                </property>
               </widget>
+             </item>
+             <item row="10" column="0" colspan="2">
+              <widget class="QCheckBox" name="dynamicTimestepShiftingCbx">
+               <property name="text">
+                <string>Dynamic Timestep Shifting</string>
+               </property>
+              </widget>
+             </item>
+             <item row="11" column="0" colspan="2">
+              <layout class="QVBoxLayout" name="previewLay"/>
              </item>
             </layout>
            </widget>

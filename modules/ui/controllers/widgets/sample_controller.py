@@ -19,26 +19,11 @@ class SampleController(BaseController):
             "{idx}.prompt": "promptLed",
         }
 
-        self._connectStateUi(self.dynamic_state_ui_connections, SampleModel.instance(), signal=None, idx=self.idx)
-
-        callback = self.__updateSample()
-        self.connect(QtW.QApplication.instance().samplesChanged, callback)
-        callback()
-
-        # TODO: TrainConfig.samples is always NONE -> Samples are serialized elsewhere!
+        self._connectStateUi(self.dynamic_state_ui_connections, SampleModel.instance(), signal=QtW.QApplication.instance().samplesChanged, update_after_connect=True, idx=self.idx)
 
     def connectUIBehavior(self):
         self.connect(self.ui.openWindowBtn.clicked, lambda: self.__openSampleWindow())
 
-    def __updateSample(self):
-        def f():
-            self._writeControl(self.ui.enabledCbx, "{}.enabled".format(self.idx), SampleModel.instance())
-            self._writeControl(self.ui.widthSbx, "{}.width".format(self.idx), SampleModel.instance())
-            self._writeControl(self.ui.heightSbx, "{}.height".format(self.idx), SampleModel.instance())
-            self._writeControl(self.ui.seedSbx, "{}.seed".format(self.idx), SampleModel.instance())
-            self._writeControl(self.ui.promptLed, "{}.prompt".format(self.idx), SampleModel.instance())
-
-        return f
 
     def __openSampleWindow(self):
         self.openWindow(self.sample_window, fixed_size=True)
