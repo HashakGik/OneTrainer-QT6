@@ -1,5 +1,5 @@
 from PySide6.QtCore import QCoreApplication as QCA
-from modules.ui.utils.base_controller import BaseController
+from modules.ui.controllers.base_controller import BaseController
 
 from modules.ui.controllers.widgets.sample_controller import SampleController
 from modules.ui.controllers.windows.new_sample_controller import NewSampleController

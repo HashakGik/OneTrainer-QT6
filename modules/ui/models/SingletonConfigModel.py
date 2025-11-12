@@ -1,3 +1,5 @@
+from triton.language.semantic import atomic_add
+
 from modules.util import path_util
 
 import os
@@ -81,3 +83,10 @@ class SingletonConfigModel:
         finally:
             if self.mutex is not None:
                 self.mutex.release()
+
+    # Decorator @atomic for fully-region critical methods. # TODO: REFACTOR MODEL CLASSES TO USE @SingletonConfigModel.atomic AND with self.critical_region()
+    def atomic(method):
+        def f(self, *args, **kwargs):
+            with self.critical_region():
+                return method(self, *args, **kwargs)
+        return f

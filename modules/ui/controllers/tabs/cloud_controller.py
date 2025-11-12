@@ -1,5 +1,5 @@
 from PySide6.QtCore import QCoreApplication as QCA
-from modules.ui.utils.base_controller import BaseController
+from modules.ui.controllers.base_controller import BaseController
 
 from modules.util.enum.CloudAction import CloudAction
 from modules.util.enum.CloudType import CloudType

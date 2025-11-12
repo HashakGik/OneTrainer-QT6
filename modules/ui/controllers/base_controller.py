@@ -12,11 +12,12 @@ from modules.ui.utils.sn_line_edit import SNLineEdit
 from modules.ui.models.StateModel import StateModel
 
 # TODO: CLEANUP:
-# 0) Move to models.ui.controllers
-# 1) Maybe it is cleaner to define callbacks always in __init__, instead of connectUIBehavior
-# 2) Naming convention is all over the place (camelCase, snake_case, inconsistent visibility __method vs _method vs method)
-# 3) Some callbacks are invoked as lambdas, others as self.__method() which returns a function f(). Choose one!
-# 4) Finite-state machine like behavior needs to be double checked/simplified.
+# 0) Maybe it is cleaner to define callbacks always in __init__, instead of connectUIBehavior?
+# 1) Naming convention is all over the place (camelCase, snake_case, inconsistent visibility __method vs _method vs method)
+# 2) Some callbacks are invoked as lambdas, others as self.__method() which returns a function f(). Choose one!
+# 3) Finite-state machine like behavior needs to be double checked/simplified.
+# 4) Use self.openAlert to provide user feedback.
+# 5) Uniform error logging (sometimes it is print, others it uses logger.logging) and exceptions (print(e) vs full traceback)
 
 # Abstract controller with some utility methods.
 class BaseController:
@@ -88,7 +89,6 @@ class BaseController:
                 if ui_elem is None:
                     print("ERROR: {} not found.".format(ui_name))
                 else:
-                    c = None
                     if isinstance(ui_elem, QtW.QCheckBox):
                         self.connect(ui_elem.stateChanged, self.__readCbx(ui_elem, var, model), group)
                     elif isinstance(ui_elem, QtW.QComboBox):
@@ -109,7 +109,7 @@ class BaseController:
     # These methods cannot use directly lambdas, because variable names would be reassigned within the loop.
     @staticmethod
     def __readCbx( ui_elem, var, model):
-        return lambda x: model.setState(var, x == Qt.Checked)
+        return lambda: model.setState(var, ui_elem.isChecked())
 
     @staticmethod
     def __readCbm(ui_elem, var, model):
@@ -207,6 +207,22 @@ class BaseController:
             controller.ui.setWindowFlag(Qt.WindowMaximizeButtonHint, on=False)
             controller.ui.setFixedSize(controller.ui.size())
         controller.ui.show()
+
+    def openAlert(self, title, message, type="about"):
+        wnd = None
+        if type == "about":
+            wnd = QtW.QMessageBox.about(self.ui, title, message)
+        elif type == "critical":
+            wnd = QtW.QMessageBox.critical(self.ui, title, message, buttons=QtW.QMessageBox.StandardButton.Ok)
+        elif type == "information":
+            wnd = QtW.QMessageBox.information(self.ui, title, message, buttons=QtW.QMessageBox.StandardButton.Ok)
+        elif type == "question":
+            wnd = QtW.QMessageBox.question(self.ui, title, message, buttons=QtW.QMessageBox.StandardButton.Ok)
+        elif type == "warning":
+            wnd = QtW.QMessageBox.warning(self.ui, title, message, buttons=QtW.QMessageBox.StandardButton.Ok)
+
+        return wnd
+
 
     def connectUIBehavior(self):
         pass # TODO: this method handles visual behavior (eg. enable/disable lora tab dynamically)

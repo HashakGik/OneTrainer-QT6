@@ -1,7 +1,7 @@
-from modules.ui.utils.base_controller import BaseController
+from modules.ui.controllers.base_controller import BaseController
 
 from modules.ui.utils.figure_widget import FigureWidget
-from modules.ui.utils.WorkerThread import WorkerThread
+from modules.ui.utils.WorkerThread import WorkerThread # TODO: replace with WorkerPool
 
 from PySide6.QtCore import QCoreApplication as QCA
 import PySide6.QtWidgets as QtW
@@ -101,7 +101,7 @@ class ConceptController(BaseController):
 
         plt.set_loglevel('WARNING')  # suppress errors about data type in bar chart
 
-        self.canvas = FigureWidget(parent=self.ui, width=7, height=3, zoom_tools=True, navigation_tools=False, edit_tools=False)
+        self.canvas = FigureWidget(parent=self.ui, width=7, height=3, zoom_tools=True)
         self.bucket_ax = self.canvas.figure.subplots()
         self.ui.histogramLay.addWidget(self.canvas.toolbar) # Matplotlib toolbar, in case we want the user to zoom in.
         self.ui.histogramLay.addWidget(self.canvas)
@@ -172,7 +172,7 @@ class ConceptController(BaseController):
         sec.spines["bottom"].set_linewidth(0)
         sec.set_xticks([0, (len(aspects) - 1) / 2, len(aspects) - 1], labels=["Wide", "Square", "Tall"])
         sec.tick_params('x', length=0)
-        self.canvas.draw()
+        self.canvas.draw_idle()
 
     def __enableTimer(self):
         def f(idx):

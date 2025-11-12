@@ -16,6 +16,7 @@ import PySide6.QtWidgets as QtW
 
 # TODO: if instead of QThread, uses threading.Thread, it can use threading events, preserving the old interface of modules.util.concept_stats...
 
+
 class WorkerThread(QThread):
     def __init__(self, worker_fn, on_end_fn=None, abort_fn=None, max_queue_size=None, terminate_on_empty=False, wakeup_time=500):
         super().__init__()

@@ -1,5 +1,5 @@
 from PySide6.QtCore import QCoreApplication as QCA
-from modules.ui.utils.base_controller import BaseController
+from modules.ui.controllers.base_controller import BaseController
 from modules.util.enum.TimeUnit import TimeUnit
 
 from modules.util.enum.GradientReducePrecision import GradientReducePrecision

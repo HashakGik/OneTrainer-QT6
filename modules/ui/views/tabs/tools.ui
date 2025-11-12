@@ -22,6 +22,20 @@
     </widget>
    </item>
    <item>
+    <widget class="QPushButton" name="imageBtn">
+     <property name="text">
+      <string>Image Tools</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="bulkCaptionBtn">
+     <property name="text">
+      <string>Bulk Caption Tools</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QPushButton" name="videoBtn">
      <property name="text">
       <string>Video Tools</string>
@@ -51,6 +65,15 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>datasetBtn</tabstop>
+  <tabstop>imageBtn</tabstop>
+  <tabstop>bulkCaptionBtn</tabstop>
+  <tabstop>videoBtn</tabstop>
+  <tabstop>convertBtn</tabstop>
+  <tabstop>samplingBtn</tabstop>
+  <tabstop>profilingBtn</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

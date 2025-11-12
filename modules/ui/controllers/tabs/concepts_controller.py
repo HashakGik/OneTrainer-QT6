@@ -1,5 +1,5 @@
 from PySide6.QtCore import QCoreApplication as QCA
-from modules.ui.utils.base_controller import BaseController
+from modules.ui.controllers.base_controller import BaseController
 
 from modules.ui.controllers.windows.concept_controller import ConceptController as WinConceptController
 from modules.ui.controllers.widgets.concept_controller import ConceptController as WidgetConceptController

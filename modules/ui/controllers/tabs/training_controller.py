@@ -1,6 +1,6 @@
 from PySide6 import QtWidgets
 from PySide6.QtCore import QCoreApplication as QCA
-from modules.ui.utils.base_controller import BaseController
+from modules.ui.controllers.base_controller import BaseController
 
 from modules.ui.controllers.windows.optimizer_controller import OptimizerController
 
@@ -154,8 +154,7 @@ class TrainingController(BaseController):
 
         plt.set_loglevel('WARNING')  # suppress errors about data type in bar chart
 
-        self.canvas = FigureWidget(parent=self.ui, width=4, height=4, zoom_tools=True, navigation_tools=False,
-                                   edit_tools=False)
+        self.canvas = FigureWidget(parent=self.ui, width=4, height=4, zoom_tools=True)
         self.canvas.setFixedHeight(300)
 
         self.ax = self.canvas.figure.subplots()
@@ -188,7 +187,7 @@ class TrainingController(BaseController):
 
             self.ax.cla()
             self.ax.hist(generator.generate(), bins=1000, range=(0, 999))
-            self.canvas.draw()
+            self.canvas.draw_idle()
         return f
 
 

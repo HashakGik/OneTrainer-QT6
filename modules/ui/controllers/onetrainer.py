@@ -1,4 +1,4 @@
-from modules.ui.utils.base_controller import BaseController
+from modules.ui.controllers.base_controller import BaseController
 
 from modules.ui.controllers.tabs.general_controller import GeneralController
 from modules.ui.controllers.tabs.model_controller import ModelController

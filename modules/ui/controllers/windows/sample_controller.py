@@ -1,10 +1,5 @@
-from modules.ui.utils.base_controller import BaseController
+from modules.ui.controllers.base_controller import BaseController
 from modules.ui.controllers.widgets.sample_params import SampleParamsController
-
-
-from PySide6.QtCore import QCoreApplication as QCA
-
-import PySide6.QtWidgets as QtW
 
 
 class SampleController(BaseController):

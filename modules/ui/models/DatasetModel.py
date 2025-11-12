@@ -1,5 +1,207 @@
 from modules.ui.models.SingletonConfigModel import SingletonConfigModel
+from modules.util.config.BaseConfig import BaseConfig
+
+from modules.util.enum.FileFilter import FileFilter
+from modules.util.enum.CaptionFilter import CaptionFilter
+
+from pathlib import Path
+import os
+import re
+
+from PIL import Image
+
+class DatasetConfig(BaseConfig):
+    path: str
+    valid: bool # Is a valid dataset path?
+    include_subdirectories: bool
+    file_filter: str
+    file_filter_mode: FileFilter
+    caption_filter: str
+    caption_filter_mode: CaptionFilter
+    files: list
+
+    @staticmethod
+    def default_values():
+        data = []
+
+        # name, default value, data type, nullable
+        data.append(("path", None, str, True))
+        data.append(("valid", False, bool, False))
+        data.append(("include_subdirectories", False, bool, False))
+        data.append(("file_filter", "", str, False))
+        data.append(("file_filter_mode", FileFilter.FILE, FileFilter, False))
+        data.append(("caption_filter", "", str, False))
+        data.append(("caption_filter_mode", CaptionFilter.MATCHES, CaptionFilter, False))
+        data.append(("files", [], list, False))
+
+        return DatasetConfig(data)
+
+
 
 class DatasetModel(SingletonConfigModel):
     def __init__(self):
-        pass
+        self.config = DatasetConfig.default_values()
+
+    def scan(self):
+        # TODO: is it safer to lock everything in a critical_region until the scan is done? Or is it reasonable to allow another thread to work on an old copy of files while scanning?
+        path = self.getState("path")
+        if path is not None:
+            root = Path(path)
+            include_subdirs = self.getState("include_subdirectories")
+
+            root_str = str(root.resolve())
+            root_len = len(root_str) + 1  # ".../dir" + "/"
+            stack = [root_str]
+            results = []
+
+            while stack:
+                top = stack.pop()
+                with os.scandir(top) as it:
+                    for entry in it:
+                        if entry.is_dir(follow_symlinks=False):
+                            if include_subdirs:
+                                stack.append(entry.path)
+                            continue
+                        name = entry.name
+                        if self.__is_supported(name):
+                            # strip root and back-slashes only once
+                            results.append(entry.path[root_len:].replace("\\", "/"))
+            self.setState("files", sorted(results, key=lambda x: self.natural_sort_key(x)))
+
+    def getFilteredFiles(self):
+        with self.critical_region():
+            path = self.config.path
+            unfiltered_files = self.config.files
+            file_filter = self.config.file_filter.strip()
+            file_filter_mode = self.config.file_filter_mode
+            caption_filter = self.config.caption_filter.strip()
+            caption_filter_mode = self.config.caption_filter_mode
+
+        if file_filter == "" and caption_filter == "":
+            return unfiltered_files
+
+        filtered = [str(f) for f in unfiltered_files]
+
+        if file_filter != "":
+            try:
+                pattern = re.compile(re.escape(file_filter), re.IGNORECASE)
+
+                if file_filter_mode == FileFilter.FILE:
+                    filtered = [
+                        f for f in filtered if pattern.search(Path(f).name)
+                    ]
+                elif file_filter_mode == FileFilter.PATH:
+                    filtered = [
+                        f for f in filtered if pattern.search(f)  # f is already str # TODO: This is taken from the original implementation, however it has the same effect of FileFilter.BOTH, because it does not strip the filename before searching
+                    ]
+                else:  # Both
+                    filtered = [
+                        f
+                        for f in filtered
+                        if pattern.search(f) or pattern.search(Path(f).name)
+                    ]
+            except re.error:
+                pass
+
+        if caption_filter != "" and path is not None:
+            try:
+                caption_files = []
+                for file_path_str in filtered:  # Iterate over strings
+                    full_path = Path(path) / file_path_str  # file_path_str is relative
+                    caption_path = full_path.with_suffix(".txt")
+
+                    if not caption_path.exists():
+                        continue
+                    try:
+                        caption_content = caption_path.read_text(
+                            encoding="utf-8"
+                        ).strip()
+                        match = False
+                        if caption_filter_mode == CaptionFilter.CONTAINS:
+                            if caption_filter.lower() in caption_content.lower():
+                                match = True
+                        elif caption_filter_mode == CaptionFilter.MATCHES:
+                            if caption_filter.lower() == caption_content.lower():
+                                match = True
+                        elif caption_filter_mode == CaptionFilter.EXCLUDES:
+                            if caption_filter.lower() not in caption_content.lower():
+                                match = True
+                        elif caption_filter_mode == CaptionFilter.REGEX:
+                            pat = re.compile(caption_filter, re.IGNORECASE)
+                            if pat.search(caption_content):
+                                match = True
+                        if match:
+                            caption_files.append(
+                                Path(file_path_str))  # Store as Path object if preferred, or keep as str
+                    except Exception:
+                        continue
+                filtered = [str(p) for p in caption_files]  # Convert back to list of strings if needed
+            except Exception as e:
+                print(f"Error applying caption filter: {e}")
+
+        return filtered
+
+    @staticmethod
+    def natural_sort_key(s):
+        """Sort strings with embedded numbers in natural order."""
+
+        # Split the input string into text and numeric parts
+        def convert(text):
+            return int(text) if text.isdigit() else text.lower()
+
+        return [convert(c) for c in re.split(r"(\d+)", s)]
+
+    def getSample(self, path):
+        image = None
+        caption = None
+        mask = None
+
+        basepath = self.getState("path")
+        image_path = Path(basepath) / path
+        mask_path = image_path.with_name(f"{image_path.stem}-masklabel.png")
+        caption_path = image_path.with_suffix(".txt")
+
+        if os.path.exists(image_path):
+            image = Image.open(image_path).convert("RGB")
+
+        if os.path.exists(mask_path):
+            mask = Image.open(mask_path).convert("RGB") # TODO: 1bit or grayscale should be enough. Save as RGB only at the end.
+
+        if os.path.exists(caption_path):
+            caption = caption_path.read_text(encoding="utf-8").strip()
+
+        return image, mask, caption
+
+
+    def __is_supported(self, filename):
+        """
+            6-10× faster than the original:
+            * No Path() construction
+            * No lower() for every file (only for the slice that matters)
+            * One hash-lookup, one endswith, no branches
+            """
+        dot = filename.rfind('.')
+        if dot == -1:
+            return False
+
+        # Check if the stem (filename without extension) ends with the mask suffix
+        if filename[:dot].endswith("-masklabel"):
+            return False
+
+        ext = filename[dot:].lower()  # slice, not copy of whole string
+        return ext in {'.bmp', '.jpg', '.jpeg', '.png', '.tif', '.tiff', '.webp', '.jxl'}
+
+
+    # TODO: Mask related methods here or in dataset controller?
+    # Mask history is handled by HistoryModel via signals/slots on the controller which operate on a list of masks:
+    # The list is unbounded (binary masks are cheap) and is associated with a pointer to the current index
+    # on edit: if the pointer is not the last element, the tail from the pointer onwards is popped. then a new (binary) image is pushed on the list
+    # on undo: the pointer is moved backwards
+    # on redo: if the pointer is not the last element, it is pushed forward
+    # on save: the mask pointed is converted to RGB and saved, and the history is emptied
+    # on reset: add a new "empty" mask to the list
+    # Redraws are scheduled for each event
+
+    # NOTE THAT THERE ARE TWO DISCRETE STATES TO TRACK AT DIFFERENT SCALES!
+    # 1)Mouse move (when clicked) events create strokes, which must be sampled with a timer enough to capture curves -> This is controller-related
+    # 2)Mouse release events save one snapshot to the history list -> Should this be controller or model based?

@@ -1,4 +1,4 @@
-from modules.ui.utils.base_controller import BaseController
+from modules.ui.controllers.base_controller import BaseController
 
 from modules.util.enum.NoiseScheduler import NoiseScheduler
 
