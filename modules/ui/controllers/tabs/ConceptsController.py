@@ -13,16 +13,9 @@ class ConceptsController(BaseController):
     def __init__(self, loader, parent=None):
         super().__init__(loader, "modules/ui/views/tabs/concepts.ui", name=QCA.translate("main_window_tabs", "Concepts"), parent=parent)
 
-        self.concept_window = WinConceptController(loader, parent=self)
+    def _setup(self):
+        self.concept_window = WinConceptController(self.loader, parent=self)
 
-        cb = self.__loadConfig()
-        self.connect(self.ui.presetCmb.textActivated, cb)
-        cb(self.ui.presetCmb.currentText())
-
-        cb2 = self.__updateConcepts()  # Requires self.concept_window
-        self.connect(QtW.QApplication.instance().conceptsChanged, cb2)
-        self.connect(QtW.QApplication.instance().stateChanged, cb2)
-        cb2()
 
     def _connectUIBehavior(self):
         self.connect(self.ui.addConceptBtn.clicked, self.__appendConcept())
@@ -32,12 +25,21 @@ class ConceptsController(BaseController):
 
         cb = self.__updateConfigs()
         self.connect(QtW.QApplication.instance().stateChanged, cb)
+        self._connectInvalidateCallback(cb)
 
         cb2 = self.__saveConfig()
         self.connect(QtW.QApplication.instance().aboutToQuit, cb2)
         self.connect(QtW.QApplication.instance().conceptsChanged, cb2)
 
-        cb()
+        cb3 = self.__loadConfig()
+        self.connect(self.ui.presetCmb.textActivated, cb3)
+        self._connectInvalidateCallback(cb3, self.ui.presetCmb.currentText())
+
+        cb4 = self.__updateConcepts()  # Requires self.concept_window
+        self.connect(QtW.QApplication.instance().conceptsChanged, cb4)
+        self.connect(QtW.QApplication.instance().stateChanged, cb4)
+        self._connectInvalidateCallback(cb4)
+
 
     def __updateConfigs(self):
         def f():

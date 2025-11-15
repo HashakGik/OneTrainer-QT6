@@ -15,13 +15,11 @@ class AdditionalEmbeddingsController(BaseController):
     def _connectUIBehavior(self):
         self.connect(self.ui.addEmbeddingBtn.clicked, lambda: self.__appendEmbedding())
 
-        callback = self.__updateEmbeddings()
-        self.connect(QtW.QApplication.instance().embeddingsChanged, callback)
-        self.connect(QtW.QApplication.instance().stateChanged, callback)
+        cb = self.__updateEmbeddings()
+        self.connect(QtW.QApplication.instance().embeddingsChanged, cb)
+        self.connect(QtW.QApplication.instance().stateChanged, cb)
 
-
-        # At the beginning invalidate the gui.
-        callback()
+        self._connectInvalidateCallback(cb)
 
 
     def __updateEmbeddings(self):

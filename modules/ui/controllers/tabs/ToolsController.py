@@ -15,14 +15,15 @@ class ToolsController(BaseController):
     def __init__(self, loader, parent=None):
         super().__init__(loader, "modules/ui/views/tabs/tools.ui", name=QCA.translate("main_window_tabs", "Tools"), parent=parent)
 
+    def _setup(self):
 
-        self.children = {"dataset": DatasetController(loader, parent=None),
-                         "image": ImageController(loader, parent=None),
-                         "bulk_caption": BulkCaptionController(loader, parent=None),
-                        "video": VideoController(loader, parent=None),
-                        "convert": ConvertController(loader, parent=None),
-                        "sample": SampleController(loader, parent=None),
-                        "profile": ProfileController(loader, parent=None)}
+        self.children = {"dataset": DatasetController(self.loader, parent=None),
+                         "image": ImageController(self.loader, parent=None),
+                         "bulk_caption": BulkCaptionController(self.loader, parent=None),
+                        "video": VideoController(self.loader, parent=None),
+                        "convert": ConvertController(self.loader, parent=None),
+                        "sample": SampleController(self.loader, parent=None),
+                        "profile": ProfileController(self.loader, parent=None)}
 
 
     def __open(self, window):

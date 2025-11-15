@@ -24,17 +24,10 @@ class SamplingController(BaseController):
 
     def __init__(self, loader, parent=None):
         super().__init__(loader, "modules/ui/views/tabs/sampling.ui", name=QCA.translate("main_window_tabs", "Sampling"), parent=parent)
+
+    def _setup(self):
         self.children = []
-        self.sample_window = NewSampleController(loader, parent=self)
-
-        cb = self.__updateSamples() # Requires self.sample_window
-        self.connect(QtW.QApplication.instance().samplesChanged, cb)
-        self.connect(QtW.QApplication.instance().stateChanged, cb)
-        cb()
-
-        cb2 = self.__loadConfig()
-        self.connect(self.ui.configCmb.textActivated, cb2)
-        cb2(self.ui.configCmb.currentText())
+        self.sample_window = NewSampleController(self.loader, parent=self)
 
     def _connectUIBehavior(self):
         self.connect(self.ui.addSampleBtn.clicked, self.__appendSample())
@@ -43,7 +36,14 @@ class SamplingController(BaseController):
         # TODO: sampleNowBtn, manualSampleBtn
         # TODO: configCmb read/write/ on stateChanged reload
 
+        cb = self.__updateSamples() # Requires self.sample_window
+        self.connect(QtW.QApplication.instance().samplesChanged, cb)
+        self.connect(QtW.QApplication.instance().stateChanged, cb)
+        self._connectInvalidateCallback(cb)
 
+        cb2 = self.__loadConfig()
+        self.connect(self.ui.configCmb.textActivated, cb2)
+        self._connectInvalidateCallback(cb2, self.ui.configCmb.currentText())
 
 
 
@@ -55,9 +55,7 @@ class SamplingController(BaseController):
         self.connect(QtW.QApplication.instance().samplesChanged, cb4)
         # TODO: this callback should also be invoked when training/sampling starts
 
-        # At the beginning invalidate the gui.
-
-        cb3()
+        self._connectInvalidateCallback(cb3)
 
     def __loadConfig(self):
         def f(filename):

@@ -24,6 +24,7 @@ class DatasetController(BaseController):
     def __init__(self, loader, parent=None):
         super().__init__(loader, "modules/ui/views/windows/dataset.ui", name=None, parent=parent)
 
+    def _setup(self):
         self.theme = "dark" if QtG.QGuiApplication.styleHints().colorScheme() == QtG.Qt.ColorScheme.Dark else "light"
 
         # (fn, type, text, name, icon, tooltip, shortcut, spinbox_range)
@@ -87,46 +88,15 @@ class DatasetController(BaseController):
 
         self.canvas = FigureWidget(parent=self.ui, width=7, height=5, zoom_tools=True, other_tools=self.tools, emit_clicked=True, emit_moved=True, emit_wheel=True, emit_released=True, use_data_coordinates=True)
         self.ax = self.canvas.figure.subplots()
+        self.ax.set_axis_off()
 
         self.ui.canvasLay.addWidget(self.canvas.toolbar)
         self.ui.canvasLay.addWidget(self.canvas)
 
-        self.connect(self.canvas.clicked, self.__onClicked())
-        self.connect(self.canvas.released, self.__onReleased())
-        self.connect(self.canvas.moved, self.__onMoved())
-        self.connect(self.canvas.wheelUp, self.__onWheelUp())
-        self.connect(self.canvas.wheelDown, self.__onWheelDown())
-
-        # TODO: new windows: Image tools, Bulk Caption edit
-
-        """
-        DRAWING:
-        https://stackoverflow.com/questions/76571540/how-do-i-add-figurecanvasqtagg-in-a-pyqt-layout
-
-        https://stackoverflow.com/questions/72242466/how-to-draw-on-an-image-tkinter-canvas-pil
-
-        """
 
 
-        self.help_window = QtW.QMessageBox(QtW.QMessageBox.Icon.NoIcon, QCA.translate("dialog_window", "Dataset Tools Help"),
-                                 QCA.translate("help_dataset", """
-Keyboard shortcuts when focusing on the prompt input field:
-Up arrow: previous image
-Down arrow: next image
-Return: save
-Ctrl+M: only show the mask
-Ctrl+D: draw mask editing mode
-Ctrl+F: fill mask editing mode
-
-When editing masks:
-Left click: add mask
-Right click: remove mask
-Mouse wheel: increase or decrease brush size
-"""))
-        self.help_window.setModal(False) # TODO: Change to openAlert. Change content to reflect new controls.
-
-        self.mask_window = MaskController(loader, parent=self)
-        self.caption_window = CaptionController(loader, parent=self)
+        self.mask_window = MaskController(self.loader, parent=self)
+        self.caption_window = CaptionController(self.loader, parent=self)
 
         
         self.leafWidgets = {}
@@ -135,7 +105,6 @@ Mouse wheel: increase or decrease brush size
         self.alpha = 0.05 # TODO: read/write from toolbar
         self.brush = 1.0 # TODO read/write from toolbar
         self.current_tool = EditMode.NONE # TODO: reset every time a new image is loaded?
-        self.ax = self.canvas.figure.subplots()
         self.im = None
 
     def __openDataset(self):
@@ -337,6 +306,27 @@ Mouse wheel: increase or decrease brush size
             pass # We might consider adding a dependency to: https://pypi.org/project/show-in-file-manager/
         return f
 
+    def __openHelp(self):
+        def f():
+            self.openAlert(QCA.translate("dialog_window", "Dataset Tools Help"),
+                    QCA.translate("help_dataset",
+"""
+Keyboard shortcuts when focusing on the prompt input field:
+Up arrow: previous image
+Down arrow: next image
+Return: save
+Ctrl+M: only show the mask
+Ctrl+D: draw mask editing mode
+Ctrl+F: fill mask editing mode
+
+When editing masks:
+Left click: add mask
+Right click: remove mask
+Mouse wheel: increase or decrease brush size
+"""),
+            type="information")
+        return f
+
     def __onClicked(self):
         def f(btn, x, y):
             if self.current_tool == EditMode.FILL:
@@ -403,7 +393,7 @@ Mouse wheel: increase or decrease brush size
         self.connect(self.ui.openBtn.clicked, self.__openDataset())
         self.connect(self.ui.generateMaskBtn.clicked, lambda: self.openWindow(self.mask_window, fixed_size=True))
         self.connect(self.ui.generateCaptionsBtn.clicked, lambda: self.openWindow(self.caption_window, fixed_size=True))
-        self.connect(self.ui.helpBtn.clicked, lambda: self.help_window.show())
+        self.connect(self.ui.helpBtn.clicked, self.__openHelp())
         self.connect(self.ui.browseBtn.clicked, self.__browse())
 
         self.connect(self.ui.fileTreeWdg.itemSelectionChanged, self.__selectFile())
@@ -412,6 +402,14 @@ Mouse wheel: increase or decrease brush size
         self.connect(self.ui.fileFilterCmb.activated, self.__updateDataset())
         self.connect(self.ui.captionFilterLed.editingFinished, self.__updateDataset())
         self.connect(self.ui.captionFilterCmb.activated, self.__updateDataset())
+
+
+        self.connect(self.canvas.clicked, self.__onClicked())
+        self.connect(self.canvas.released, self.__onReleased())
+        self.connect(self.canvas.moved, self.__onMoved())
+        self.connect(self.canvas.wheelUp, self.__onWheelUp())
+        self.connect(self.canvas.wheelDown, self.__onWheelDown())
+
 
 
     def _loadPresets(self):

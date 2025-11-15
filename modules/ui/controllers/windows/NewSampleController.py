@@ -11,7 +11,8 @@ class NewSampleController(BaseController):
     def __init__(self, loader, parent=None):
         super().__init__(loader, "modules/ui/views/windows/new_sample.ui", name=None, parent=parent)
 
-        self.samplingParams = SampleParamsController(loader, parent=parent)
+    def _setup(self):
+        self.samplingParams = SampleParamsController(self.loader, parent=self.parent)
         self.ui.paramsLay.addWidget(self.samplingParams.ui)
 
     def _connectUIBehavior(self):

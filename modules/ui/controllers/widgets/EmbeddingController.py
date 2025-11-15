@@ -13,7 +13,14 @@ class EmbeddingController(BaseController):
         self.idx = idx
         super().__init__(loader, "modules/ui/views/widgets/embedding.ui", name=None, parent=parent)
 
-        # Signal connections here, because idx is needed, and connectUIBehavior() is invoked before self.idx exists.
+
+
+    def _connectUIBehavior(self):
+        self._connectFileDialog(self.ui.baseEmbeddingBtn, self.ui.baseEmbeddingLed, is_dir=False, save=False,
+                               title=QCA.translate("dialog_window", "Open base embeddings"),
+                               filters=QCA.translate("filetype_filters",
+                                                     "Safetensors (*.safetensors);;Diffusers (model_index.json);;Checkpoints (*.ckpt, *.pt, *.bin);;All Files (*.*)"))
+
         self.dynamic_state_ui_connections = {
             "additional_embeddings.{idx}.model_name": "baseEmbeddingLed",
             "additional_embeddings.{idx}.placeholder": "placeholderLed",
@@ -25,18 +32,9 @@ class EmbeddingController(BaseController):
             "additional_embeddings.{idx}.initial_embedding_text": "initialEmbeddingLed",
         }
 
-        self._connectStateUi(self.dynamic_state_ui_connections, StateModel.instance(), signal=QtW.QApplication.instance().embeddingsChanged, update_after_connect=True, idx=self.idx)
-
-
-
-
-    def _connectUIBehavior(self):
-        self._connectFileDialog(self.ui.baseEmbeddingBtn, self.ui.baseEmbeddingLed, is_dir=False, save=False,
-                               title=QCA.translate("dialog_window", "Open base embeddings"),
-                               filters=QCA.translate("filetype_filters",
-                                                     "Safetensors (*.safetensors);;Diffusers (model_index.json);;Checkpoints (*.ckpt, *.pt, *.bin);;All Files (*.*)"))
-
-
+        self._connectStateUi(self.dynamic_state_ui_connections, StateModel.instance(),
+                             signal=QtW.QApplication.instance().embeddingsChanged, update_after_connect=True,
+                             idx=self.idx)
 
     def _loadPresets(self):
         for e in TimeUnit.enabled_values():

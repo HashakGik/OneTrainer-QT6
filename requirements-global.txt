@@ -55,6 +55,7 @@ pyside6==6.10.0 # 6.4.2
 pyqt6==6.10.0 # 6.4.2
 PyQt6-Qt6==6.10.0 # 6.4.2
 matplotlib
+show-in-file-manager
 
 # cloud
 runpod==1.7.10

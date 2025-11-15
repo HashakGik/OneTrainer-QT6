@@ -27,69 +27,14 @@ class ConceptController(BaseController):
     def __init__(self, loader, parent=None):
         super().__init__(loader, "modules/ui/views/windows/concept.ui", name=None, parent=parent)
 
+    def _setup(self):
         self.idx = 0
         self.file_index = 0
         self.timer = QTimer()
         self.worker = WorkerThread(self.__scanConcept(), on_end_fn=self.__conceptScannedCallback(), abort_fn=self.__abortScan())
         # self.worker.start() # TODO: either solve deadlock on advanced scan, or restore original implementation.
 
-        self.connect(self.timer.timeout, self.__updateTitle())
-        self.connect(QtW.QApplication.instance().openConcept, self.__enableTimer())
-        self.connect(QtW.QApplication.instance().openConcept, self.__updateImage())
 
-        self.dynamic_state_ui_connections = {
-            # General tab.
-            "{idx}.enabled": "enabledCbx",
-            "{idx}.type": "conceptTypeCmb",
-            "{idx}.path": "pathLed",
-            "{idx}.text.prompt_source": "promptSourceCmb",
-            "{idx}.text.prompt_path": "promptSourceLed",
-            "{idx}.include_subdirectories": "includeSubdirectoriesCbx",
-            "{idx}.image_variations": "imageVariationsSbx",
-            "{idx}.text_variations": "textVariationsSbx",
-            "{idx}.balancing": "balancingSbx",
-            "{idx}.balancing_strategy": "balancingCmb",
-            "{idx}.loss_weight": "lossWeightSbx",
-            # Image augmentation tab.
-            "{idx}.image.enable_crop_jitter": "rndJitterCbx",
-            "{idx}.image.enable_random_flip": "rndFlipCbx",
-            "{idx}.image.enable_fixed_flip": "fixFlipCbx",
-            "{idx}.image.enable_random_rotate": "rndRotationCbx",
-            "{idx}.image.enable_fixed_rotate": "fixRotationCbx",
-            "{idx}.image.random_rotate_max_angle": "rotationSbx",
-            "{idx}.image.enable_random_brightness": "rndBrightnessCbx",
-            "{idx}.image.enable_fixed_brightness": "fixBrightnessCbx",
-            "{idx}.image.random_brightness_max_strength": "brightnessSbx",
-            "{idx}.image.enable_random_contrast": "rndContrastCbx",
-            "{idx}.image.enable_fixed_contrast": "fixContrastCbx",
-            "{idx}.image.random_contrast_max_strength": "contrastSbx",
-            "{idx}.image.enable_random_saturation": "rndSaturationCbx",
-            "{idx}.image.enable_fixed_saturation": "fixSaturationCbx",
-            "{idx}.image.random_saturation_max_strength": "saturationSbx",
-            "{idx}.image.enable_random_hue": "rndHueCbx",
-            "{idx}.image.enable_fixed_hue": "fixHueCbx",
-            "{idx}.image.random_hue_max_strength": "hueSbx",
-            "{idx}.image.enable_resolution_override": "fixResolutionOverrideCbx",
-            "{idx}.image.resolution_override": "resolutionOverrideSbx",
-            "{idx}.image.enable_random_circular_mask_shrink": "rndCircularMaskCbx",
-            "{idx}.image.enable_random_mask_rotate_crop": "rndRotateCropCbx",
-            # Text augmentation tab.
-            "{idx}.text.enable_tag_shuffling": "tagShufflingCbx",
-            "{idx}.text.tag_delimiter": "tagDelimiterLed",
-            "{idx}.text.keep_tags_count": "keepTagCountSbx",
-            "{idx}.text.tag_dropout_enable": "tagDropoutCbx",
-            "{idx}.text.tag_dropout_mode": "dropoutModeCmb",
-            "{idx}.text.tag_dropout_probability": "dropoutProbabilitySbx",
-            "{idx}.text.tag_dropout_special_tags_mode": "specialDropoutTagsCmb",
-            "{idx}.text.tag_dropout_special_tags": "specialDropoutTagsLed",
-            "{idx}.text.tag_dropout_special_tags_regex": "specialTagsRegexCbx",
-            "{idx}.text.caps_randomize_enable": "randomizeCapitalizationCbx",
-            "{idx}.text.caps_randomize_probability": "capitalizationProbabilitySbx",
-            "{idx}.text.caps_randomize_mode": "capitalizationModeLed",
-            "{idx}.text.caps_randomize_lowercase": "forceLowercaseCbx",
-        }
-
-        self.connect(QtW.QApplication.instance().openConcept, self.__reconnectControls())
 
         # TODO: TKinter implementation does a basic scan automatically when the window is created, then retries an advanced one if basic took < 0.1s
         # A more robust approach would be to have a queuing mechanism:
@@ -278,6 +223,64 @@ class ConceptController(BaseController):
         self.connect(QtW.QApplication.instance().scannedConcept, self.__updateStats())
 
         # TODO: connect conceptsChanged with a global basic scanning
+
+        self.connect(self.timer.timeout, self.__updateTitle())
+        self.connect(QtW.QApplication.instance().openConcept, self.__enableTimer())
+        self.connect(QtW.QApplication.instance().openConcept, self.__updateImage())
+
+        self.dynamic_state_ui_connections = {
+            # General tab.
+            "{idx}.enabled": "enabledCbx",
+            "{idx}.type": "conceptTypeCmb",
+            "{idx}.path": "pathLed",
+            "{idx}.text.prompt_source": "promptSourceCmb",
+            "{idx}.text.prompt_path": "promptSourceLed",
+            "{idx}.include_subdirectories": "includeSubdirectoriesCbx",
+            "{idx}.image_variations": "imageVariationsSbx",
+            "{idx}.text_variations": "textVariationsSbx",
+            "{idx}.balancing": "balancingSbx",
+            "{idx}.balancing_strategy": "balancingCmb",
+            "{idx}.loss_weight": "lossWeightSbx",
+            # Image augmentation tab.
+            "{idx}.image.enable_crop_jitter": "rndJitterCbx",
+            "{idx}.image.enable_random_flip": "rndFlipCbx",
+            "{idx}.image.enable_fixed_flip": "fixFlipCbx",
+            "{idx}.image.enable_random_rotate": "rndRotationCbx",
+            "{idx}.image.enable_fixed_rotate": "fixRotationCbx",
+            "{idx}.image.random_rotate_max_angle": "rotationSbx",
+            "{idx}.image.enable_random_brightness": "rndBrightnessCbx",
+            "{idx}.image.enable_fixed_brightness": "fixBrightnessCbx",
+            "{idx}.image.random_brightness_max_strength": "brightnessSbx",
+            "{idx}.image.enable_random_contrast": "rndContrastCbx",
+            "{idx}.image.enable_fixed_contrast": "fixContrastCbx",
+            "{idx}.image.random_contrast_max_strength": "contrastSbx",
+            "{idx}.image.enable_random_saturation": "rndSaturationCbx",
+            "{idx}.image.enable_fixed_saturation": "fixSaturationCbx",
+            "{idx}.image.random_saturation_max_strength": "saturationSbx",
+            "{idx}.image.enable_random_hue": "rndHueCbx",
+            "{idx}.image.enable_fixed_hue": "fixHueCbx",
+            "{idx}.image.random_hue_max_strength": "hueSbx",
+            "{idx}.image.enable_resolution_override": "fixResolutionOverrideCbx",
+            "{idx}.image.resolution_override": "resolutionOverrideSbx",
+            "{idx}.image.enable_random_circular_mask_shrink": "rndCircularMaskCbx",
+            "{idx}.image.enable_random_mask_rotate_crop": "rndRotateCropCbx",
+            # Text augmentation tab.
+            "{idx}.text.enable_tag_shuffling": "tagShufflingCbx",
+            "{idx}.text.tag_delimiter": "tagDelimiterLed",
+            "{idx}.text.keep_tags_count": "keepTagCountSbx",
+            "{idx}.text.tag_dropout_enable": "tagDropoutCbx",
+            "{idx}.text.tag_dropout_mode": "dropoutModeCmb",
+            "{idx}.text.tag_dropout_probability": "dropoutProbabilitySbx",
+            "{idx}.text.tag_dropout_special_tags_mode": "specialDropoutTagsCmb",
+            "{idx}.text.tag_dropout_special_tags": "specialDropoutTagsLed",
+            "{idx}.text.tag_dropout_special_tags_regex": "specialTagsRegexCbx",
+            "{idx}.text.caps_randomize_enable": "randomizeCapitalizationCbx",
+            "{idx}.text.caps_randomize_probability": "capitalizationProbabilitySbx",
+            "{idx}.text.caps_randomize_mode": "capitalizationModeLed",
+            "{idx}.text.caps_randomize_lowercase": "forceLowercaseCbx",
+        }
+
+        self.connect(QtW.QApplication.instance().openConcept, self.__reconnectControls())
 
 
     def _connectInputValidation(self):

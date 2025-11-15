@@ -35,20 +35,11 @@ class OnetrainerController(BaseController):
 
     def __init__(self, loader):
         super().__init__(loader, "modules/ui/views/windows/onetrainer.ui", name="OneTrainer", parent=None)
+
+    def _setup(self):
         self.save_window = SaveController(self.loader, parent=self)
         self.children = {}
         self.__createTabs()
-
-        cb1 = self.__updateModel()
-        self.connect(self.ui.modelTypeCmb.activated, cb1)
-
-        cb2 = self.__updateConfigs()
-        self.connect(QtW.QApplication.instance().stateChanged, cb2)
-
-
-        # At the beginning invalidate the gui.
-        cb1()
-        cb2()
 
         # TODO: AT STARTUP LOAD #.json!
 
@@ -114,6 +105,15 @@ class OnetrainerController(BaseController):
         self.connect(self.ui.modelTypeCmb.activated, lambda _: self.__changeModel())
 
         self.connect(self.ui.configCmb.activated, lambda idx: self.__loadConfig(self.ui.configCmb.currentData(), idx))
+
+        cb1 = self.__updateModel()
+        self.connect(self.ui.modelTypeCmb.activated, cb1)
+
+        cb2 = self.__updateConfigs()
+        self.connect(QtW.QApplication.instance().stateChanged, cb2)
+
+        self._connectInvalidateCallback(cb1)
+        self._connectInvalidateCallback(cb2)
 
     def __loadConfig(self, config, idx=None):
         StateModel.instance().load_config(config)

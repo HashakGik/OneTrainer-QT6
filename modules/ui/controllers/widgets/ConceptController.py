@@ -22,7 +22,7 @@ class ConceptController(BaseController):
         cb = self.__updateConcept()
         self.connect(QtW.QApplication.instance().conceptsChanged, cb)
 
-        cb()
+        self._connectInvalidateCallback(cb)
 
     def __openConceptWindow(self):
         def f():

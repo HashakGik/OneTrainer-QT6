@@ -143,14 +143,8 @@ class TrainingController(BaseController):
     def __init__(self, loader, parent=None):
         super().__init__(loader, "modules/ui/views/tabs/training.ui", name=QCA.translate("main_window_tabs", "Training"), parent=parent)
 
-        self.optimizer_window = OptimizerController(loader, parent=self)
-
-        callback = self.__updateModel()
-        self.connect(QtW.QApplication.instance().modelChanged, callback)
-
-        cb = self.__enableCustomScheduler() # This must be connected after __updateModel, otherwise it will not enable/disable custom parameters correctly
-        self.connect(self.ui.schedulerCmb.activated, cb)
-        self.connect(QtW.QApplication.instance().stateChanged, cb)
+    def _setup(self):
+        self.optimizer_window = OptimizerController(self.loader, parent=self)
 
         plt.set_loglevel('WARNING')  # suppress errors about data type in bar chart
 
@@ -163,12 +157,6 @@ class TrainingController(BaseController):
 
         self.ax.tick_params(axis='x', which="both")
         self.ax.tick_params(axis='y', which="both")
-
-        self.__postConnectUIBehavior()
-        # At the beginning invalidate the gui.
-        callback(StateModel.instance().getState("model_type"), StateModel.instance().getState("training_method"))
-        self.optimizer_window.ui.optimizerCmb.setCurrentIndex(self.ui.optimizerCmb.currentIndex())
-        cb()
 
     def __updatePreview(self):
         def f():
@@ -256,19 +244,33 @@ class TrainingController(BaseController):
         pass # TODO: resolutionLed validation, learningRateLed validation, minNoisingStrengthSbx <= maxNoisingStrengthSbx
 
     def _connectUIBehavior(self):
-
-
         self.connect(self.ui.layerFilterCmb.activated, lambda _: self.__connectLayerFilter())
-
-
 
         cb2 = self.__updateSchedulerParams()
         self.connect(QtW.QApplication.instance().stateChanged, cb2)
 
-        cb2()
+        self._connectInvalidateCallback(cb2)
 
         self.connect(self.ui.tableWidget.currentCellChanged, self.__changeCell())
         self.connect(self.ui.updatePreviewBtn.clicked, self.__updatePreview())
+
+        callback = self.__updateModel()
+        self.connect(QtW.QApplication.instance().modelChanged, callback)
+
+        self._connectInvalidateCallback(callback, StateModel.instance().getState("model_type"),
+                 StateModel.instance().getState("training_method"))
+
+        cb = self.__enableCustomScheduler()  # This must be connected after __updateModel, otherwise it will not enable/disable custom parameters correctly
+        self.connect(self.ui.schedulerCmb.activated, cb)
+        self.connect(QtW.QApplication.instance().stateChanged, cb)
+
+        self.connect(self.ui.optimizerBtn.clicked, lambda: self.openWindow(self.optimizer_window, fixed_size=True))
+        self.connect(self.ui.optimizerCmb.activated, self.__updateOptimizer())
+
+        # At the beginning invalidate the gui.
+
+        self.optimizer_window.ui.optimizerCmb.setCurrentIndex(self.ui.optimizerCmb.currentIndex())
+        self._connectInvalidateCallback(cb)
 
 
     def __changeCell(self):
@@ -309,15 +311,6 @@ class TrainingController(BaseController):
         return f
 
 
-    # This is called manually at the end of the constructor.
-    def __postConnectUIBehavior(self): # TODO: REFACTOR! this becomes setup()
-        self.connect(self.ui.optimizerBtn.clicked, lambda: self.openWindow(self.optimizer_window, fixed_size=True))
-        self.connect(self.ui.optimizerCmb.activated, self.__updateOptimizer())
-
-        for e in Optimizer.enabled_values():
-            self.optimizer_window.ui.optimizerCmb.addItem(e.pretty_print(), userData=e)
-
-
     def __connectLayerFilter(self):
         self.ui.layerFilterRegexCbx.setEnabled(self.ui.layerFilterCmb.currentText() == "custom")
         self.ui.layerFilterLed.setText(",".join(self.ui.layerFilterCmb.currentData()))
@@ -349,6 +342,7 @@ class TrainingController(BaseController):
 
         for e in Optimizer.enabled_values():
             self.ui.optimizerCmb.addItem(e.pretty_print(), userData=e)
+            self.optimizer_window.ui.optimizerCmb.addItem(e.pretty_print(), userData=e)
 
         for e in LearningRateScheduler.enabled_values():
             self.ui.schedulerCmb.addItem(e.pretty_print(), userData=e)
@@ -358,3 +352,4 @@ class TrainingController(BaseController):
 
         for e in DataType.enabled_values(context="training_fallback"):
             self.ui.fallbackDTypeCmb.addItem(e.pretty_print(), userData=e)
+

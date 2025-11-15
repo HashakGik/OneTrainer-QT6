@@ -8,15 +8,15 @@ from PySide6.QtCore import Slot, Qt
 import re
 import webbrowser
 
+from showinfm import show_in_file_manager
+
 from modules.ui.utils.SNLineEdit import SNLineEdit
 
 from modules.ui.models.StateModel import StateModel
 
 # TODO: CLEANUP:
-# 0) Maybe it is cleaner to define callbacks always in __init__, instead of connectUIBehavior?
 # 1) Naming convention is all over the place (camelCase, snake_case, inconsistent visibility __method vs _method vs method)
 # 2) Some callbacks are invoked as lambdas, others as self.__method() which returns a function f(). Choose one!
-# 3) Finite-state machine like behavior needs to be double checked/simplified.
 # 4) Use self.openAlert to provide user feedback.
 # 5) Uniform error logging (sometimes it is print, others it uses logger.logging) and exceptions (print(e) vs full traceback)
 
@@ -30,20 +30,46 @@ class BaseController:
         self.name = name
 
         self.connections = {}
+        self.invalidation_callbacks = []
 
         self._setup()
 
         self._connectUIBehavior()
         self._connectInputValidation()
         self._loadPresets()
+
         self._connectStateUi(self.state_ui_connections, StateModel.instance(), signal=QtW.QApplication.instance().stateChanged, **kwargs)
 
-        # TODO: connect disconnectAll to some signal (eg aboutToClose) or not?
+        self._invalidateUI()
 
-    # TODO: refactor to use this method for OptimizerController and TrainingController, to make connections cleaner
-    # This is called before elements are connected together, therefore it can be used to create dynamic GUI elements programmatically.
+    # Use this method to initialize auxiliary attributes of each controller.
     def _setup(self):
         pass
+
+    # Use this method to connect signals and slots for visual behavior.
+    def _connectUIBehavior(self):
+        pass
+
+    # Use this method to handle complex field validation OTHER than the automatic validations defined in *.ui files.
+    def _connectInputValidation(self):
+        pass
+
+    # Use this method to load preset values for each control.
+    def _loadPresets(self):
+        pass
+
+    def _connectInvalidateCallback(self, fn, *args):
+        if len(args) > 0:
+            self.invalidation_callbacks.append((fn, *args))
+        else:
+            self.invalidation_callbacks.append((fn, None))
+
+    def _invalidateUI(self):
+        for fn, *args in self.invalidation_callbacks:
+            if len(args) > 0 and args[0] is not None:
+                fn(*args)
+            else:
+                fn()
 
     def connect(self, signal, slot, key="global"):
         c = signal.connect(slot)
@@ -128,34 +154,24 @@ class BaseController:
 
     @staticmethod
     def _writeControl(ui_elem, var, model):
-        try: # TODO: workaround: when ui_elem has been deallocated in C++, this throws a RuntimeError. I have not found a way to detect this and avoid calling the method.
-            ui_elem.blockSignals(True)
-            val = model.getState(var)
-            if val is not None:
-                if isinstance(ui_elem, QtW.QCheckBox):
-                    ui_elem.setChecked(val)
-                elif isinstance(ui_elem, QtW.QComboBox):
-                    idx = ui_elem.findData(val)
-                    if idx != -1:
-                        ui_elem.setCurrentIndex(idx)
-                elif isinstance(ui_elem, QtW.QSpinBox) or isinstance(ui_elem, QtW.QDoubleSpinBox):
-                    ui_elem.setValue(float(val))
-                elif isinstance(ui_elem, SNLineEdit): # IMPORTANT: keep this above base class!
-                    ui_elem.setText(str(val))
-                elif isinstance(ui_elem, QtW.QLineEdit):
-                    ui_elem.setText(val)
-            ui_elem.blockSignals(False)
-        except Exception as e:
-            print(e)
-            pass
-
-
-
+        ui_elem.blockSignals(True)
+        val = model.getState(var)
+        if val is not None:
+            if isinstance(ui_elem, QtW.QCheckBox):
+                ui_elem.setChecked(val)
+            elif isinstance(ui_elem, QtW.QComboBox):
+                idx = ui_elem.findData(val)
+                if idx != -1:
+                    ui_elem.setCurrentIndex(idx)
+            elif isinstance(ui_elem, QtW.QSpinBox) or isinstance(ui_elem, QtW.QDoubleSpinBox):
+                ui_elem.setValue(float(val))
+            elif isinstance(ui_elem, SNLineEdit): # IMPORTANT: keep this above base class!
+                ui_elem.setText(str(val))
+            elif isinstance(ui_elem, QtW.QLineEdit):
+                ui_elem.setText(val)
+        ui_elem.blockSignals(False)
 
     def _connectFileDialog(self, tool_button, edit_box, is_dir=False, save=False, title=None, filters=None):
-        assert filters is None or not is_dir, "Directories cannot be associated with filters."
-
-        @Slot()
         def f(elem):
             diag = QtW.QFileDialog()
 
@@ -207,29 +223,25 @@ class BaseController:
             controller.ui.setFixedSize(controller.ui.size())
         controller.ui.show()
 
-    def openAlert(self, title, message, type="about"):
+    def openAlert(self, title, message, type="about", buttons=QtW.QMessageBox.StandardButton.Ok):
         wnd = None
         if type == "about":
-            wnd = QtW.QMessageBox.about(self.ui, title, message)
+            wnd = QtW.QMessageBox.about(self.ui, title, message, buttons=buttons)
         elif type == "critical":
-            wnd = QtW.QMessageBox.critical(self.ui, title, message, buttons=QtW.QMessageBox.StandardButton.Ok)
+            wnd = QtW.QMessageBox.critical(self.ui, title, message, buttons=buttons)
         elif type == "information":
-            wnd = QtW.QMessageBox.information(self.ui, title, message, buttons=QtW.QMessageBox.StandardButton.Ok)
+            wnd = QtW.QMessageBox.information(self.ui, title, message, buttons=buttons)
         elif type == "question":
-            wnd = QtW.QMessageBox.question(self.ui, title, message, buttons=QtW.QMessageBox.StandardButton.Ok)
+            wnd = QtW.QMessageBox.question(self.ui, title, message, buttons=buttons)
         elif type == "warning":
-            wnd = QtW.QMessageBox.warning(self.ui, title, message, buttons=QtW.QMessageBox.StandardButton.Ok)
+            wnd = QtW.QMessageBox.warning(self.ui, title, message, buttons=buttons)
 
-        return wnd
+        return wnd # TODO: check outcome with if openAlert(...) == QMessageBox.StandardButton.Ok
+
 
     def openUrl(self, url):
         webbrowser.open(url, new=0, autoraise=False)
 
-    def _connectUIBehavior(self):
-        pass # TODO: this method handles visual behavior (eg. enable/disable lora tab dynamically)
-
-    def _connectInputValidation(self):
-        pass # TODO: this method handles field validation OTHER than the automatic field validations defined in ui files.
-
-    def _loadPresets(self):
-        pass
+    def browse(self, dir):
+        if os.path.isdir(dir):
+            show_in_file_manager(dir)

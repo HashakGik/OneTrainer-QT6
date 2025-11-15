@@ -611,10 +611,6 @@ class OptimizerController(BaseController):
         super().__init__(loader, "modules/ui/views/windows/optimizer.ui", name=None, parent=parent)
 
 
-        callback = self.__updateOptimizer(from_index=False)
-        self.connect(QtW.QApplication.instance().optimizerChanged, callback)
-        self.connect(QtW.QApplication.instance().stateChanged, lambda: callback(StateModel.instance().getState("optimizer.optimizer")))
-
     def _setup(self):
         row = 0
         for k in sorted(self.optimizer_params.keys()):
@@ -689,3 +685,8 @@ class OptimizerController(BaseController):
     def _connectUIBehavior(self):
         self.connect(self.ui.optimizerCmb.activated, self.__updateOptimizer(from_index=True))
         self.connect(self.ui.loadDefaultsBtn.clicked, lambda: self.__loadDefaults())
+
+
+        callback = self.__updateOptimizer(from_index=False)
+        self.connect(QtW.QApplication.instance().optimizerChanged, callback)
+        self.connect(QtW.QApplication.instance().stateChanged, lambda: callback(StateModel.instance().getState("optimizer.optimizer")))

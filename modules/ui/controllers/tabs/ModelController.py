@@ -59,8 +59,8 @@ class ModelController(BaseController):
         callback = self.__updateModel()
         QtW.QApplication.instance().modelChanged.connect(callback)
 
-        # At the beginning invalidate the gui.
-        callback(StateModel.instance().getState("model_type"), StateModel.instance().getState("training_method"))
+
+        self._connectInvalidateCallback(callback, StateModel.instance().getState("model_type"), StateModel.instance().getState("training_method"))
 
     def __updateModel(self):
         def f(model_type, training_method):
