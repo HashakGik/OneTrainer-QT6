@@ -1,11 +1,11 @@
 import sys
 import os
-from modules.ui.controllers.onetrainer import OnetrainerController
+from modules.ui.controllers.OneTrainerController import OnetrainerController
 
-from modules.ui.utils.onetrainer_application import OnetrainerApplication
+from modules.ui.utils.OneTrainerApplication import OnetrainerApplication
 from PySide6.QtUiTools import QUiLoader
 
-from modules.ui.utils.sn_line_edit import SNLineEdit
+from modules.ui.utils.SNLineEdit import SNLineEdit
 
 if __name__ == "__main__":
     os.environ["QT_QPA_PLATFORM"] = "xcb" # Suppress Wayland warnings on NVidia drivers.

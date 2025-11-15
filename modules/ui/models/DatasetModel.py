@@ -151,7 +151,7 @@ class DatasetModel(SingletonConfigModel):
 
         return [convert(c) for c in re.split(r"(\d+)", s)]
 
-    def getSample(self, path):
+    def getSample(self, path): # TODO: should this become a controller method instead?
         image = None
         caption = None
         mask = None
@@ -165,7 +165,7 @@ class DatasetModel(SingletonConfigModel):
             image = Image.open(image_path).convert("RGB")
 
         if os.path.exists(mask_path):
-            mask = Image.open(mask_path).convert("RGB") # TODO: 1bit or grayscale should be enough. Save as RGB only at the end.
+            mask = Image.open(mask_path).convert("L") # TODO: Save as RGB only at the end.
 
         if os.path.exists(caption_path):
             caption = caption_path.read_text(encoding="utf-8").strip()
@@ -190,18 +190,3 @@ class DatasetModel(SingletonConfigModel):
 
         ext = filename[dot:].lower()  # slice, not copy of whole string
         return ext in {'.bmp', '.jpg', '.jpeg', '.png', '.tif', '.tiff', '.webp', '.jxl'}
-
-
-    # TODO: Mask related methods here or in dataset controller?
-    # Mask history is handled by HistoryModel via signals/slots on the controller which operate on a list of masks:
-    # The list is unbounded (binary masks are cheap) and is associated with a pointer to the current index
-    # on edit: if the pointer is not the last element, the tail from the pointer onwards is popped. then a new (binary) image is pushed on the list
-    # on undo: the pointer is moved backwards
-    # on redo: if the pointer is not the last element, it is pushed forward
-    # on save: the mask pointed is converted to RGB and saved, and the history is emptied
-    # on reset: add a new "empty" mask to the list
-    # Redraws are scheduled for each event
-
-    # NOTE THAT THERE ARE TWO DISCRETE STATES TO TRACK AT DIFFERENT SCALES!
-    # 1)Mouse move (when clicked) events create strokes, which must be sampled with a timer enough to capture curves -> This is controller-related
-    # 2)Mouse release events save one snapshot to the history list -> Should this be controller or model based?
