@@ -31,6 +31,9 @@
       <layout class="QGridLayout" name="gridLayout_6">
        <item row="0" column="0">
         <widget class="QCheckBox" name="enabledCbx">
+         <property name="toolTip">
+          <string>Enable cloud training</string>
+         </property>
          <property name="text">
           <string>Enabled</string>
          </property>
@@ -59,7 +62,11 @@
            </widget>
           </item>
           <item row="0" column="1" colspan="2">
-           <widget class="QComboBox" name="cloudTypeCmb"/>
+           <widget class="QComboBox" name="cloudTypeCmb">
+            <property name="toolTip">
+             <string>Choose LINUX to connect to a linux machine via SSH. Choose RUNPOD for additional functionality such as automatically creating and deleting pods</string>
+            </property>
+           </widget>
           </item>
           <item row="0" column="4">
            <widget class="QLabel" name="label_40">
@@ -72,10 +79,17 @@
            </widget>
           </item>
           <item row="0" column="5">
-           <widget class="QLineEdit" name="remoteDirectoryLed"/>
+           <widget class="QLineEdit" name="remoteDirectoryLed">
+            <property name="toolTip">
+             <string>The directory on the cloud where files will be uploaded and downloaded</string>
+            </property>
+           </widget>
           </item>
           <item row="0" column="7">
            <widget class="QCheckBox" name="createCloudCbx">
+            <property name="toolTip">
+             <string>Automatically creates a new cloud instance if both Host:Port and Cloud ID are empty. Currently supported for RUNPOD</string>
+            </property>
             <property name="text">
              <string>Create Cloud Via API</string>
             </property>
@@ -99,7 +113,11 @@
            </widget>
           </item>
           <item row="1" column="1" colspan="2">
-           <widget class="QComboBox" name="fileSyncMethodCmb"/>
+           <widget class="QComboBox" name="fileSyncMethodCmb">
+            <property name="toolTip">
+             <string>Choose NATIVE_SCP to use scp.exe to transfer files. FABRIC_SFTP uses the Paramiko/Fabric SFTP implementation for file transfers instead</string>
+            </property>
+           </widget>
           </item>
           <item row="1" column="4">
            <widget class="QLabel" name="label_41">
@@ -112,7 +130,11 @@
            </widget>
           </item>
           <item row="1" column="5">
-           <widget class="QLineEdit" name="onetrainerDirectoryLed"/>
+           <widget class="QLineEdit" name="onetrainerDirectoryLed">
+            <property name="toolTip">
+             <string>The directory for OneTrainer on the cloud</string>
+            </property>
+           </widget>
           </item>
           <item row="1" column="7">
            <widget class="QLabel" name="label_44">
@@ -125,7 +147,11 @@
            </widget>
           </item>
           <item row="1" column="8" colspan="2">
-           <widget class="QLineEdit" name="cloudNameLed"/>
+           <widget class="QLineEdit" name="cloudNameLed">
+            <property name="toolTip">
+             <string>The name of the new cloud instance</string>
+            </property>
+           </widget>
           </item>
           <item row="2" column="0">
            <widget class="QLabel" name="label_35">
@@ -138,7 +164,11 @@
            </widget>
           </item>
           <item row="2" column="1" colspan="2">
-           <widget class="QLineEdit" name="apiKeyLed"/>
+           <widget class="QLineEdit" name="apiKeyLed">
+            <property name="toolTip">
+             <string>Cloud service API key for RUNPOD. Leave empty for LINUX. This value is stored separately, not saved to your configuration file</string>
+            </property>
+           </widget>
           </item>
           <item row="2" column="4">
            <widget class="QLabel" name="label_42">
@@ -151,7 +181,11 @@
            </widget>
           </item>
           <item row="2" column="5">
-           <widget class="QLineEdit" name="huggingfaceCacheLed"/>
+           <widget class="QLineEdit" name="huggingfaceCacheLed">
+            <property name="toolTip">
+             <string>Huggingface models are downloaded to this remote directory</string>
+            </property>
+           </widget>
           </item>
           <item row="2" column="7">
            <widget class="QLabel" name="label_45">
@@ -164,7 +198,11 @@
            </widget>
           </item>
           <item row="2" column="8" colspan="2">
-           <widget class="QComboBox" name="subTypeCmb"/>
+           <widget class="QComboBox" name="subTypeCmb">
+            <property name="toolTip">
+             <string>Select the RunPod cloud type. See RunPod's website for details</string>
+            </property>
+           </widget>
           </item>
           <item row="3" column="0">
            <widget class="QLabel" name="label_36">
@@ -177,10 +215,17 @@
            </widget>
           </item>
           <item row="3" column="1" colspan="2">
-           <widget class="QLineEdit" name="hostnameLed"/>
+           <widget class="QLineEdit" name="hostnameLed">
+            <property name="toolTip">
+             <string>SSH server hostname or IP. Leave empty if you have a Cloud ID or want to automatically create a new cloud</string>
+            </property>
+           </widget>
           </item>
           <item row="3" column="4" colspan="2">
            <widget class="QCheckBox" name="installOnetrainerCbx">
+            <property name="toolTip">
+             <string>Automatically install OneTrainer from GitHub if the directory doesn't already exist</string>
+            </property>
             <property name="text">
              <string>Install OneTrainer</string>
             </property>
@@ -197,7 +242,11 @@
            </widget>
           </item>
           <item row="3" column="8">
-           <widget class="QComboBox" name="gpuCmb"/>
+           <widget class="QComboBox" name="gpuCmb">
+            <property name="toolTip">
+             <string>Select the GPU type. Enter an API key before pressing the button</string>
+            </property>
+           </widget>
           </item>
           <item row="4" column="0">
            <widget class="QLabel" name="label_37">
@@ -211,6 +260,9 @@
           </item>
           <item row="4" column="1" colspan="2">
            <widget class="QSpinBox" name="portSbx">
+            <property name="toolTip">
+             <string>SSH server port. Leave empty if you have a Cloud ID or want to automatically create a new cloud</string>
+            </property>
             <property name="buttonSymbols">
              <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
             </property>
@@ -230,7 +282,11 @@
            </widget>
           </item>
           <item row="4" column="5">
-           <widget class="QLineEdit" name="installCommandLed"/>
+           <widget class="QLineEdit" name="installCommandLed">
+            <property name="toolTip">
+             <string>The command for installing OneTrainer. Leave the default, unless you want to use a development branch of OneTrainer</string>
+            </property>
+           </widget>
           </item>
           <item row="4" column="7">
            <widget class="QLabel" name="label_47">
@@ -243,7 +299,11 @@
            </widget>
           </item>
           <item row="4" column="8" colspan="2">
-           <widget class="QSpinBox" name="volumeSizeSbx"/>
+           <widget class="QSpinBox" name="volumeSizeSbx">
+            <property name="toolTip">
+             <string>Set the storage volume size in GB. This volume persists only until the cloud is deleted - not a RunPod network volume</string>
+            </property>
+           </widget>
           </item>
           <item row="5" column="0">
            <widget class="QLabel" name="label_38">
@@ -256,10 +316,17 @@
            </widget>
           </item>
           <item row="5" column="1" colspan="2">
-           <widget class="QLineEdit" name="userLed"/>
+           <widget class="QLineEdit" name="userLed">
+            <property name="toolTip">
+             <string>SSH username. Use &quot;root&quot; for RUNPOD. Your SSH client must be set up to connect to the cloud using a public key, without a password. For RUNPOD, create an ed25519 key locally, and copy the contents of the public keyfile to your &quot;SSH Public Keys&quot; on the RunPod website</string>
+            </property>
+           </widget>
           </item>
           <item row="5" column="4" colspan="2">
            <widget class="QCheckBox" name="updateOnetrainerCbx">
+            <property name="toolTip">
+             <string>Update OneTrainer if it already exists on the cloud</string>
+            </property>
             <property name="text">
              <string>Update OneTrainer</string>
             </property>
@@ -276,7 +343,11 @@
            </widget>
           </item>
           <item row="5" column="8" colspan="2">
-           <widget class="QSpinBox" name="minDownloadSbx"/>
+           <widget class="QSpinBox" name="minDownloadSbx">
+            <property name="toolTip">
+             <string>Set the minimum download speed of the cloud in Mbps</string>
+            </property>
+           </widget>
           </item>
           <item row="6" column="0">
            <widget class="QLabel" name="label_39">
@@ -289,10 +360,17 @@
            </widget>
           </item>
           <item row="6" column="1" colspan="2">
-           <widget class="QLineEdit" name="cloudIdLed"/>
+           <widget class="QLineEdit" name="cloudIdLed">
+            <property name="toolTip">
+             <string>RUNPOD Cloud ID. The cloud service must have a public IP and SSH service. Leave empty if you want to automatically create a new RUNPOD cloud, or if you're connecting to another cloud provider via SSH Hostname and Port</string>
+            </property>
+           </widget>
           </item>
           <item row="7" column="0">
            <widget class="QCheckBox" name="tensorboardTcpTunnelCbx">
+            <property name="toolTip">
+             <string>Instead of starting tensorboard locally, make a TCP tunnel to a tensorboard on the cloud</string>
+            </property>
             <property name="text">
              <string>Tensorboard TCP Tunnel</string>
             </property>
@@ -339,6 +417,9 @@
           </item>
           <item row="9" column="0">
            <widget class="QCheckBox" name="detachRemoteTrainerCbx">
+            <property name="toolTip">
+             <string>Allows the trainer to keep running even if your connection to the cloud is lost</string>
+            </property>
             <property name="text">
              <string>Detach Remote Trainer</string>
             </property>
@@ -361,6 +442,9 @@
               <width>156</width>
               <height>0</height>
              </size>
+            </property>
+            <property name="toolTip">
+             <string>An id identifying the remotely running trainer. In case you have lost connection or closed OneTrainer, it will try to reattach to this id instead of starting a new remote trainer</string>
             </property>
            </widget>
           </item>
@@ -398,10 +482,17 @@
            </widget>
           </item>
           <item row="10" column="8" colspan="2">
-           <widget class="QComboBox" name="onFinishCmb"/>
+           <widget class="QComboBox" name="onFinishCmb">
+            <property name="toolTip">
+             <string>What to do when training finishes and the data has been fully downloaded: Stop or delete the cloud, or do nothing</string>
+            </property>
+           </widget>
           </item>
           <item row="11" column="0">
            <widget class="QCheckBox" name="downloadSamplesCbx">
+            <property name="toolTip">
+             <string>Download samples from the remote workspace directory to your local machine</string>
+            </property>
             <property name="text">
              <string>Download Samples</string>
             </property>
@@ -418,10 +509,17 @@
            </widget>
           </item>
           <item row="11" column="8" colspan="2">
-           <widget class="QComboBox" name="onErrorCmb"/>
+           <widget class="QComboBox" name="onErrorCmb">
+            <property name="toolTip">
+             <string>What to do if training stops due to an error: Stop or delete the cloud, or do nothing. Data may be lost</string>
+            </property>
+           </widget>
           </item>
           <item row="12" column="0">
            <widget class="QCheckBox" name="downloadOutputModelCbx">
+            <property name="toolTip">
+             <string>Download the final model after training. You can disable this if you plan to use an automatically saved checkpoint instead</string>
+            </property>
             <property name="text">
              <string>Download Output Model</string>
             </property>
@@ -438,10 +536,17 @@
            </widget>
           </item>
           <item row="12" column="8" colspan="2">
-           <widget class="QComboBox" name="onDetachedCmb"/>
+           <widget class="QComboBox" name="onDetachedCmb">
+            <property name="toolTip">
+             <string>What to do when training finishes, but the client has been detached and cannot download data. Data may be lost</string>
+            </property>
+           </widget>
           </item>
           <item row="13" column="0">
            <widget class="QCheckBox" name="downloadSavedCheckpointsCbx">
+            <property name="toolTip">
+             <string>Download the automatically saved training checkpoints from the remote workspace directory to your local machine</string>
+            </property>
             <property name="text">
              <string>Download Saved Checkpoints</string>
             </property>
@@ -458,10 +563,17 @@
            </widget>
           </item>
           <item row="13" column="8" colspan="2">
-           <widget class="QComboBox" name="onDetachedErrorCmb"/>
+           <widget class="QComboBox" name="onDetachedErrorCmb">
+            <property name="toolTip">
+             <string>What to if training stops due to an error, but the client has been detached and cannot download data. Data may be lost</string>
+            </property>
+           </widget>
           </item>
           <item row="14" column="0">
            <widget class="QCheckBox" name="downloadBackupsCbx">
+            <property name="toolTip">
+             <string>Download backups from the remote workspace directory to your local machine. It's usually not necessary to download them, because as long as the backups are still available on the cloud, the training can be restarted using one of the cloud's backups</string>
+            </property>
             <property name="text">
              <string>Download Backups</string>
             </property>
@@ -469,6 +581,9 @@
           </item>
           <item row="15" column="0">
            <widget class="QCheckBox" name="downloadTensorboardLogCbx">
+            <property name="toolTip">
+             <string>Download TensorBoard event logs from the remote workspace directory to your local machine. They can then be viewed locally in TensorBoard. It is recommended to disable &quot;Sample to TensorBoard&quot; to reduce the event log size</string>
+            </property>
             <property name="text">
              <string>Download Tensorboard Logs</string>
             </property>
@@ -476,6 +591,9 @@
           </item>
           <item row="16" column="0">
            <widget class="QCheckBox" name="deleteRemoteWorkspaceCbx">
+            <property name="toolTip">
+             <string>Delete the workspace directory on the cloud after training has finished successfully and data has been downloaded</string>
+            </property>
             <property name="text">
              <string>Delete Remote Workspace</string>
             </property>

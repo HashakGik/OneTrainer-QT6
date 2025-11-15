@@ -83,6 +83,9 @@
        </item>
        <item row="7" column="1" colspan="2">
         <widget class="QLineEdit" name="trainDeviceLed">
+         <property name="toolTip">
+          <string>The device used for training. Can be &quot;cuda&quot;, &quot;cuda:0&quot;, &quot;cuda:1&quot; etc. Default:&quot;cuda&quot;</string>
+         </property>
          <property name="text">
           <string>cuda</string>
          </property>
@@ -108,6 +111,9 @@
         <widget class="QCheckBox" name="exposeTensorboardCbx">
          <property name="enabled">
           <bool>false</bool>
+         </property>
+         <property name="toolTip">
+          <string>Exposes Tensorboard Web UI to all network interfaces (makes it accessible from the network)</string>
          </property>
          <property name="text">
           <string>Expose Tensorboard</string>
@@ -149,6 +155,9 @@
        </item>
        <item row="1" column="0" colspan="2">
         <widget class="QCheckBox" name="continueCbx">
+         <property name="toolTip">
+          <string>Automatically continues training from the last backup saved in &lt;workspace&gt;/backup</string>
+         </property>
          <property name="text">
           <string>Continue From Last Backup</string>
          </property>
@@ -205,6 +214,9 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="toolTip">
+          <string>The interval used when validate training</string>
+         </property>
         </widget>
        </item>
        <item row="12" column="0">
@@ -226,13 +238,20 @@
        </item>
        <item row="5" column="0">
         <widget class="QCheckBox" name="validateCbx">
+         <property name="toolTip">
+          <string>Enable validation steps and add new graph in tensorboard</string>
+         </property>
          <property name="text">
           <string>Validation</string>
          </property>
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QLineEdit" name="workspaceLed"/>
+        <widget class="QLineEdit" name="workspaceLed">
+         <property name="toolTip">
+          <string>The directory where all files of this training run are saved</string>
+         </property>
+        </widget>
        </item>
        <item row="11" column="4">
         <widget class="QLabel" name="label_24">
@@ -258,7 +277,11 @@
         </widget>
        </item>
        <item row="0" column="5" colspan="2">
-        <widget class="QLineEdit" name="cacheLed"/>
+        <widget class="QLineEdit" name="cacheLed">
+         <property name="toolTip">
+          <string>The directory where cached data is saved</string>
+         </property>
+        </widget>
        </item>
        <item row="11" column="0">
         <widget class="QCheckBox" name="asyncGradientCbx">
@@ -275,6 +298,9 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="toolTip">
+          <string>Number of threads used for the data loader. Increase if your GPU has room during caching, decrease if it's going out of memory during caching</string>
+         </property>
          <property name="minimum">
           <number>1</number>
          </property>
@@ -285,6 +311,9 @@
        </item>
        <item row="1" column="4" colspan="2">
         <widget class="QCheckBox" name="onlyCacheCbx">
+         <property name="toolTip">
+          <string>Only populate the cache, without any training</string>
+         </property>
          <property name="text">
           <string>Only Cache</string>
          </property>
@@ -299,6 +328,9 @@
        </item>
        <item row="3" column="0">
         <widget class="QCheckBox" name="tensorboardCbx">
+         <property name="toolTip">
+          <string>Starts the Tensorboard Web UI during training</string>
+         </property>
          <property name="text">
           <string>Tensorboard</string>
          </property>
@@ -306,13 +338,20 @@
        </item>
        <item row="2" column="0" colspan="2">
         <widget class="QCheckBox" name="debugCbx">
+         <property name="toolTip">
+          <string>Save debug information during the training into the debug directory</string>
+         </property>
          <property name="text">
           <string>Debug Mode</string>
          </property>
         </widget>
        </item>
        <item row="12" column="1" colspan="2">
-        <widget class="QLineEdit" name="tempDeviceLed"/>
+        <widget class="QLineEdit" name="tempDeviceLed">
+         <property name="toolTip">
+          <string>The device used to temporarily offload models while they are not used. Default: &quot;cpu&quot;</string>
+         </property>
+        </widget>
        </item>
        <item row="10" column="1" colspan="2">
         <widget class="QComboBox" name="gradientReduceCmb"/>
@@ -339,6 +378,9 @@
          <property name="enabled">
           <bool>false</bool>
          </property>
+         <property name="toolTip">
+          <string>The directory where debug data is saved</string>
+         </property>
         </widget>
        </item>
        <item row="5" column="6" colspan="2">
@@ -352,6 +394,9 @@
         <widget class="QSpinBox" name="tensorboardSbx">
          <property name="enabled">
           <bool>false</bool>
+         </property>
+         <property name="toolTip">
+          <string>Port to use for Tensorboard link</string>
          </property>
          <property name="buttonSymbols">
           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>

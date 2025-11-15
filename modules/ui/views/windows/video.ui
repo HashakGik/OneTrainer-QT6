@@ -41,6 +41,9 @@
       <layout class="QGridLayout" name="gridLayout_2">
        <item row="4" column="0">
         <widget class="QCheckBox" name="outputSubdirectories1Cbx">
+         <property name="toolTip">
+          <string>If enabled, files are saved to subfolders based on filename and input directory. Otherwise will all be saved to the top level of the output directory</string>
+         </property>
          <property name="text">
           <string>Output To Subdirectories</string>
          </property>
@@ -54,7 +57,11 @@
         </widget>
        </item>
        <item row="6" column="1">
-        <widget class="QSpinBox" name="maxLengthSbx"/>
+        <widget class="QSpinBox" name="maxLengthSbx">
+         <property name="toolTip">
+          <string>Maximum length in seconds for saved clips, larger clips will be broken into multiple small clips</string>
+         </property>
+        </widget>
        </item>
        <item row="0" column="5">
         <widget class="QPushButton" name="extractSingle1Btn">
@@ -104,7 +111,11 @@
         </widget>
        </item>
        <item row="7" column="1">
-        <widget class="QSpinBox" name="fpsSbx"/>
+        <widget class="QSpinBox" name="fpsSbx">
+         <property name="toolTip">
+          <string>FPS to convert output videos to, set to 0 to keep original rate</string>
+         </property>
+        </widget>
        </item>
        <item row="2" column="5">
         <widget class="QPushButton" name="extractDirectory1Btn">
@@ -115,13 +126,20 @@
        </item>
        <item row="5" column="0" colspan="2">
         <widget class="QCheckBox" name="splitCutsCbx">
+         <property name="toolTip">
+          <string>If enabled, detect cuts in the input video and split at those points. Otherwise will split at any point, and clips may contain cuts</string>
+         </property>
          <property name="text">
           <string>Split At Cuts</string>
          </property>
         </widget>
        </item>
        <item row="2" column="1" colspan="2">
-        <widget class="QLineEdit" name="directory1Led"/>
+        <widget class="QLineEdit" name="directory1Led">
+         <property name="toolTip">
+          <string>Path to directory with multiple videos to process, including in subdirectories</string>
+         </property>
+        </widget>
        </item>
        <item row="8" column="0">
         <widget class="QCheckBox" name="removeBorders1Cbx">
@@ -131,7 +149,11 @@
         </widget>
        </item>
        <item row="0" column="1" colspan="2">
-        <widget class="QLineEdit" name="singleVideo1Led"/>
+        <widget class="QLineEdit" name="singleVideo1Led">
+         <property name="toolTip">
+          <string>Link to single video file to process</string>
+         </property>
+        </widget>
        </item>
        <item row="2" column="4">
         <widget class="QToolButton" name="directory1Btn">
@@ -141,7 +163,11 @@
         </widget>
        </item>
        <item row="3" column="1" colspan="2">
-        <widget class="QLineEdit" name="output1Led"/>
+        <widget class="QLineEdit" name="output1Led">
+         <property name="toolTip">
+          <string>Path to folder where extracted clips will be saved</string>
+         </property>
+        </widget>
        </item>
        <item row="0" column="4">
         <widget class="QToolButton" name="singleVideo1Btn">
@@ -161,7 +187,11 @@
         </widget>
        </item>
        <item row="9" column="1">
-        <widget class="QDoubleSpinBox" name="cropVariation1Sbx"/>
+        <widget class="QDoubleSpinBox" name="cropVariation1Sbx">
+         <property name="toolTip">
+          <string>Output clips will be randomly cropped to +- the base aspect ratio, somewhat biased towards making square videos. Set to 0 to use only base aspect</string>
+         </property>
+        </widget>
        </item>
        <item row="1" column="0">
         <widget class="QLabel" name="label_2">
@@ -181,6 +211,9 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="toolTip">
+          <string>Time range to limit selection for single video, format as hour:minute:second, minute:second, or seconds</string>
+         </property>
          <property name="inputMask">
           <string>99:99:99</string>
          </property>
@@ -196,6 +229,9 @@
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
+         </property>
+         <property name="toolTip">
+          <string>Time range to limit selection for single video, format as hour:minute:second, minute:second, or seconds</string>
          </property>
          <property name="inputMask">
           <string>99:99:99</string>
@@ -243,7 +279,11 @@
         </widget>
        </item>
        <item row="8" column="1">
-        <widget class="QDoubleSpinBox" name="cropVariation2Sbx"/>
+        <widget class="QDoubleSpinBox" name="cropVariation2Sbx">
+         <property name="toolTip">
+          <string>Output images will be randomly cropped to +- the base aspect ratio, somewhat biased towards making square images. Set to 0 to use only base aspect</string>
+         </property>
+        </widget>
        </item>
        <item row="0" column="4">
         <widget class="QPushButton" name="extractSingle2Btn">
@@ -304,10 +344,18 @@
         </widget>
        </item>
        <item row="0" column="1" colspan="2">
-        <widget class="QLineEdit" name="singleVideo2Led"/>
+        <widget class="QLineEdit" name="singleVideo2Led">
+         <property name="toolTip">
+          <string>Link to single video file to process</string>
+         </property>
+        </widget>
        </item>
        <item row="3" column="1" colspan="2">
-        <widget class="QLineEdit" name="output2Led"/>
+        <widget class="QLineEdit" name="output2Led">
+         <property name="toolTip">
+          <string>Path to folder where extracted images will be saved</string>
+         </property>
+        </widget>
        </item>
        <item row="0" column="0">
         <widget class="QLabel" name="label_11">
@@ -344,6 +392,9 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="toolTip">
+          <string>Time range to limit selection for single video, format as hour:minute:second, minute:second, or seconds</string>
+         </property>
          <property name="inputMask">
           <string>99:99:99</string>
          </property>
@@ -374,6 +425,9 @@
        </item>
        <item row="4" column="0">
         <widget class="QCheckBox" name="outputSubdirectories2Cbx">
+         <property name="toolTip">
+          <string>If enabled, files are saved to subfolders based on filename and input directory. Otherwise will all be saved to the top level of the output directory</string>
+         </property>
          <property name="text">
           <string>Output To Subdirectories</string>
          </property>
@@ -386,6 +440,9 @@
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
+         </property>
+         <property name="toolTip">
+          <string>Time range to limit selection for single video, format as hour:minute:second, minute:second, or seconds</string>
          </property>
          <property name="inputMask">
           <string>99:99:99</string>
@@ -409,13 +466,25 @@
         </spacer>
        </item>
        <item row="2" column="1" colspan="2">
-        <widget class="QLineEdit" name="directory2Led"/>
+        <widget class="QLineEdit" name="directory2Led">
+         <property name="toolTip">
+          <string>Path to directory with multiple videos to process, including in subdirectories</string>
+         </property>
+        </widget>
        </item>
        <item row="5" column="1">
-        <widget class="QDoubleSpinBox" name="imagesSecSbx"/>
+        <widget class="QDoubleSpinBox" name="imagesSecSbx">
+         <property name="toolTip">
+          <string>Number of images to capture per second of video. Images will be taken at semi-random frames around the specified frequency</string>
+         </property>
+        </widget>
        </item>
        <item row="6" column="1">
-        <widget class="QDoubleSpinBox" name="blurRemovalSbx"/>
+        <widget class="QDoubleSpinBox" name="blurRemovalSbx">
+         <property name="toolTip">
+          <string>Threshold for removal of blurry images, relative to all others. For example at 0.2, the blurriest 20% of the final selected frames will not be saved</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -435,7 +504,11 @@
         </widget>
        </item>
        <item row="0" column="1" colspan="2">
-        <widget class="QLineEdit" name="singleLinkLed"/>
+        <widget class="QLineEdit" name="singleLinkLed">
+         <property name="toolTip">
+          <string>Link to video/playlist to download. Uses yt-dlp, supports youtube, twitch, instagram, and many other sites</string>
+         </property>
+        </widget>
        </item>
        <item row="0" column="4">
         <widget class="QPushButton" name="downloadLinkBtn">
@@ -455,7 +528,11 @@
         </widget>
        </item>
        <item row="1" column="2">
-        <widget class="QLineEdit" name="linkListLed"/>
+        <widget class="QLineEdit" name="linkListLed">
+         <property name="toolTip">
+          <string>Path to txt file with list of links separated by newlines</string>
+         </property>
+        </widget>
        </item>
        <item row="1" column="3">
         <widget class="QToolButton" name="linkListBtn">
@@ -482,7 +559,11 @@
         </widget>
        </item>
        <item row="2" column="2">
-        <widget class="QLineEdit" name="output3Led"/>
+        <widget class="QLineEdit" name="output3Led">
+         <property name="toolTip">
+          <string>Path to folder where downloaded videos will be saved</string>
+         </property>
+        </widget>
        </item>
        <item row="2" column="3">
         <widget class="QToolButton" name="output3Btn">
@@ -503,6 +584,9 @@
        </item>
        <item row="3" column="2" colspan="2">
         <widget class="QPlainTextEdit" name="additionalArgsTed">
+         <property name="toolTip">
+          <string>Any additional arguments to pass to yt-dlp, for example '--restrict-filenames --force-overwrite'. Default args will hide most terminal outputs</string>
+         </property>
          <property name="plainText">
           <string>--quiet --no-warnings --progress</string>
          </property>

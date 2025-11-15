@@ -47,7 +47,11 @@
       </attribute>
       <layout class="QGridLayout" name="gridLayout_2">
        <item row="0" column="2" colspan="2">
-        <widget class="QLineEdit" name="nameLed"/>
+        <widget class="QLineEdit" name="nameLed">
+         <property name="toolTip">
+          <string>Name of the concept</string>
+         </property>
+        </widget>
        </item>
        <item row="2" column="1" colspan="3">
         <widget class="QGroupBox" name="conceptBox">
@@ -69,7 +73,13 @@
            </widget>
           </item>
           <item row="0" column="1" colspan="2">
-           <widget class="QComboBox" name="conceptTypeCmb"/>
+           <widget class="QComboBox" name="conceptTypeCmb">
+            <property name="toolTip">
+             <string>STANDARD: Standard finetuning with the sample as training target
+VALIDATION: Use concept for validation instead of training
+PRIOR_PREDICTION: Use the sample to make a prediction using the model as it was before training. This prediction is then used as the training target  for the model in training. This can be used as regularisation and to preserve prior model knowledge while finetuning the model on other concepts.  Only implemented for LoRA</string>
+            </property>
+           </widget>
           </item>
           <item row="1" column="0">
            <widget class="QLabel" name="label_3">
@@ -82,7 +92,11 @@
            </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QLineEdit" name="pathLed"/>
+           <widget class="QLineEdit" name="pathLed">
+            <property name="toolTip">
+             <string>Path where the training data is located</string>
+            </property>
+           </widget>
           </item>
           <item row="1" column="2">
            <widget class="QToolButton" name="pathBtn">
@@ -109,7 +123,11 @@
            </widget>
           </item>
           <item row="2" column="1" colspan="2">
-           <widget class="QComboBox" name="promptSourceCmb"/>
+           <widget class="QComboBox" name="promptSourceCmb">
+            <property name="toolTip">
+             <string>The source for prompts used during training. When selecting &quot;From single text file&quot;, select a text file that contains a list of prompts</string>
+            </property>
+           </widget>
           </item>
           <item row="2" column="3">
            <widget class="QLineEdit" name="promptSourceLed">
@@ -130,6 +148,9 @@
           </item>
           <item row="3" column="0" colspan="3">
            <widget class="QCheckBox" name="includeSubdirectoriesCbx">
+            <property name="toolTip">
+             <string>Includes images from subdirectories into the dataset</string>
+            </property>
             <property name="text">
              <string>Include Subdirectories</string>
             </property>
@@ -146,7 +167,11 @@
            </widget>
           </item>
           <item row="4" column="1" colspan="2">
-           <widget class="QSpinBox" name="imageVariationsSbx"/>
+           <widget class="QSpinBox" name="imageVariationsSbx">
+            <property name="toolTip">
+             <string>The number of different image versions to cache if latent caching is enabled</string>
+            </property>
+           </widget>
           </item>
           <item row="5" column="0">
            <widget class="QLabel" name="label_6">
@@ -159,7 +184,11 @@
            </widget>
           </item>
           <item row="5" column="1" colspan="2">
-           <widget class="QSpinBox" name="textVariationsSbx"/>
+           <widget class="QSpinBox" name="textVariationsSbx">
+            <property name="toolTip">
+             <string>The number of different text versions to cache if latent caching is enabled</string>
+            </property>
+           </widget>
           </item>
           <item row="6" column="0">
            <widget class="QLabel" name="label_7">
@@ -172,7 +201,11 @@
            </widget>
           </item>
           <item row="6" column="1" colspan="2">
-           <widget class="QDoubleSpinBox" name="balancingSbx"/>
+           <widget class="QDoubleSpinBox" name="balancingSbx">
+            <property name="toolTip">
+             <string>The number of samples used during training. Use repeats to multiply the concept, or samples to specify an exact number of samples used in each epoch</string>
+            </property>
+           </widget>
           </item>
           <item row="6" column="3" colspan="2">
            <widget class="QComboBox" name="balancingCmb"/>
@@ -188,7 +221,11 @@
            </widget>
           </item>
           <item row="7" column="1" colspan="2">
-           <widget class="QDoubleSpinBox" name="lossWeightSbx"/>
+           <widget class="QDoubleSpinBox" name="lossWeightSbx">
+            <property name="toolTip">
+             <string>The loss multiplyer for this concept</string>
+            </property>
+           </widget>
           </item>
           <item row="8" column="0" colspan="2">
            <spacer name="verticalSpacer">
@@ -220,6 +257,9 @@
         <widget class="QCheckBox" name="enabledCbx">
          <property name="enabled">
           <bool>true</bool>
+         </property>
+         <property name="toolTip">
+          <string>Enable or disable this concept</string>
          </property>
          <property name="text">
           <string>Enabled</string>
@@ -262,6 +302,9 @@
        </item>
        <item row="6" column="0">
         <widget class="QLabel" name="label_15">
+         <property name="toolTip">
+          <string>Randomly adjusts the contrast of the sample during training</string>
+         </property>
          <property name="text">
           <string>Random Contrast</string>
          </property>
@@ -272,6 +315,9 @@
        </item>
        <item row="7" column="0">
         <widget class="QLabel" name="label_16">
+         <property name="toolTip">
+          <string>Randomly adjusts the saturation of the sample during training</string>
+         </property>
          <property name="text">
           <string>Random Saturation</string>
          </property>
@@ -293,6 +339,9 @@
        </item>
        <item row="1" column="2">
         <widget class="QLabel" name="label_11">
+         <property name="toolTip">
+          <string>Enable this augmentation with fixed values</string>
+         </property>
          <property name="text">
           <string>Fixed</string>
          </property>
@@ -307,6 +356,9 @@
        </item>
        <item row="9" column="0">
         <widget class="QLabel" name="label_18">
+         <property name="toolTip">
+          <string>Automatically create circular masks for masked training</string>
+         </property>
          <property name="text">
           <string>Circular Mask Generation</string>
          </property>
@@ -321,6 +373,9 @@
        </item>
        <item row="11" column="0">
         <widget class="QLabel" name="label_20">
+         <property name="toolTip">
+          <string>Override the resolution for this concept. Optionally specify multiple resolutions separated by a comma, or a single exact resolution in the format &lt;width&gt;x&lt;height&gt;</string>
+         </property>
          <property name="text">
           <string>Resolution Override</string>
          </property>
@@ -331,6 +386,9 @@
        </item>
        <item row="4" column="0">
         <widget class="QLabel" name="label_13">
+         <property name="toolTip">
+          <string>Randomly rotates the sample during training</string>
+         </property>
          <property name="text">
           <string>Random Rotation</string>
          </property>
@@ -338,6 +396,9 @@
        </item>
        <item row="1" column="1">
         <widget class="QLabel" name="label_10">
+         <property name="toolTip">
+          <string>Enable this augmentation with random values</string>
+         </property>
          <property name="text">
           <string>Random</string>
          </property>
@@ -396,6 +457,9 @@
        </item>
        <item row="8" column="0">
         <widget class="QLabel" name="label_17">
+         <property name="toolTip">
+          <string>Randomly adjusts the hue of the sample during training</string>
+         </property>
          <property name="text">
           <string>Random Hue</string>
          </property>
@@ -427,6 +491,9 @@
        </item>
        <item row="10" column="0">
         <widget class="QLabel" name="label_19">
+         <property name="toolTip">
+          <string>Randomly rotate the training samples and crop to the masked region</string>
+         </property>
          <property name="text">
           <string>Random Rotate And Crop</string>
          </property>
@@ -434,6 +501,9 @@
        </item>
        <item row="3" column="0">
         <widget class="QLabel" name="label_12">
+         <property name="toolTip">
+          <string>Randomly flip the sample during training</string>
+         </property>
          <property name="text">
           <string>Random Flip</string>
          </property>
@@ -441,6 +511,9 @@
        </item>
        <item row="2" column="0">
         <widget class="QLabel" name="label_9">
+         <property name="toolTip">
+          <string>Enables random cropping of samples</string>
+         </property>
          <property name="text">
           <string>Crop Jitter</string>
          </property>
@@ -471,6 +544,9 @@
        </item>
        <item row="5" column="0">
         <widget class="QLabel" name="label_14">
+         <property name="toolTip">
+          <string>Randomly adjusts the brightness of the sample during training</string>
+         </property>
          <property name="text">
           <string>Random Brightness</string>
          </property>
@@ -573,23 +649,38 @@
         </widget>
        </item>
        <item row="2" column="2" colspan="2">
-        <widget class="QSpinBox" name="keepTagCountSbx"/>
+        <widget class="QSpinBox" name="keepTagCountSbx">
+         <property name="toolTip">
+          <string>The number of tags at the start of the caption that are not shuffled or dropped</string>
+         </property>
+        </widget>
        </item>
        <item row="5" column="3">
         <widget class="QLineEdit" name="specialDropoutTagsLed"/>
        </item>
        <item row="5" column="2">
-        <widget class="QComboBox" name="specialDropoutTagsCmb"/>
+        <widget class="QComboBox" name="specialDropoutTagsCmb">
+         <property name="toolTip">
+          <string>List of tags which will be whitelisted/blacklisted by dropout. 'Whitelist' tags will never be dropped but all others may be, 'Blacklist' tags may be dropped but all others will never be, 'None' may drop any tags. Can specify either a delimiter-separated list in the field, or a file path to a .txt or .csv file with entries separated by newlines</string>
+         </property>
+        </widget>
        </item>
        <item row="3" column="1">
         <widget class="QCheckBox" name="tagDropoutCbx">
+         <property name="toolTip">
+          <string>Enables random dropout for tags in the captions</string>
+         </property>
          <property name="text">
           <string>Tag Dropout</string>
          </property>
         </widget>
        </item>
        <item row="1" column="2" colspan="2">
-        <widget class="QLineEdit" name="tagDelimiterLed"/>
+        <widget class="QLineEdit" name="tagDelimiterLed">
+         <property name="toolTip">
+          <string>The delimiter between tags</string>
+         </property>
+        </widget>
        </item>
        <item row="9" column="2">
         <spacer name="verticalSpacer_3">
@@ -616,6 +707,9 @@
        </item>
        <item row="8" column="5">
         <widget class="QDoubleSpinBox" name="capitalizationProbabilitySbx">
+         <property name="toolTip">
+          <string>Probability to randomize capitialization of each tag, from 0 to 1</string>
+         </property>
          <property name="maximum">
           <double>1.000000000000000</double>
          </property>
@@ -636,6 +730,9 @@
        </item>
        <item row="7" column="3">
         <widget class="QCheckBox" name="forceLowercaseCbx">
+         <property name="toolTip">
+          <string>If enabled, converts the caption to lowercase before any further processing</string>
+         </property>
          <property name="text">
           <string>Force Lowercase</string>
          </property>
@@ -643,6 +740,9 @@
        </item>
        <item row="0" column="1">
         <widget class="QCheckBox" name="tagShufflingCbx">
+         <property name="toolTip">
+          <string>Enables tag shuffling</string>
+         </property>
          <property name="text">
           <string>Tag Shuffling</string>
          </property>
@@ -659,7 +759,11 @@
         </widget>
        </item>
        <item row="4" column="2" colspan="2">
-        <widget class="QComboBox" name="dropoutModeCmb"/>
+        <widget class="QComboBox" name="dropoutModeCmb">
+         <property name="toolTip">
+          <string>Method used to drop captions. 'Full' will drop the entire caption past the 'kept' tags with a certain probability, 'Random' will drop individual tags with the set probability, and 'Random Weighted' will linearly increase the probability of dropping tags, more likely to preseve tags near the front with full probability to drop at the end</string>
+         </property>
+        </widget>
        </item>
        <item row="4" column="1">
         <widget class="QLabel" name="label_25">
@@ -673,6 +777,9 @@
        </item>
        <item row="6" column="1">
         <widget class="QCheckBox" name="specialTagsRegexCbx">
+         <property name="toolTip">
+          <string>Interpret special tags with regex, such as 'photo.*' to match 'photo, photograph, photon' but not 'telephoto'. Includes exception for '/(' and '/)' syntax found in many booru/e6 tags</string>
+         </property>
          <property name="text">
           <string>Special Tags Regex</string>
          </property>
@@ -686,10 +793,17 @@
         </widget>
        </item>
        <item row="8" column="2" colspan="2">
-        <widget class="QLineEdit" name="capitalizationModeLed"/>
+        <widget class="QLineEdit" name="capitalizationModeLed">
+         <property name="toolTip">
+          <string>Comma-separated list of types of capitalization randomization to perform. 'capslock' for ALL CAPS, 'title' for First Letter Of Every Word, 'first' for First word only, 'random' for rAndOMiZeD lEtTERs</string>
+         </property>
+        </widget>
        </item>
        <item row="4" column="5">
         <widget class="QDoubleSpinBox" name="dropoutProbabilitySbx">
+         <property name="toolTip">
+          <string>Probability to drop tags, from 0 to 1</string>
+         </property>
          <property name="maximum">
           <double>1.000000000000000</double>
          </property>
@@ -700,6 +814,9 @@
        </item>
        <item row="7" column="1" colspan="2">
         <widget class="QCheckBox" name="randomizeCapitalizationCbx">
+         <property name="toolTip">
+          <string>Enables randomization of capitalization for tags in the caption</string>
+         </property>
          <property name="text">
           <string>Randomize Capitalization</string>
          </property>
@@ -732,8 +849,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>484</width>
-            <height>534</height>
+            <width>722</width>
+            <height>543</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout">

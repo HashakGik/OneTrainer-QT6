@@ -50,7 +50,11 @@
         </widget>
        </item>
        <item row="5" column="5">
-        <widget class="QComboBox" name="te2DTypeCmb"/>
+        <widget class="QComboBox" name="te2DTypeCmb">
+         <property name="toolTip">
+          <string>Overrides the text encoder 2 weight data type</string>
+         </property>
+        </widget>
        </item>
        <item row="15" column="1">
         <spacer name="verticalSpacer">
@@ -86,7 +90,11 @@
         </widget>
        </item>
        <item row="4" column="5">
-        <widget class="QComboBox" name="te1DTypeCmb"/>
+        <widget class="QComboBox" name="te1DTypeCmb">
+         <property name="toolTip">
+          <string>Overrides the text encoder weight data type</string>
+         </property>
+        </widget>
        </item>
        <item row="2" column="4">
         <widget class="QLabel" name="unetDTypeLbl">
@@ -156,7 +164,11 @@
         </widget>
        </item>
        <item row="7" column="5">
-        <widget class="QComboBox" name="te4DTypeCmb"/>
+        <widget class="QComboBox" name="te4DTypeCmb">
+         <property name="toolTip">
+          <string>Overrides the text encoder 4 weight data type</string>
+         </property>
+        </widget>
        </item>
        <item row="13" column="2">
         <widget class="QToolButton" name="modelOutputBtn">
@@ -166,7 +178,11 @@
         </widget>
        </item>
        <item row="10" column="1">
-        <widget class="QLineEdit" name="decLed"/>
+        <widget class="QLineEdit" name="decLed">
+         <property name="toolTip">
+          <string>Filename, directory or Hugging Face repository of the decoder model</string>
+         </property>
+        </widget>
        </item>
        <item row="4" column="4">
         <widget class="QLabel" name="te1DTypeLbl">
@@ -199,16 +215,32 @@
         </widget>
        </item>
        <item row="13" column="1">
-        <widget class="QLineEdit" name="modelOutputLed"/>
+        <widget class="QLineEdit" name="modelOutputLed">
+         <property name="toolTip">
+          <string>Filename or directory where the output model is saved</string>
+         </property>
+        </widget>
        </item>
        <item row="14" column="5">
-        <widget class="QComboBox" name="configCmb"/>
+        <widget class="QComboBox" name="configCmb">
+         <property name="toolTip">
+          <string>Include the training configuration in the final model. Only supported for safetensors files. None: No config is included. Settings: All training settings are included. All: All settings, including the samples and concepts are included</string>
+         </property>
+        </widget>
        </item>
        <item row="10" column="5">
-        <widget class="QComboBox" name="decDTypeCmb"/>
+        <widget class="QComboBox" name="decDTypeCmb">
+         <property name="toolTip">
+          <string>Overrides the decoder weight data type</string>
+         </property>
+        </widget>
        </item>
        <item row="14" column="1" colspan="2">
-        <widget class="QComboBox" name="outputFormatCmb"/>
+        <widget class="QComboBox" name="outputFormatCmb">
+         <property name="toolTip">
+          <string>Format to use when saving the output model</string>
+         </property>
+        </widget>
        </item>
        <item row="5" column="4">
         <widget class="QLabel" name="te2DTypeLbl">
@@ -221,13 +253,26 @@
         </widget>
        </item>
        <item row="0" column="1" colspan="2">
-        <widget class="QLineEdit" name="huggingfaceLed"/>
+        <widget class="QLineEdit" name="huggingfaceLed">
+         <property name="toolTip">
+          <string>Enter your Hugging Face access token if you have used a protected Hugging Face repository below.
+This value is stored separately, not saved to your configuration file. Go to https://huggingface.co/settings/tokens to create an access token</string>
+         </property>
+        </widget>
        </item>
        <item row="3" column="5">
-        <widget class="QComboBox" name="priorDTypeCmb"/>
+        <widget class="QComboBox" name="priorDTypeCmb">
+         <property name="toolTip">
+          <string>Overrides the prior weight data type</string>
+         </property>
+        </widget>
        </item>
        <item row="8" column="5">
-        <widget class="QComboBox" name="vaeDTypeCmb"/>
+        <widget class="QComboBox" name="vaeDTypeCmb">
+         <property name="toolTip">
+          <string>Overrides the vae weight data type</string>
+         </property>
+        </widget>
        </item>
        <item row="3" column="0">
         <widget class="QLabel" name="priorLbl">
@@ -240,7 +285,11 @@
         </widget>
        </item>
        <item row="13" column="5">
-        <widget class="QComboBox" name="outputDTypeCmb"/>
+        <widget class="QComboBox" name="outputDTypeCmb">
+         <property name="toolTip">
+          <string>Precision to use when saving the output model</string>
+         </property>
+        </widget>
        </item>
        <item row="6" column="4">
         <widget class="QLabel" name="te3DTypeLbl">
@@ -273,7 +322,11 @@
         </widget>
        </item>
        <item row="3" column="1">
-        <widget class="QLineEdit" name="priorLed"/>
+        <widget class="QLineEdit" name="priorLed">
+         <property name="toolTip">
+          <string>Filename, directory or Hugging Face repository of the prior model. For Flux, it must be a safetensors file that only contains the transformer</string>
+         </property>
+        </widget>
        </item>
        <item row="1" column="2">
         <widget class="QToolButton" name="baseModelBtn">
@@ -283,13 +336,25 @@
         </widget>
        </item>
        <item row="2" column="5">
-        <widget class="QComboBox" name="unetDTypeCmb"/>
+        <widget class="QComboBox" name="unetDTypeCmb">
+         <property name="toolTip">
+          <string>Overrides the unet weight data type</string>
+         </property>
+        </widget>
        </item>
        <item row="11" column="5">
-        <widget class="QComboBox" name="vqganDTypeCmb"/>
+        <widget class="QComboBox" name="vqganDTypeCmb">
+         <property name="toolTip">
+          <string>Overrides the decoder vqgan weight data type</string>
+         </property>
+        </widget>
        </item>
        <item row="7" column="1">
-        <widget class="QLineEdit" name="te4Led"/>
+        <widget class="QLineEdit" name="te4Led">
+         <property name="toolTip">
+          <string>Filename, directory or Hugging Face repository of the text encoder 4 model</string>
+         </property>
+        </widget>
        </item>
        <item row="9" column="2">
         <widget class="QToolButton" name="effnetBtn">
@@ -336,7 +401,11 @@
         </widget>
        </item>
        <item row="1" column="5">
-        <widget class="QComboBox" name="weightDTypeCmb"/>
+        <widget class="QComboBox" name="weightDTypeCmb">
+         <property name="toolTip">
+          <string>The base model weight data type used for training. This can reduce memory consumption, but reduces precision</string>
+         </property>
+        </widget>
        </item>
        <item row="13" column="0">
         <widget class="QLabel" name="label_5">
@@ -349,7 +418,11 @@
         </widget>
        </item>
        <item row="9" column="1">
-        <widget class="QLineEdit" name="effnetLed"/>
+        <widget class="QLineEdit" name="effnetLed">
+         <property name="toolTip">
+          <string>Filename, directory or Hugging Face repository of the effnet encoder model</string>
+         </property>
+        </widget>
        </item>
        <item row="1" column="0">
         <widget class="QLabel" name="label_2">
@@ -362,19 +435,39 @@
         </widget>
        </item>
        <item row="6" column="5">
-        <widget class="QComboBox" name="te3DTypeCmb"/>
+        <widget class="QComboBox" name="te3DTypeCmb">
+         <property name="toolTip">
+          <string>Overrides the text encoder 3 weight data type</string>
+         </property>
+        </widget>
        </item>
        <item row="1" column="1">
-        <widget class="QLineEdit" name="baseModelLed"/>
+        <widget class="QLineEdit" name="baseModelLed">
+         <property name="toolTip">
+          <string>Filename, directory or Hugging Face repository of the base model</string>
+         </property>
+        </widget>
        </item>
        <item row="9" column="5">
-        <widget class="QComboBox" name="effnetDTypeCmb"/>
+        <widget class="QComboBox" name="effnetDTypeCmb">
+         <property name="toolTip">
+          <string>Overrides the effnet encoder weight data type</string>
+         </property>
+        </widget>
        </item>
        <item row="12" column="5">
-        <widget class="QComboBox" name="decTeDTypeCmb"/>
+        <widget class="QComboBox" name="decTeDTypeCmb">
+         <property name="toolTip">
+          <string>Overrides the decoder text encoder weight data type</string>
+         </property>
+        </widget>
        </item>
        <item row="8" column="1">
-        <widget class="QLineEdit" name="vaeLed"/>
+        <widget class="QLineEdit" name="vaeLed">
+         <property name="toolTip">
+          <string>Directory or Hugging Face repository of a VAE model in diffusers format. Can be used to override the VAE included in the base model. Using a safetensor VAE file will cause an error that the model cannot be loaded</string>
+         </property>
+        </widget>
        </item>
        <item row="10" column="2">
         <widget class="QToolButton" name="decBtn">

@@ -216,6 +216,9 @@
            <pointsize>8</pointsize>
           </font>
          </property>
+         <property name="toolTip">
+          <string>Current status of the training run</string>
+         </property>
          <property name="text">
           <string>STATUS</string>
          </property>
@@ -223,6 +226,9 @@
        </item>
        <item>
         <widget class="QPushButton" name="exportBtn">
+         <property name="toolTip">
+          <string>Export the current configuration as a script to run without a UI</string>
+         </property>
          <property name="text">
           <string>Export</string>
          </property>

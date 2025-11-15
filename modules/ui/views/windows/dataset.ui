@@ -152,6 +152,9 @@
    </item>
    <item row="0" column="4">
     <widget class="QCheckBox" name="includeSubdirCbx">
+     <property name="toolTip">
+      <string>Include subdirectories when loading images</string>
+     </property>
      <property name="text">
       <string>Include Subdirectories</string>
      </property>

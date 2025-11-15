@@ -144,7 +144,11 @@
     </widget>
    </item>
    <item row="7" column="2" colspan="2">
-    <widget class="QDoubleSpinBox" name="alphaSbx"/>
+    <widget class="QDoubleSpinBox" name="alphaSbx">
+     <property name="toolTip">
+      <string>Blending strength when combining with existing masks</string>
+     </property>
+    </widget>
    </item>
    <item row="8" column="0" colspan="4">
     <widget class="QCheckBox" name="includeSubfolderCbx">
@@ -154,19 +158,35 @@
     </widget>
    </item>
    <item row="6" column="2" colspan="2">
-    <widget class="QSpinBox" name="expandSbx"/>
+    <widget class="QSpinBox" name="expandSbx">
+     <property name="toolTip">
+      <string>Expansion pixels: Expands mask boundaries outward</string>
+     </property>
+    </widget>
    </item>
    <item row="5" column="2" colspan="2">
-    <widget class="QSpinBox" name="smoothSbx"/>
+    <widget class="QSpinBox" name="smoothSbx">
+     <property name="toolTip">
+      <string>Additional smoothing (0=use built-in smoothing, higher values for extra smoothing)</string>
+     </property>
+    </widget>
    </item>
    <item row="4" column="2" colspan="2">
-    <widget class="QDoubleSpinBox" name="thresholdSbx"/>
+    <widget class="QDoubleSpinBox" name="thresholdSbx">
+     <property name="toolTip">
+      <string>Confidence threshold: Lower values detect more objects but may include incorrect regions</string>
+     </property>
+    </widget>
    </item>
    <item row="3" column="2" colspan="2">
     <widget class="QComboBox" name="modeCmb"/>
    </item>
    <item row="2" column="2" colspan="2">
-    <widget class="QLineEdit" name="promptLed"/>
+    <widget class="QLineEdit" name="promptLed">
+     <property name="toolTip">
+      <string>Enter object to detect (e.g. 'person', 'dog', 'car')</string>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

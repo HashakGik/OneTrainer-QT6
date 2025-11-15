@@ -38,13 +38,20 @@
    </item>
    <item row="0" column="3">
     <widget class="QPushButton" name="loadDefaultsBtn">
+     <property name="toolTip">
+      <string>Load default settings for the selected optimizer</string>
+     </property>
      <property name="text">
       <string>Load Defaults</string>
      </property>
     </widget>
    </item>
    <item row="0" column="2">
-    <widget class="QComboBox" name="optimizerCmb"/>
+    <widget class="QComboBox" name="optimizerCmb">
+     <property name="toolTip">
+      <string>The type of optimizer</string>
+     </property>
+    </widget>
    </item>
    <item row="1" column="1" colspan="3">
     <widget class="QScrollArea" name="scrollArea">

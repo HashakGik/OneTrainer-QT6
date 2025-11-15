@@ -39,6 +39,9 @@
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
+     <property name="toolTip">
+      <string>Start sampling automatically after this interval has elapsed</string>
+     </property>
     </widget>
    </item>
    <item row="0" column="3">
@@ -75,7 +78,11 @@
     </widget>
    </item>
    <item row="0" column="11">
-    <widget class="QComboBox" name="formatCmb"/>
+    <widget class="QComboBox" name="formatCmb">
+     <property name="toolTip">
+      <string>File Format used when saving samples</string>
+     </property>
+    </widget>
    </item>
    <item row="0" column="14">
     <widget class="QPushButton" name="manualSampleBtn">
@@ -86,6 +93,9 @@
    </item>
    <item row="1" column="0" colspan="3">
     <widget class="QCheckBox" name="nonEmaCbx">
+     <property name="toolTip">
+      <string>Whether to include non-ema sampling when using ema</string>
+     </property>
      <property name="text">
       <string>Non-EMA Sampling</string>
      </property>
@@ -129,6 +139,9 @@
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
+     <property name="toolTip">
+      <string>The interval used when automatically sampling from the model during training</string>
+     </property>
     </widget>
    </item>
    <item row="0" column="12">
@@ -149,6 +162,9 @@
    </item>
    <item row="1" column="13" colspan="2">
     <widget class="QCheckBox" name="tensorboardCbx">
+     <property name="toolTip">
+      <string>Whether to include sample images in the Tensorboard output</string>
+     </property>
      <property name="text">
       <string>Samples To Tensorboard</string>
      </property>

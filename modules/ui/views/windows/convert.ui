@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>250</height>
+    <height>282</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -40,10 +40,18 @@
     </widget>
    </item>
    <item row="1" column="1" colspan="2">
-    <widget class="QComboBox" name="modelTypeCmb"/>
+    <widget class="QComboBox" name="modelTypeCmb">
+     <property name="toolTip">
+      <string>Type of the model</string>
+     </property>
+    </widget>
    </item>
    <item row="4" column="1" colspan="2">
-    <widget class="QComboBox" name="outputDTypeCmb"/>
+    <widget class="QComboBox" name="outputDTypeCmb">
+     <property name="toolTip">
+      <string>Precision to use when saving the output model</string>
+     </property>
+    </widget>
    </item>
    <item row="8" column="0">
     <spacer name="verticalSpacer">
@@ -79,13 +87,25 @@
     </widget>
    </item>
    <item row="6" column="1">
-    <widget class="QLineEdit" name="outputLed"/>
+    <widget class="QLineEdit" name="outputLed">
+     <property name="toolTip">
+      <string>Filename or directory where the output model is saved</string>
+     </property>
+    </widget>
    </item>
    <item row="3" column="1">
-    <widget class="QLineEdit" name="inputLed"/>
+    <widget class="QLineEdit" name="inputLed">
+     <property name="toolTip">
+      <string>Filename, directory or hugging face repository of the base model</string>
+     </property>
+    </widget>
    </item>
    <item row="2" column="1" colspan="2">
-    <widget class="QComboBox" name="trainingMethodCmb"/>
+    <widget class="QComboBox" name="trainingMethodCmb">
+     <property name="toolTip">
+      <string>The type of model to convert</string>
+     </property>
+    </widget>
    </item>
    <item row="6" column="2">
     <widget class="QToolButton" name="outputBtn">
@@ -136,7 +156,11 @@
     </widget>
    </item>
    <item row="5" column="1" colspan="2">
-    <widget class="QComboBox" name="outputFormatCmb"/>
+    <widget class="QComboBox" name="outputFormatCmb">
+     <property name="toolTip">
+      <string>Format to use when saving the output model</string>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

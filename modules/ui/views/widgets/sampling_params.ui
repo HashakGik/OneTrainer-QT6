@@ -91,7 +91,11 @@
     </widget>
    </item>
    <item row="3" column="1">
-    <widget class="QSpinBox" name="framesSbx"/>
+    <widget class="QSpinBox" name="framesSbx">
+     <property name="toolTip">
+      <string>Number of frames to generate. Only used when generating videos</string>
+     </property>
+    </widget>
    </item>
    <item row="3" column="4">
     <widget class="QLabel" name="label_11">
@@ -104,7 +108,11 @@
     </widget>
    </item>
    <item row="3" column="5" colspan="2">
-    <widget class="QDoubleSpinBox" name="lengthSbx"/>
+    <widget class="QDoubleSpinBox" name="lengthSbx">
+     <property name="toolTip">
+      <string>Length in seconds of audio output</string>
+     </property>
+    </widget>
    </item>
    <item row="4" column="0">
     <widget class="QLabel" name="label_4">
@@ -177,6 +185,9 @@
    </item>
    <item row="7" column="0" colspan="3">
     <widget class="QCheckBox" name="inpaintingCbx">
+     <property name="toolTip">
+      <string>Enables inpainting sampling. Only available when sampling from an inpainting model</string>
+     </property>
      <property name="text">
       <string>Inpainting</string>
      </property>
@@ -193,7 +204,11 @@
     </widget>
    </item>
    <item row="8" column="1">
-    <widget class="QLineEdit" name="imagePathLed"/>
+    <widget class="QLineEdit" name="imagePathLed">
+     <property name="toolTip">
+      <string>The base image used when inpainting</string>
+     </property>
+    </widget>
    </item>
    <item row="8" column="2">
     <widget class="QToolButton" name="imagePathBtn">
@@ -226,7 +241,11 @@
     </widget>
    </item>
    <item row="8" column="5">
-    <widget class="QLineEdit" name="maskPathLed"/>
+    <widget class="QLineEdit" name="maskPathLed">
+     <property name="toolTip">
+      <string>The mask used when inpainting</string>
+     </property>
+    </widget>
    </item>
    <item row="8" column="6">
     <widget class="QToolButton" name="maskPathBtn">
