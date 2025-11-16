@@ -5,3 +5,4 @@ class ToolType(BaseEnum):
     BUTTON = "button"
     CHECKABLE_BUTTON = "checkable_button"
     SPINBOX = "spinbox"
+    DOUBLE_SPINBOX = "double_spinbox"

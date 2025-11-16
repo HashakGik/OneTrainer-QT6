@@ -4,3 +4,5 @@ class EditMode(BaseEnum):
     NONE = "none"
     DRAW = "draw"
     FILL = "fill"
+    ZOOM = "zoom"
+    PAN = "pan"

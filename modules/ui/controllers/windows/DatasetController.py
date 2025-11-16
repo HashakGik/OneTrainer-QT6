@@ -11,10 +11,11 @@ from modules.ui.models.MaskHistoryModel import MaskHistoryModel
 from modules.util.enum.FileFilter import FileFilter
 from modules.util.enum.CaptionFilter import CaptionFilter
 from modules.util.enum.EditMode import EditMode
+from modules.util.enum.ToolType import ToolType
 
 from modules.ui.utils.WorkerPool import WorkerPool
 
-from modules.ui.utils.FigureWidget import FigureWidget, ToolType # TODO: move to enum
+from modules.ui.utils.FigureWidget import FigureWidget
 from modules.util.enum.MouseButton import MouseButton
 
 from PIL import Image
@@ -28,66 +29,105 @@ class DatasetController(BaseController):
         self.theme = "dark" if QtG.QGuiApplication.styleHints().colorScheme() == QtG.Qt.ColorScheme.Dark else "light"
 
         # (fn, type, text, name, icon, tooltip, shortcut, spinbox_range)
+        # spinbox_range = (min, step, max, default value)
         self.tools = [
-            (
-                self.__prevImg(), ToolType.BUTTON, "prev_btn", None, "resources/icons/buttons/{}/arrow-left.svg".format(self.theme),
-             QCA.translate("toolbar_item", "Previous image (Left Arrow)"), "Left", None
-            ),
-            (
-                self.__nextImg(), ToolType.BUTTON, "next_btn", None, "resources/icons/buttons/{}/arrow-right.svg".format(self.theme),
-             QCA.translate("toolbar_item", "Next image (Right Arrow)"), "Right", None
-            ),
-            (None, ToolType.SEPARATOR, None, None, None, None, None, None),
-            (
-                self.__toggleMaskEdit(), ToolType.CHECKABLE_BUTTON, "draw_btn", None, "resources/icons/buttons/{}/brush.svg".format(self.theme),
-                QCA.translate("toolbar_item", "Draw (Left Click) or Erase (Right Click) mask (CTRL+E)"), "Ctrl+E", None
-            ),
-            (
-                self.__toggleMaskFill(), ToolType.CHECKABLE_BUTTON, "fill_btn", None,
-                "resources/icons/buttons/{}/paint-bucket.svg".format(self.theme),
-                QCA.translate("toolbar_item",
-                              "Fill (Left Click) or Erase-fill (Right Click) mask (CTRL+F)"), "Ctrl+F", None
-            ),
-            (
-                self.__setBrushSize(), ToolType.SPINBOX, "brush_sbx", QCA.translate("toolbar_item", "Brush size"), None,
-                              QCA.translate("toolbar_item", "Brush size (Mouse Wheel Up/Down)"), None, (1, 256.0, 1.0) # TODO: CHECK RANGE. SHORTCUT.
-            ),
-            (
-                self.__setAlpha(), ToolType.SPINBOX, "alpha_sbx", QCA.translate("toolbar_item", "Mask opacity"), None,
-                QCA.translate("toolbar_item", "Mask opacity for preview"), None, (0.05, 1.0, 0.05)
-            ),
-            (None, ToolType.SEPARATOR, None, None, None, None, None, None),
-            (
-                self.__clearAll(), ToolType.BUTTON, "clear_btn", QCA.translate("toolbar_item", "Clear All"), None,
-                              QCA.translate("toolbar_item", "Clear mask and caption (Del)"), "Del", None
-            ),
-            (
-                self.__resetMask(), ToolType.BUTTON, "reset_btn", QCA.translate("toolbar_item", "Reset Mask"), None,
-                              QCA.translate("toolbar_item", "Reset mask (CTRL+R, or Middle Click)"), "Ctrl+R", None
-            ),
-            (None, ToolType.SEPARATOR, None, None, None, None, None, None),
-            (
-                self.__saveMask(), ToolType.BUTTON, "save_btn", None, "resources/icons/buttons/{}/save.svg".format(self.theme),
-                              QCA.translate("toolbar_item", "Save mask (CTRL+S)"), "Ctrl+S", None
-            ),
-            (
-                self.__undo(), ToolType.BUTTON, "undo_btn", None, "resources/icons/buttons/{}/undo.svg".format(self.theme),
-                QCA.translate("toolbar_item", "Undo (CTRL+Z)"), "Ctrl+Z", None
-            ),
-            (
-                self.__redo(), ToolType.BUTTON, "redo_btn", None, "resources/icons/buttons/{}/redo.svg".format(self.theme),
-                              QCA.translate("toolbar_item", "Redo (CTRL+Y)"), "Ctrl+Y", None
-            ),
-            (None, ToolType.SEPARATOR, None, None, None, None, None, None),
-            (
-                self.__deleteSample(), ToolType.BUTTON, "delete_btn", None, "resources/icons/buttons/{}/trash-2.svg".format(self.theme),
-                QCA.translate("toolbar_item", "Delete image and caption (CTRL+Del)"), "Ctrl+Del", None
-            ),
+            {
+                "fn": self.__prevImg(),
+                "type": ToolType.BUTTON,
+                "icon": "resources/icons/buttons/{}/arrow-left.svg".format(self.theme),
+                "tooltip": QCA.translate("toolbar_item", "Previous image (Left Arrow)"),
+                "shortcut": "Left"
+            },
+            {
+                "fn": self.__nextImg(),
+                "type": ToolType.BUTTON,
+                "icon": "resources/icons/buttons/{}/arrow-right.svg".format(self.theme),
+                "tooltip": QCA.translate("toolbar_item", "Next image (Right Arrow)"),
+                "shortcut": "Right"
+            },
+            {"type": ToolType.SEPARATOR},
+            {
+                "type": ToolType.CHECKABLE_BUTTON,
+                "tool": EditMode.DRAW,
+                "icon": "resources/icons/buttons/{}/brush.svg".format(self.theme),
+                "tooltip": QCA.translate("toolbar_item", "Draw (Left Click) or Erase (Right Click) mask (CTRL+E)"),
+                "shortcut": "Ctrl+E"
+            },
+            {
+                "type": ToolType.CHECKABLE_BUTTON,
+                "tool": EditMode.FILL,
+                "icon": "resources/icons/buttons/{}/paint-bucket.svg".format(self.theme),
+                "tooltip": QCA.translate("toolbar_item", "Fill (Left Click) or Erase-fill (Right Click) mask (CTRL+F)"),
+                "shortcut": "Ctrl+F"
+            },
+            {
+                "fn": self.__setBrushSize(),
+                "type": ToolType.SPINBOX,
+                "name": "brush_sbx",
+                "text": QCA.translate("toolbar_item", "Brush size"),
+                "tooltip": QCA.translate("toolbar_item", "Brush size (Mouse Wheel Up/Down)"),
+                "spinbox_range": (1, 256, 1),
+                "value": 10
+            },
+            {
+                "fn": self.__setAlpha(),
+                "type": ToolType.DOUBLE_SPINBOX,
+                "name": "alpha_sbx",
+                "text": QCA.translate("toolbar_item", "Mask opacity"),
+                "tooltip": QCA.translate("toolbar_item", "Mask opacity for preview"),
+                "spinbox_range": (0.05, 1.0, 0.05),
+                "value": 0.5
+            },
+            {"type": ToolType.SEPARATOR},
+            {
+                "fn": self.__clearAll(),
+                "type": ToolType.BUTTON,
+                "text": QCA.translate("toolbar_item", "Clear All"),
+                "tooltip": QCA.translate("toolbar_item", "Clear mask and caption (Del)"),
+                "shortcut": "Del"
+            },
+            {
+                "fn": self.__resetMask(),
+                "type": ToolType.BUTTON,
+                "text": QCA.translate("toolbar_item", "Reset Mask"),
+                "tooltip": QCA.translate("toolbar_item", "Reset mask (CTRL+R, or Middle Click)"),
+                "shortcut": "Ctrl+R"
+            },
+            {"type": ToolType.SEPARATOR},
+            {
+                "fn": self.__saveMask(),
+                "type": ToolType.BUTTON,
+                "icon": "resources/icons/buttons/{}/save.svg".format(self.theme),
+                "tooltip": QCA.translate("toolbar_item", "Save mask (CTRL+S)"),
+                "shortcut": "Ctrl+S"
+            },
+            {
+                "fn": self.__undo(),
+                "type": ToolType.BUTTON,
+                "icon": "resources/icons/buttons/{}/undo.svg".format(self.theme),
+                "tooltip": QCA.translate("toolbar_item", "Undo (CTRL+Z)"),
+                "shortcut": "Ctrl+Z"
+            },
+            {
+                "fn": self.__redo(),
+                "type": ToolType.BUTTON,
+                "icon": "resources/icons/buttons/{}/redo.svg".format(self.theme),
+                "tooltip": QCA.translate("toolbar_item", "Redo (CTRL+Y)"),
+                "shortcut": "Ctrl+Y"
+            },
+            {"type": ToolType.SEPARATOR},
+            {
+                "fn": self.__deleteSample(),
+                "type": ToolType.BUTTON,
+                "icon": "resources/icons/buttons/{}/trash-2.svg".format(self.theme),
+                "tooltip": QCA.translate("toolbar_item", "Delete image and caption (CTRL+Del)"),
+                "shortcut": "Ctrl+Del"
+            },
         ]
 
 
         self.canvas = FigureWidget(parent=self.ui, width=7, height=5, zoom_tools=True, other_tools=self.tools, emit_clicked=True, emit_moved=True, emit_wheel=True, emit_released=True, use_data_coordinates=True)
-        self.ax = self.canvas.figure.subplots()
+        self.ax = self.canvas.figure.subplots() # TODO: when panning, the drawing area changes size. Probably there is some matplotlib option to set.
         self.ax.set_axis_off()
 
         self.ui.canvasLay.addWidget(self.canvas.toolbar)
@@ -104,7 +144,6 @@ class DatasetController(BaseController):
         self.current_index = 0
         self.alpha = 0.05 # TODO: read/write from toolbar
         self.brush = 1.0 # TODO read/write from toolbar
-        self.current_tool = EditMode.NONE # TODO: reset every time a new image is loaded?
         self.im = None
 
     def __openDataset(self):
@@ -157,24 +196,6 @@ class DatasetController(BaseController):
                 # TODO: if mask or caption is changed, ask for save (Yes: save and move to next, No: discard and move to next, Cancel: do not move and undo gui selection
                 self.current_index = (self.current_index + 1) % self.num_files
                 self.ui.fileTreeWdg.setCurrentItem(self.leafWidgets[self.current_index])
-        return f
-
-    def __toggleMaskEdit(self):
-        def f(): # TODO: take bool param?
-            if self.current_tool == EditMode.DRAW:
-                self.current_tool = EditMode.NONE
-            else:
-                self.current_tool = EditMode.DRAW
-            # TODO: disable pan/zoom and checked
-        return f
-
-    def __toggleMaskFill(self):
-        def f(): # TODO: take bool param?
-            if self.current_tool == EditMode.FILL:
-                self.current_tool = EditMode.NONE
-            else:
-                self.current_tool = EditMode.FILL
-            # TODO: disable pan/zoom and checked
         return f
 
     def __setBrushSize(self):
@@ -277,12 +298,9 @@ class DatasetController(BaseController):
     
                             # TODO: use DatasetModel.instance().getState("files")[self.current_index] to load image and caption (OR SAVE CURRENT PATH LOCALLY FROM path when not None)
                             self.image, mask, self.original_caption = DatasetModel.instance().getSample(path)
-                            # TODO: USE IMAGE, MASK, CAPTION?
+
                             if self.original_caption is not None:
                                 self.ui.captionTed.setPlainText(self.original_caption) # TODO: WHEN SAVING CHECK: file exists and caption has changed, file does not exist and caption is not empty (create file), file exists and caption ted is empty (delete file)
-                            # self.canvas.drawImage(image, self.ax, alpha=1.0, layer=0)
-                            # if mask is not None:
-                            #     self.canvas.drawImage(mask, self.ax, alpha=self.alpha, layer=1) # TODO: dynamic alpha based on toolbar
 
                             if mask is None:
                                 mask = Image.new("L", self.image.size, 1)
@@ -329,16 +347,9 @@ Mouse wheel: increase or decrease brush size
 
     def __onClicked(self):
         def f(btn, x, y):
-            if self.current_tool == EditMode.FILL:
-                if btn == MouseButton.LEFT:
-                    MaskHistoryModel.instance().fill(x, y, 0)
-                elif btn == MouseButton.RIGHT:
-                    MaskHistoryModel.instance().fill(x, y, 1)
-            else:
-                if btn == MouseButton.MIDDLE:
-                    MaskHistoryModel.instance().reset()
-
-            self.__updateCanvas()
+            if btn == MouseButton.MIDDLE:
+                MaskHistoryModel.instance().reset()
+                self.__updateCanvas()
         return f
 
     def __onReleased(self):
@@ -350,32 +361,35 @@ Mouse wheel: increase or decrease brush size
 
     def __onWheelUp(self):
         def f():
-            wdg = self.canvas.toolbar.findChild(QtW.QDoubleSpinBox, "brush_sbx")
+            wdg = self.canvas.toolbar.findChild(QtW.QSpinBox, "brush_sbx")
             new_val = wdg.value() + wdg.singleStep()
             wdg.setValue(new_val) # This will emit valueChanged, which is connected to self.__setBrushSize()
         return f
 
     def __onWheelDown(self):
         def f():
-            wdg = self.canvas.toolbar.findChild(QtW.QDoubleSpinBox, "brush_sbx")
+            wdg = self.canvas.toolbar.findChild(QtW.QSpinBox, "brush_sbx")
             new_val = wdg.value() - wdg.singleStep()
             wdg.setValue(new_val)
         return f
 
-    def __onMoved(self):
+    def __onMaskClicked(self):
+        def f(btn, x, y):
+            if btn == MouseButton.LEFT:
+                MaskHistoryModel.instance().fill(x, y, 0)
+            elif btn == MouseButton.RIGHT:
+                MaskHistoryModel.instance().fill(x, y, 1)
+            self.__updateCanvas()
+
+    def __onDrawMoved(self):
         def f(btn, x0, y0, x1, y1):
-            if self.current_tool == EditMode.DRAW and x0 >= 0 and y0 >= 0 and x1 >= 0 and y1 >= 0:
+            if x0 >= 0 and y0 >= 0 and x1 >= 0 and y1 >= 0:
                 if btn == MouseButton.LEFT:
                     MaskHistoryModel.instance().paintStroke(x0, y0, x1, y1, int(self.brush), 0, commit=False)  # Draw stroke 0 from x0,y0 to x1,y1
                     self.__updateCanvas()
                 elif btn == MouseButton.RIGHT:
                     MaskHistoryModel.instance().paintStroke(x0, y0, x1, y1, int(self.brush), 1, commit=False)
                     self.__updateCanvas()
-
-
-            else:
-                pass # Do nothing?
-
 
         return f
 
@@ -406,9 +420,11 @@ Mouse wheel: increase or decrease brush size
 
         self.connect(self.canvas.clicked, self.__onClicked())
         self.connect(self.canvas.released, self.__onReleased())
-        self.connect(self.canvas.moved, self.__onMoved())
         self.connect(self.canvas.wheelUp, self.__onWheelUp())
         self.connect(self.canvas.wheelDown, self.__onWheelDown())
+
+        self.canvas.registerTool(EditMode.DRAW, moved_fn=self.__onDrawMoved(), use_mpl_event=False)
+        self.canvas.registerTool(EditMode.FILL, clicked_fn=self.__onMaskClicked(), use_mpl_event=False)
 
 
 

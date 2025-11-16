@@ -74,7 +74,7 @@ class TrainingController(BaseController):
         "layer_filter": "layerFilterLed",
         "layer_filter_regex": "layerFilterRegexCbx",
 
-        "embedding_learning_rate": "embeddingLearningRateSbx",
+        "embedding_learning_rate": "embeddingLearningRateLed",
         "preserve_embedding_norm": "embeddingNormCbx",
 
         "offset_noise_weight": "offsetNoiseWeightSbx",
