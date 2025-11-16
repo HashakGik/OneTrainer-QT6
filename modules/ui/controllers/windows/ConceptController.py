@@ -1,12 +1,10 @@
 from modules.ui.controllers.BaseController import BaseController
 
 from modules.ui.utils.FigureWidget import FigureWidget
-from modules.ui.utils.WorkerThread import WorkerThread # TODO: replace with WorkerPool
+from modules.ui.utils.WorkerPool import WorkerPool
 
 from PySide6.QtCore import QCoreApplication as QCA
 import PySide6.QtWidgets as QtW
-
-from PySide6.QtCore import QTimer
 
 from modules.util.enum.BalancingStrategy import BalancingStrategy
 from modules.util.enum.ConceptType import ConceptType
@@ -30,19 +28,6 @@ class ConceptController(BaseController):
     def _setup(self):
         self.idx = 0
         self.file_index = 0
-        self.timer = QTimer()
-        self.worker = WorkerThread(self.__scanConcept(), on_end_fn=self.__conceptScannedCallback(), abort_fn=self.__abortScan())
-        # self.worker.start() # TODO: either solve deadlock on advanced scan, or restore original implementation.
-
-
-
-        # TODO: TKinter implementation does a basic scan automatically when the window is created, then retries an advanced one if basic took < 0.1s
-        # A more robust approach would be to have a queuing mechanism:
-        # On preset change: enqueue every concept's path that is not associated with statistics
-        # On okBtn clicked: if new path != old path -> enqueue current concept's path
-        # On Update Basic/Advanced Statistics: add current concept to top of queue, instead of bottom
-        # The queue is processed concurrently while the application is running (the thread uses a QSemaphore on the list to sleep as long as it is empty)
-        # On enqueue (by main thread) Semaphore.release(1), Before every dequeue Semaphore.acquire(1) (by scanner thread)
 
         plt.set_loglevel('WARNING')  # suppress errors about data type in bar chart
 
@@ -54,50 +39,45 @@ class ConceptController(BaseController):
     def __reconnectControls(self):
         def f():
             self.disconnectGroup("idx")
-            self._connectStateUi(self.dynamic_state_ui_connections, ConceptModel.instance(), signal=None, group="idx", update_after_connect=True, idx=self.idx) # TODO: NO! Does not update on new concept
+            self._connectStateUi(self.dynamic_state_ui_connections, ConceptModel.instance(), signal=None, group="idx", update_after_connect=True, idx=self.idx)
         return f
 
-
-    def __conceptScannedCallback(self):
-        def f(concept, out):
-            QtW.QApplication.instance().scannedConcept.emit(concept[0], concept[1])
-        return f
 
     def __updateStats(self):
-        def f(idx=None, advanced_scan=None):
-            if idx is None or idx == self.idx:
-                stats_dict = ConceptModel.instance().pretty_print_stats(self.idx)
+        def f():
+            self.__enableScanBtn(True)()
+            stats_dict = ConceptModel.instance().pretty_print_stats(self.idx)
 
-                for k, v in {
-                    "fileSizeLbl": "file_size",
-                    "processingTimeLbl": "processing_time",
-                    "dirCountLbl": "dir_count",
-                    "imageCountLbl": "image_count",
-                    "imageCountMaskLbl": "image_count_mask",
-                    "imageCountCaptionLbl": "image_count_caption",
-                    "videoCountLbl": "video_count",
-                    "videoCountCaptionLbl": "video_count_caption",
-                    "maskCountLbl": "mask_count",
-                    "maskCountUnpairedLbl": "mask_count_unpaired",
-                    "captionCountLbl": "caption_count",
-                    "unpairedCaptionsLbl": "unpaired_captions",
-                    "maxPixelsLbl": "max_pixels",
-                    "avgPixelsLbl": "avg_pixels",
-                    "minPixelsLbl": "min_pixels",
-                    "lengthMaxLbl": "length_max",
-                    "lengthAvgLbl": "length_avg",
-                    "lengthMinLbl": "length_min",
-                    "fpsMaxLbl": "fps_max",
-                    "fpsAvgLbl": "fps_avg",
-                    "fpsMinLbl": "fps_min",
-                    "captionMaxLbl": "caption_max",
-                    "captionAvgLbl": "caption_avg",
-                    "captionMinLbl": "caption_min",
-                    "smallBucketLbl": "small_bucket",
-                }.items():
-                    self.ui.findChild(QtW.QLabel, k).setText(str(stats_dict[v]))
+            for k, v in {
+                "fileSizeLbl": "file_size",
+                "processingTimeLbl": "processing_time",
+                "dirCountLbl": "dir_count",
+                "imageCountLbl": "image_count",
+                "imageCountMaskLbl": "image_count_mask",
+                "imageCountCaptionLbl": "image_count_caption",
+                "videoCountLbl": "video_count",
+                "videoCountCaptionLbl": "video_count_caption",
+                "maskCountLbl": "mask_count",
+                "maskCountUnpairedLbl": "mask_count_unpaired",
+                "captionCountLbl": "caption_count",
+                "unpairedCaptionsLbl": "unpaired_captions",
+                "maxPixelsLbl": "max_pixels",
+                "avgPixelsLbl": "avg_pixels",
+                "minPixelsLbl": "min_pixels",
+                "lengthMaxLbl": "length_max",
+                "lengthAvgLbl": "length_avg",
+                "lengthMinLbl": "length_min",
+                "fpsMaxLbl": "fps_max",
+                "fpsAvgLbl": "fps_avg",
+                "fpsMinLbl": "fps_min",
+                "captionMaxLbl": "caption_max",
+                "captionAvgLbl": "caption_avg",
+                "captionMinLbl": "caption_min",
+                "smallBucketLbl": "small_bucket",
+            }.items():
+                self.ui.findChild(QtW.QLabel, k).setText(str(stats_dict[v]))
 
-                self.__updateHistogram(stats_dict)
+            self.__updateHistogram(stats_dict)
         return f
 
     def __updateHistogram(self, stats_dict):
@@ -119,46 +99,35 @@ class ConceptController(BaseController):
         sec.tick_params('x', length=0)
         self.canvas.draw_idle()
 
-    def __enableTimer(self):
-        def f(idx):
-            self.timer.setInterval(500)
-            self.timer.start()
-        return f
-
     def __scanConcept(self):
-        def f(elem):
-            # elem[0] = concept idx, elem[1] basic/advanced scanning
-            return ConceptModel.instance().get_concept_stats(elem[0], elem[1])
+        def f(advanced_scanning):
+            return ConceptModel.instance().get_concept_stats(self.idx, advanced_scanning)
+        return f
+
+    def __startScan(self, advanced_scanning):
+        def f():
+            worker, name = WorkerPool.instance().createNamed(self.__scanConcept(), "scan_concept", abort_flag=ConceptModel.instance().cancel_scan_flag, advanced_scanning=advanced_scanning)
+            worker.connect(init_fn=self.__enableScanBtn(False), result_fn=None, finished_fn=self.__updateStats(), errored_fn=self.__enableScanBtn(True), aborted_fn=self.__enableScanBtn(True))
+            WorkerPool.instance().start(name)
 
         return f
 
-    def __addConcept(self, advanced_scanning, first=False):
+    def __startDownload(self):
         def f():
-            self.worker.enqueue((self.idx, advanced_scanning), first=first)
+            worker, name = WorkerPool.instance().createNamed(self.__downloadConcept(), "download_concept")
+            worker.connect(init_fn=self.__enableDownloadBtn(False), result_fn=None, finished_fn=self.__enableDownloadBtn(True),
+                           errored_fn=self.__enableDownloadBtn(True), aborted_fn=self.__enableDownloadBtn(True))
+            WorkerPool.instance().start(name)
+        return f
+
+    def __downloadConcept(self):
+        def f():
+            ConceptModel.instance().download_dataset(self.idx)
         return f
 
     def __abortScan(self):
         def f():
-            ConceptModel.instance().cancel_current_concept_stats()
-            self.worker.flush()
-        return f
-
-    def __updateTitle(self):
-        def f():
-            if not self.ui.isVisible():
-                self.timer.stop() # Since QDialog has no signal for a closed window, the timer is disabled here instead.
-
-            base_title = QCA.translate("edit_concept_status", "Edit Concept")
-            processing_string = QCA.translate("edit_concept_status", "(Scanning {}...)")
-
-            current_input = self.worker.getCurrentInput()
-
-            if current_input is not None:
-                path = ConceptModel.instance().getState("{}.path".format(current_input[0]))
-                self.ui.setWindowTitle(base_title + " " + processing_string.format(path))
-            else:
-                self.ui.setWindowTitle(base_title)
-
+            ConceptModel.instance().cancel_scan_flag.set()
         return f
 
     def __enablePromptSource(self):
@@ -173,24 +142,29 @@ class ConceptController(BaseController):
 
     def __prevImage(self):
         def f():
-            self.file_index = max(0, self.file_index - 1)
-            self.__updateImage()()
+            image_count = ConceptModel.instance().getState("{}.concept_stats.image_count".format(self.idx))
+            if image_count is not None and image_count > 0:
+                self.file_index = (self.file_index + image_count - 1) % image_count
+            else:
+                self.file_index = max(0, self.file_index - 1)
+            self.__updateImage()
         return f
 
     def __nextImage(self):
         def f():
             image_count = ConceptModel.instance().getState("{}.concept_stats.image_count".format(self.idx))
-            self.file_index = min(image_count - 1, self.file_index + 1) if image_count is not None else self.file_index + 1
-            self.__updateImage()()
+            if image_count is not None and image_count > 0:
+                self.file_index = (self.file_index + 1) % image_count
+            else:
+                self.file_index += 1
+            self.__updateImage()
         return f
 
     def __updateImage(self):
-        def f():
-            img, filename, caption = ConceptModel.instance().getImage(self.idx, self.file_index, show_augmentations=self.ui.showAugmentationsCbx.isChecked())
-            self.ui.previewLbl.setPixmap(QtGui.QPixmap.fromImage(ImageQt(img)))
-            self.ui.filenameLbl.setText(filename)
-            self.ui.promptTed.setPlainText(caption)
-        return f
+        img, filename, caption = ConceptModel.instance().getImage(self.idx, self.file_index, show_augmentations=self.ui.showAugmentationsCbx.isChecked())
+        self.ui.previewLbl.setPixmap(QtGui.QPixmap.fromImage(ImageQt(img)))
+        self.ui.filenameLbl.setText(filename)
+        self.ui.promptTed.setPlainText(caption)
 
     def __updateConcept(self):
         def f(idx):
@@ -220,13 +194,8 @@ class ConceptController(BaseController):
         self.connect(QtW.QApplication.instance().openConcept, self.__updateStats())
         self.connect(self.ui.okBtn.clicked, self.__saveConcept())
 
-        self.connect(QtW.QApplication.instance().scannedConcept, self.__updateStats())
 
-        # TODO: connect conceptsChanged with a global basic scanning
-
-        self.connect(self.timer.timeout, self.__updateTitle())
-        self.connect(QtW.QApplication.instance().openConcept, self.__enableTimer())
-        self.connect(QtW.QApplication.instance().openConcept, self.__updateImage())
+        self.connect(QtW.QApplication.instance().openConcept, lambda: self.__updateImage())
 
         self.dynamic_state_ui_connections = {
             # General tab.
@@ -261,7 +230,7 @@ class ConceptController(BaseController):
             "{idx}.image.enable_fixed_hue": "fixHueCbx",
             "{idx}.image.random_hue_max_strength": "hueSbx",
             "{idx}.image.enable_resolution_override": "fixResolutionOverrideCbx",
-            "{idx}.image.resolution_override": "resolutionOverrideSbx",
+            "{idx}.image.resolution_override": "resolutionOverrideLed",
             "{idx}.image.enable_random_circular_mask_shrink": "rndCircularMaskCbx",
             "{idx}.image.enable_random_mask_rotate_crop": "rndRotateCropCbx",
             # Text augmentation tab.
@@ -282,15 +251,17 @@ class ConceptController(BaseController):
 
         self.connect(QtW.QApplication.instance().openConcept, self.__reconnectControls())
 
-
-    def _connectInputValidation(self):
         self.connect(self.ui.promptSourceCmb.activated, self.__enablePromptSource())
-        self.connect(self.ui.refreshBasicBtn.clicked, self.__addConcept(advanced_scanning=False, first=True))
-        self.connect(self.ui.refreshAdvancedBtn.clicked, self.__addConcept(advanced_scanning=True, first=True))
+        self.connect(self.ui.refreshBasicBtn.clicked, self.__startScan(advanced_scanning=False))
+        self.connect(self.ui.refreshAdvancedBtn.clicked, self.__startScan(advanced_scanning=True))
         self.connect(self.ui.abortScanBtn.clicked, self.__abortScan())
-        self.connect(self.ui.updatePreviewBtn.clicked, self.__updateImage())
+        self.connect(self.ui.downloadNowBtn.clicked, self.__startDownload())
+        self.connect(self.ui.updatePreviewBtn.clicked, lambda: self.__updateImage())
         self.connect(self.ui.prevBtn.clicked, self.__prevImage())
         self.connect(self.ui.nextBtn.clicked, self.__nextImage())
+
+        self._connectInvalidateCallback(self.__enableDownloadBtn(True))
+        self._connectInvalidateCallback(self.__enableScanBtn(True))
 
 
     def _loadPresets(self):
@@ -306,6 +277,22 @@ class ConceptController(BaseController):
         for e in BalancingStrategy.enabled_values():
             self.ui.balancingCmb.addItem(e.pretty_print(), userData=e)
 
-        # TODO: this always allows Prior Validation concepts, even when LORA is not selected. (The behavior is the same as original OneTrainer, delegating checks to non-ui methods).
+        # This always allows Prior Validation concepts, even when LORA is not selected. (The behavior is the same as original OneTrainer, delegating checks to non-ui methods).
         for e in ConceptType.enabled_values(context="prior_pred_enabled"):
             self.ui.conceptTypeCmb.addItem(e.pretty_print(), userData=e)
+
+    def _connectInputValidation(self):
+        self.ui.resolutionOverrideLed.setValidator(QtGui.QRegularExpressionValidator("\d+(x\d+(,\d+x\d+)*)?", self.ui))
+
+
+    def __enableDownloadBtn(self, enabled):
+        def f():
+            self.ui.downloadNowBtn.setEnabled(enabled)
+        return f
+
+    def __enableScanBtn(self, enabled):
+        def f():
+            self.ui.refreshBasicBtn.setEnabled(enabled)
+            self.ui.refreshAdvancedBtn.setEnabled(enabled)
+            self.ui.abortScanBtn.setEnabled(not enabled)
+        return f

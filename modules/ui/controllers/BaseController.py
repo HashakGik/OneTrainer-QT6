@@ -226,7 +226,7 @@ class BaseController:
     def openAlert(self, title, message, type="about", buttons=QtW.QMessageBox.StandardButton.Ok):
         wnd = None
         if type == "about":
-            wnd = QtW.QMessageBox.about(self.ui, title, message, buttons=buttons)
+            QtW.QMessageBox.about(self.ui, title, message) # About has no buttons nor return values.
         elif type == "critical":
             wnd = QtW.QMessageBox.critical(self.ui, title, message, buttons=buttons)
         elif type == "information":

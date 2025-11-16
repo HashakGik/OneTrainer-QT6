@@ -72,7 +72,7 @@ class InputPipelineModule(
 class ConceptModel(SingletonConfigModel):
     def __init__(self):
         self.config = []
-        self.cancel_scan_flag = threading.Event() # TODO: this is to preserve old implementation in modules.util.concept_stats.py In the future remove it and refactor those functions to be implementation agnostic.
+        self.cancel_scan_flag = threading.Event()
 
     def __len__(self):
         return len(self.config)
@@ -92,6 +92,8 @@ class ConceptModel(SingletonConfigModel):
             else:
                 return ""
 
+    def disable_concepts(self):
+        pass # TODO
 
     def create_new_concept(self):
         with self.critical_region():
@@ -173,12 +175,13 @@ class ConceptModel(SingletonConfigModel):
         return image
 
     def download_dataset(self, idx):
-        # TODO: Invoked by a simple QRunnable in controller? https://stackoverflow.com/questions/6783194/background-thread-with-qthread-in-pyqt
+        # TODO: if this handles the exception, it will return successfully. If exception is deferred to WorkerPool, instead, it will emit the errored signal.
         try:
             huggingface_hub.login(token=StateModel.instance().getState("secrets.huggingface_token"), new_session=False)
             huggingface_hub.snapshot_download(repo_id=self.getState("{}.path".format(idx)), repo_type="dataset")
         except Exception:
             traceback.print_exc()
+
 
     def get_preview_prompt(self, filename, show_augmentations):
         empty_msg = "[Empty prompt]"
@@ -202,8 +205,6 @@ class ConceptModel(SingletonConfigModel):
             return "[Invalid file encoding. This should not happen, please report this issue]"
 
     def get_concept_stats(self, idx, advanced_checks, wait_time=60):
-        #  TODO: SOMETIMES ADVANCED SCAN GETS STUCK!
-
         path = self.getState("{}.path".format(idx))
         include_subdirectories = self.getState("{}.include_subdirectories".format(idx))
         if not os.path.isdir(path):
@@ -220,7 +221,6 @@ class ConceptModel(SingletonConfigModel):
         subfolders = [concept_path]
 
         stats_dict = concept_stats.init_concept_stats(advanced_checks)
-        # TODO: Refactor this loop and folder_scan() to avoid needing start_time/wait_time/cancel_scan_flag
         for path in subfolders:
             if self.cancel_scan_flag.is_set() or time.perf_counter() - start_time > wait_time:
                 break
@@ -230,11 +230,6 @@ class ConceptModel(SingletonConfigModel):
 
             self.setState("{}.concept_stats".format(idx), stats_dict)
         self.cancel_scan_flag.clear()
-
-    def cancel_current_concept_stats(self):
-        # TODO: after refactoring this will not be needed anymore
-        # Note: this aborts current scan! The controller is in charge of flushing the worker's queue.
-        self.cancel_scan_flag.set()
 
     def pretty_print_stats(self, idx):
         concept_stats = self.getState("{}.concept_stats".format(idx))
@@ -362,11 +357,6 @@ class ConceptModel(SingletonConfigModel):
 
 
 
-    def get_unscanned_concepts(self, advanced=False):
-        # TODO
-        pass # Returns list of concepts not scanned yet -> The controller removes from this list the current input of the worker to avoid infinite loops
-        # This returns tuples (idx, both_missing/only_advanced_missing), the controller decides what to do with it
-
     def decimal_to_aspect_ratio(self, value):
         #find closest fraction to decimal aspect value and convert to a:b format
         aspect_fraction = fractions.Fraction(value).limit_denominator(16)
@@ -416,7 +406,7 @@ class ConceptModel(SingletonConfigModel):
             prompt_output = self.get_preview_prompt(str(file_path), show_augmentations) if file_path else "[Empty prompt]"
 
         modules = []
-        if show_augmentations: # TODO
+        if show_augmentations:
             input_module = InputPipelineModule({
                 'true': True,
                 'image': image_tensor,

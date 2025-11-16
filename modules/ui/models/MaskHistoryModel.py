@@ -13,15 +13,6 @@ class MaskHistoryConfig(BaseConfig):
     width: int
     height: int
 
-    # TODO: Rename to MaskHistoryModel/MaskHistoryConfig
-    # buffer = list of np.packbits arrays
-    # initial_mask = np.bool -> loaded on load and on reset. Required for save to check if changed
-    # current_mask = np.bool corresponding to the current image. It is not accessed directly, but sent as np.packbits (and np.unpackbits() from the controller) to block on the smallest amount of data possible
-    # commit packs the mask before adding it to the buffer
-    # load_mask, reset_mask, draw, fill, etc. operate on current_mask
-
-    # NOTE: 0 (black): masked, 1 (unmasked) -> No mask file = np.ones()
-
 
     @staticmethod
     def default_values():
@@ -57,7 +48,7 @@ class MaskHistoryModel(SingletonConfigModel):
 
     def __unpack(self, mask, w, h):
         # Unpack np.uint8 into np.bool, remove zero-padding at the end, and reshape.
-        return np.unpackbits(mask)[:w * h].reshape((w, h)).astype(np.uint8).copy() # TODO: opencv only works with uint8 -> 8x memory saved doesn't make sense?
+        return np.unpackbits(mask)[:w * h].reshape((w, h)).astype(np.uint8).copy()
 
     @SingletonConfigModel.atomic
     def undo(self):
@@ -74,7 +65,7 @@ class MaskHistoryModel(SingletonConfigModel):
 
     @SingletonConfigModel.atomic
     def commit(self):
-        if self.config.current_mask is not None: # TODO: STILL NOT ENOUGH TO PREVENT ERRORS IF MASK WAS NOT LOADED?
+        if self.config.current_mask is not None:
             if self.config.ptr < len(self.config.buffer) - 1:
                 self.config.buffer = self.config.buffer[:self.config.ptr + 1] # Invalidate the future before adding a new state.
 

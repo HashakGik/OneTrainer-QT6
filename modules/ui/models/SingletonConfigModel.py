@@ -1,5 +1,3 @@
-from triton.language.semantic import atomic_add
-
 from modules.util import path_util
 
 import os
@@ -29,6 +27,8 @@ class SingletonConfigModel:
                 for key in str(path).split("."):
                     if isinstance(ref, list):
                         ref = ref[int(key)]
+                    elif isinstance(ref, dict) and key in ref:
+                        ref = ref[key]
                     elif hasattr(ref, key):
                         ref = getattr(ref, key)
                     else:
@@ -49,6 +49,8 @@ class SingletonConfigModel:
                         ref = getattr(ref, ptr)
                 if isinstance(ref, list):
                     ref[int(path.split(".")[-1])] = value
+                elif isinstance(ref, dict):
+                    ref[path.split(".")[-1]] = value
                 elif hasattr(ref, path.split(".")[-1]):
                     setattr(ref, path.split(".")[-1], value)
                 else:
