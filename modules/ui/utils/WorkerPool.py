@@ -1,5 +1,5 @@
 from PySide6.QtCore import QObject, QThreadPool, QRunnable, Signal, Slot
-import sys, traceback, uuid
+import sys, traceback, uuid, inspect
 
 class Worker(QRunnable, QObject):
     initialized = Signal()
@@ -7,23 +7,37 @@ class Worker(QRunnable, QObject):
     errored = Signal(tuple)
     aborted = Signal()
     result = Signal(object)
+    progress = Signal(dict) # Arbitrary key-value pairs.
 
-    def __init__(self, fn, name, abort_flag=None, **kwargs):
+    def __init__(self, fn, name, abort_flag=None, inject_progress_callback=False, **kwargs):
         QObject.__init__(self)
         QRunnable.__init__(self)
         self.fn = fn
         self.name = name
         self.abort_flag = abort_flag
         self.kwargs = kwargs
+        self.inject_progress_callback = inject_progress_callback
 
-        self.connections = {"initialized": [], "result": [], "errored": [], "finished": [], "aborted": []}
+        self.connections = {"initialized": [], "result": [], "errored": [], "finished": [], "aborted": [], "progress": []}
         self.destroyed.connect(lambda _: self.disconnectAll)
+
+    def progressCallback(self):
+        def f(data):
+            self.progress.emit(data)
+        return f
 
     @Slot()
     def run(self):
         try:
             self.initialized.emit()
-            out = self.fn(**self.kwargs)
+            if self.inject_progress_callback:
+                if "progress_fn" not in inspect.signature(self.fn).parameters:
+                    print("WARNING: callable function has no progress_fn parameter. Invoking the function without it.")
+                    out = self.fn(**self.kwargs)
+                else:
+                    out = self.fn(progress_fn=self.progressCallback(), **self.kwargs)
+            else:
+                out = self.fn(**self.kwargs)
 
             if self.abort_flag is not None and self.abort_flag.is_set():
                 self.abort_flag.clear()
@@ -37,7 +51,7 @@ class Worker(QRunnable, QObject):
         finally:
             self.finished.emit(self.name)
 
-    def connect(self, init_fn=None, result_fn=None, finished_fn=None, errored_fn=None, aborted_fn=None):
+    def connect(self, init_fn=None, result_fn=None, finished_fn=None, errored_fn=None, aborted_fn=None, progress_fn=None):
         if init_fn is not None:
             self.connections["initialized"].append(self.initialized.connect(init_fn))
         if result_fn is not None:
@@ -48,12 +62,14 @@ class Worker(QRunnable, QObject):
             self.connections["finished"].append(self.finished.connect(finished_fn))
         if aborted_fn is not None:
             self.connections["aborted"].append(self.aborted.connect(aborted_fn))
+        if progress_fn is not None:
+            self.connections["progress"].append(self.progress.connect(progress_fn))
 
     def disconnectAll(self):
         for k, v in self.connections.items():
             for v2 in v:
                 v2.disconnect()
-        self.connections = {"initialized": [], "result": [], "errored": [], "finished": [], "aborted": []}
+        self.connections = {"initialized": [], "result": [], "errored": [], "finished": [], "aborted": [], "progress": []}
 
 # Simple worker pool class. It allows to enqueue arbitrary functions executed on a QThreadPool. All the function parameters must be passed BY NAME (kwargs).
 # If a job is associated with a name (createNamed()), its execution is reentrant (i.e., attempting to run the same job multiple times, will execute it only once).

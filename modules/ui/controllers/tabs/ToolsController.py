@@ -1,5 +1,6 @@
 from PySide6.QtCore import QCoreApplication as QCA
 from modules.ui.controllers.BaseController import BaseController
+from modules.ui.controllers.windows.CaptionController import CaptionController
 
 from modules.ui.controllers.windows.DatasetController import DatasetController
 from modules.ui.controllers.windows.ImageController import ImageController
@@ -8,6 +9,8 @@ from modules.ui.controllers.windows.VideoController import VideoController
 from modules.ui.controllers.windows.ConvertController import ConvertController
 from modules.ui.controllers.windows.SampleController import SampleController
 from modules.ui.controllers.windows.ProfileController import ProfileController
+from modules.ui.controllers.windows.CaptionController import CaptionController
+from modules.ui.controllers.windows.MaskController import MaskController
 
 import PySide6.QtWidgets as QtW
 
@@ -18,6 +21,8 @@ class ToolsController(BaseController):
     def _setup(self):
 
         self.children = {"dataset": DatasetController(self.loader, parent=None),
+                         "caption": CaptionController(self.loader, parent=None),
+                         "mask": MaskController(self.loader, parent=None),
                          "image": ImageController(self.loader, parent=None),
                          "bulk_caption": BulkCaptionController(self.loader, parent=None),
                         "video": VideoController(self.loader, parent=None),
@@ -38,6 +43,8 @@ class ToolsController(BaseController):
     def _connectUIBehavior(self):
         self.connect(self.ui.datasetBtn.clicked, lambda: self.__open("dataset"))
         self.connect(self.ui.imageBtn.clicked, lambda: self.__open("image"))
+        self.connect(self.ui.maskBtn.clicked, lambda: self.__open("mask"))
+        self.connect(self.ui.captionBtn.clicked, lambda: self.__open("caption"))
         self.connect(self.ui.bulkCaptionBtn.clicked, lambda: self.__open("bulk_caption"))
         self.connect(self.ui.videoBtn.clicked, lambda: self.__open("video"))
         self.connect(self.ui.convertBtn.clicked, lambda: self.__open("convert"))

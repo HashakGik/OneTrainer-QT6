@@ -3,6 +3,9 @@ from PySide6.QtCore import QCoreApplication as QCA
 
 from modules.util.enum.GenerateCaptionsModel import GenerateCaptionsModel, GenerateCaptionsAction
 
+from modules.ui.models.CaptionModel import CaptionModel
+from modules.ui.utils.WorkerPool import WorkerPool
+
 class CaptionController(BaseController):
     def __init__(self, loader, parent=None):
         super().__init__(loader, "modules/ui/views/windows/generate_caption.ui", name=None, parent=parent)
@@ -10,6 +13,46 @@ class CaptionController(BaseController):
     def _connectUIBehavior(self):
         self._connectFileDialog(self.ui.folderBtn, self.ui.folderLed, is_dir=True, save=False, title=
                                QCA.translate("dialog_window", "Open Dataset directory"))
+
+        state_ui_connections = {
+            "model": "modelCmb",
+            "path": "folderLed",
+            "caption": "initialCaptionLed",
+            "prefix": "captionPrefixLed",
+            "postfix": "captionPostfixLed",
+            "mode": "modeCmb",
+            "include_subdirectories": "includeSubfolderCbx"
+        }
+
+        self._connectStateUi(state_ui_connections, CaptionModel.instance(), update_after_connect=True)
+
+        self._connectInvalidateCallback(self.__enableControls(True))
+
+        self.connect(self.ui.createMaskBtn.clicked, self.__startCaption())
+
+    def __createCaption(self):
+        def f(progress_fn=None):
+            return CaptionModel.instance().create_captions(progress_fn=progress_fn)
+
+        return f
+
+    def __startCaption(self):
+        def f():
+            worker, name = WorkerPool.instance().createNamed(self.__createCaption(), "create_caption", inject_progress_callback=True) # TODO: choose if it should be shared with other GPU-intensive tools
+            worker.connect(init_fn=self.__enableControls(False), result_fn=None,
+                           finished_fn=self.__enableControls(True),
+                           errored_fn=self.__enableControls(True), aborted_fn=self.__enableControls(True),
+                           progress_fn=self._updateProgress(self.ui.progressBar))
+            WorkerPool.instance().start(name)
+
+        return f
+
+    def __enableControls(self, enabled):
+        def f():
+            self.ui.createMaskBtn.setEnabled(enabled)
+            if enabled:
+                self.ui.progressBar.setValue(0)
+        return f
 
     def _loadPresets(self):
         for e in GenerateCaptionsModel.enabled_values():

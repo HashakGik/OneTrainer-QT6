@@ -3,7 +3,7 @@ import functools
 import PySide6.QtWidgets as QtW
 import PySide6.QtCore as QtC
 
-from PySide6.QtCore import Slot, Qt
+from PySide6.QtCore import Slot, Qt, QMetaObject, QGenericArgument
 
 import re
 import webbrowser
@@ -14,6 +14,8 @@ from modules.ui.utils.SNLineEdit import SNLineEdit
 
 from modules.ui.models.StateModel import StateModel
 
+
+
 # TODO: CLEANUP:
 # 1) Naming convention is all over the place (camelCase, snake_case, inconsistent visibility __method vs _method vs method)
 # 2) Some callbacks are invoked as lambdas, others as self.__method() which returns a function f(). Choose one!
@@ -23,6 +25,7 @@ from modules.ui.models.StateModel import StateModel
 # Abstract controller with some utility methods.
 class BaseController:
     state_ui_connections = {} # Class attribute, but it will be overwritten by every subclass.
+
     def __init__(self, loader, ui_file, name=None, parent=None, **kwargs):
         self.loader = loader
         self.parent = parent
@@ -34,9 +37,10 @@ class BaseController:
 
         self._setup()
 
+        self._loadPresets()
+
         self._connectUIBehavior()
         self._connectInputValidation()
-        self._loadPresets()
 
         self._connectStateUi(self.state_ui_connections, StateModel.instance(), signal=QtW.QApplication.instance().stateChanged, **kwargs)
 
@@ -181,6 +185,7 @@ class BaseController:
                     dir = elem.text()
                 txt = diag.getExistingDirectory(parent=None, caption=title, dir=dir)
                 elem.setText(self._removeWorkingDir(txt))
+                elem.editingFinished.emit()
             else:
                 file = None
                 if os.path.exists(elem.text()):
@@ -190,17 +195,22 @@ class BaseController:
                     txt, flt = diag.getSaveFileName(parent=None, caption=title, dir=file, filter=filters)
                     if txt != "":
                         elem.setText(self._removeWorkingDir(self._appendExtension(txt, flt)))
+                        elem.editingFinished.emit()
                 else:
                     txt, _ = diag.getOpenFileName(parent=None, caption=title, dir=file, filter=filters)
                     if txt != "":
                         elem.setText(self._removeWorkingDir(txt))
+                        elem.editingFinished.emit()
 
         self.connect(tool_button.clicked, functools.partial(f, edit_box))
 
     def _removeWorkingDir(self, txt):
         cwd = os.getcwd()
         if txt.startswith(cwd):
-            return txt[len(cwd) + 1:] # Remove working directory and trailing slash.
+            out = txt[len(cwd) + 1:]
+            if out == "":
+                out = "."
+            return out # Remove working directory and trailing slash.
         else:
             return txt
 
@@ -215,6 +225,23 @@ class BaseController:
 
         if self_clone_fn is not None:
             self.connect(controller.ui.cloneBtn.clicked, self_clone_fn)
+
+    def _updateProgress(self, elem):
+        def f(data):
+            if "value" in data and "max_value" in data:
+                val = int(elem.minimum() + data["value"] / data["max_value"] * (
+                            elem.maximum() - elem.minimum())) if data["max_value"] > elem.minimum() else elem.minimum()
+                if isinstance(elem, QtW.QProgressBar):
+                    elem.setValue(val)
+                elif isinstance(elem, QtW.QLabel):
+                    elem.setText(str(val))
+        return f
+
+    def _log(self, severity, message):
+        # TODO: if you prefer a GUI text area, print on it instead: https://stackoverflow.com/questions/24469662/how-to-redirect-logger-output-into-pyqt-text-widget
+        # In that case it is important to register a global logger widget (e.g. on a window with different tabs for each severity level)
+        # For high severity, maybe an alertbox can also be opened automatically
+        StateModel.instance().log(severity, message) # TODO: refactor every message in the controller to use this. Do something similar with SingletonConfigModel
 
     def openWindow(self, controller, fixed_size=False):
         if fixed_size:

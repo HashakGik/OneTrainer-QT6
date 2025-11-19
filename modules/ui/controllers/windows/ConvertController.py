@@ -6,6 +6,10 @@ from modules.util.enum.TrainingMethod import TrainingMethod
 from modules.util.enum.DataType import DataType
 from modules.util.enum.ModelFormat import ModelFormat
 
+from modules.ui.models.ConvertModel import ConvertModel
+
+from modules.ui.utils.WorkerPool import WorkerPool
+
 class ConvertController(BaseController):
     def __init__(self, loader, parent=None):
         super().__init__(loader, "modules/ui/views/windows/convert.ui", name=None, parent=parent)
@@ -17,6 +21,38 @@ class ConvertController(BaseController):
         self._connectFileDialog(self.ui.outputBtn, self.ui.outputLed, is_dir=False, save=True,
                                title=QCA.translate("dialog_window", "Save Output model"),
                                filters=QCA.translate("filetype_filters", "Safetensors (*.safetensors);;Diffusers (model_index.json)"))
+
+        state_ui_connections = {
+            "model_type": "modelTypeCmb",
+            "training_method": "trainingMethodCmb",
+            "input_name": "inputLed",
+            "output_model_destination": "outputLed",
+            "output_model_format": "outputFormatCmb",
+            "output_dtype": "outputDTypeCmb",
+        }
+
+        self._connectStateUi(state_ui_connections, ConvertModel.instance(), update_after_connect=True)
+
+        self.connect(self.ui.convertBtn.clicked, self.__startConvert())
+
+    def __convert(self):
+        def f():
+            return ConvertModel.instance().convert_model()
+
+        return f
+
+    def __startConvert(self):
+        def f():
+            worker, name = WorkerPool.instance().createNamed(self.__convert(), "convert_model")
+            worker.connect(init_fn=self.__enableButton(False), result_fn=None, finished_fn=self.__enableButton(True),
+                           errored_fn=self.__enableButton(True), aborted_fn=self.__enableButton(True))
+            WorkerPool.instance().start(name)
+        return f
+
+    def __enableButton(self, enabled):
+        def f():
+            self.ui.convertBtn.setEnabled(enabled)
+        return f
 
     def _loadPresets(self):
         for e in ModelType.enabled_values(context="convert_window"):

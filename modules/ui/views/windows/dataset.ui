@@ -29,59 +29,6 @@
    <bool>true</bool>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="6" column="3" colspan="3">
-    <widget class="QLineEdit" name="fileFilterLed"/>
-   </item>
-   <item row="5" column="7" rowspan="7" colspan="8">
-    <layout class="QVBoxLayout" name="canvasLay">
-     <item>
-      <spacer name="horizontalSpacer_2">
-       <property name="orientation">
-        <enum>Qt::Orientation::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
-   </item>
-   <item row="6" column="0">
-    <widget class="QLabel" name="label_4">
-     <property name="text">
-      <string>File/Path Filter</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="12">
-    <spacer name="horizontalSpacer">
-     <property name="orientation">
-      <enum>Qt::Orientation::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>40</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="7" column="6">
-    <widget class="QComboBox" name="captionFilterCmb"/>
-   </item>
-   <item row="0" column="11">
-    <widget class="QPushButton" name="generateCaptionsBtn">
-     <property name="text">
-      <string>Generate Captions</string>
-     </property>
-    </widget>
-   </item>
-   <item row="7" column="3" colspan="3">
-    <widget class="QLineEdit" name="captionFilterLed"/>
-   </item>
    <item row="8" column="0" rowspan="5" colspan="7">
     <widget class="QTreeWidget" name="fileTreeWdg">
      <property name="sizePolicy">
@@ -103,18 +50,11 @@
      </column>
     </widget>
    </item>
-   <item row="5" column="0" colspan="6">
-    <widget class="QLabel" name="numFilesLbl">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text">
-      <string/>
-     </property>
-    </widget>
+   <item row="7" column="3" colspan="3">
+    <widget class="QLineEdit" name="captionFilterLed"/>
+   </item>
+   <item row="7" column="6">
+    <widget class="QComboBox" name="captionFilterCmb"/>
    </item>
    <item row="0" column="6">
     <widget class="QPushButton" name="browseBtn">
@@ -130,23 +70,43 @@
      </property>
     </widget>
    </item>
-   <item row="0" column="9">
-    <widget class="QPushButton" name="generateMaskBtn">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text">
-      <string>Generate Mask</string>
-     </property>
-    </widget>
+   <item row="5" column="7" rowspan="7" colspan="6">
+    <layout class="QVBoxLayout" name="canvasLay">
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
    </item>
-   <item row="0" column="14">
-    <widget class="QPushButton" name="helpBtn">
+   <item row="6" column="6">
+    <widget class="QComboBox" name="fileFilterCmb"/>
+   </item>
+   <item row="0" column="10">
+    <spacer name="horizontalSpacer">
+     <property name="orientation">
+      <enum>Qt::Orientation::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>40</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="6" column="0">
+    <widget class="QLabel" name="label_4">
      <property name="text">
-      <string>Help</string>
+      <string>File/Path Filter</string>
      </property>
     </widget>
    </item>
@@ -160,7 +120,7 @@
      </property>
     </widget>
    </item>
-   <item row="12" column="7" colspan="8">
+   <item row="12" column="7" colspan="6">
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QPlainTextEdit" name="captionTed">
@@ -202,6 +162,13 @@
      </item>
     </layout>
    </item>
+   <item row="0" column="12">
+    <widget class="QPushButton" name="helpBtn">
+     <property name="text">
+      <string>Help</string>
+     </property>
+    </widget>
+   </item>
    <item row="7" column="0">
     <widget class="QLabel" name="label_5">
      <property name="text">
@@ -209,8 +176,21 @@
      </property>
     </widget>
    </item>
-   <item row="6" column="6">
-    <widget class="QComboBox" name="fileFilterCmb"/>
+   <item row="5" column="0" colspan="6">
+    <widget class="QLabel" name="numFilesLbl">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="3" colspan="3">
+    <widget class="QLineEdit" name="fileFilterLed"/>
    </item>
   </layout>
  </widget>
@@ -223,8 +203,6 @@
   <tabstop>captionFilterLed</tabstop>
   <tabstop>captionFilterCmb</tabstop>
   <tabstop>fileTreeWdg</tabstop>
-  <tabstop>generateMaskBtn</tabstop>
-  <tabstop>generateCaptionsBtn</tabstop>
   <tabstop>helpBtn</tabstop>
   <tabstop>captionTed</tabstop>
   <tabstop>saveCaptionBtn</tabstop>

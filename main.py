@@ -9,6 +9,7 @@ from modules.ui.utils.SNLineEdit import SNLineEdit
 
 if __name__ == "__main__":
     os.environ["QT_QPA_PLATFORM"] = "xcb" # Suppress Wayland warnings on NVidia drivers.
+    # TODO: scalene (modules.ui.models.StateModel) changes locale on import, change QT6 locale to suppress warning here?
 
     app = OnetrainerApplication(sys.argv)
     loader = QUiLoader()

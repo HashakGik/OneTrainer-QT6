@@ -22,6 +22,20 @@
     </widget>
    </item>
    <item>
+    <widget class="QPushButton" name="maskBtn">
+     <property name="text">
+      <string>Mask Tools</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="captionBtn">
+     <property name="text">
+      <string>Caption Tools</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QPushButton" name="imageBtn">
      <property name="text">
       <string>Image Tools</string>
@@ -67,6 +81,8 @@
  </widget>
  <tabstops>
   <tabstop>datasetBtn</tabstop>
+  <tabstop>maskBtn</tabstop>
+  <tabstop>captionBtn</tabstop>
   <tabstop>imageBtn</tabstop>
   <tabstop>bulkCaptionBtn</tabstop>
   <tabstop>videoBtn</tabstop>

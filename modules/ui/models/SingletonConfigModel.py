@@ -4,11 +4,14 @@ import os
 import threading
 import traceback
 from contextlib import contextmanager
+import copy
 
 # Base class for config models. It provides a Singleton interface and a single mutex shared across all the subclasses.
 class SingletonConfigModel:
     _instance = None
     config = None
+    _frozenConfig = None
+    _is_frozen = False
     mutex = threading.RLock() # QBasicMutex and QMutex are both non-reentrant. We need this to allow the same thread to enter the critical region multiple times without deadlocks.
 
     @classmethod
@@ -17,10 +20,44 @@ class SingletonConfigModel:
             cls._instance = cls()
         return cls._instance
 
+    def log(self, severity, message):
+        with self.critical_region(): # It may make sense to use a DIFFERENT mutex for logging, to avoid blocking business logic!
+            print("{}: {}".format(severity, message)) # TODO: use logging.logger?
+            pass # TODO: replace every model message with a call to this.
+
+    # TODO: IMPORTANT!!! Multithreaded operations using getState (eg. scan dataset stats) will read different data than the one they were launched with if the GUI is changed while they are processing in the background!!!
+     # Models must access config only "with self.freezeState(): ...", this also allows to remove critical_region/atomic (unless the model is setting a state)
+    @contextmanager
+    def __freeze_state(self):
+        try:
+            try:
+                if self.mutex is not None:
+                    self.mutex.acquire()
+                    self._frozenConfig = copy.deepcopy(self.config)
+                    self._is_frozen = True
+            finally:
+                if self.mutex is not None:
+                    self.mutex.release()
+
+            yield
+        except Exception:
+            traceback.print_exc()
+        finally:
+            if self.mutex is not None:
+                self.mutex.acquire()
+                self._frozenConfig = None
+                self._is_frozen = False
+            if self.mutex is not None:
+                self.mutex.release()
+
     def getState(self, path):
-        if self.config is not None:
-            with self.critical_region():
-                ref = self.config
+        cfg = self._frozenConfig if self._is_frozen else self.config
+        if cfg is not None:
+            try:
+                if self.mutex is not None and not self._is_frozen:
+                    self.mutex.acquire()
+
+                ref = cfg
                 if path == "":
                     return ref
 
@@ -36,6 +73,13 @@ class SingletonConfigModel:
                         return None
                 return ref
 
+            except Exception:
+                traceback.print_exc()
+            finally:
+                if self.mutex is not None and not self._is_frozen:
+                    self.mutex.release()
+
+
         return None
 
     def setState(self, path, value):
@@ -45,6 +89,8 @@ class SingletonConfigModel:
                 for ptr in str(path).split(".")[:-1]:
                     if isinstance(ref, list):
                         ref = ref[int(ptr)]
+                    elif isinstance(ref, dict):
+                        ref = ref[ptr]
                     elif hasattr(ref, ptr):
                         ref = getattr(ref, ptr)
                 if isinstance(ref, list):

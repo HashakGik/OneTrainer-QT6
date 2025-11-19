@@ -7,3 +7,4 @@ training_concepts/*
 training_presets/*
 training_samples/*
 secrets.json
+external/*

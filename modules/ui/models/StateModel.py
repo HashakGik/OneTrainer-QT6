@@ -12,10 +12,14 @@ import json
 import os
 import copy
 
+import faulthandler
+from scalene import scalene_profiler # TODO: importing Scalene sets the application locale to ANSI-C, while QT6 uses UTF-8 by default. We could change locale to C to suppress warnings, but this may cause problems with some features...
+
 
 class StateModel(SingletonConfigModel):
     def __init__(self):
         self.config = TrainConfig.default_values()
+        self.is_profiling = False
 
 
     def save_default(self):
@@ -88,3 +92,13 @@ class StateModel(SingletonConfigModel):
 
     def get_random_uuid(self):
         return TrainEmbeddingConfig.default_values().uuid
+
+    def dump_stack(self):
+        with open('stacks.txt', 'w') as f:
+            faulthandler.dump_traceback(f)
+
+    def toggle_profiler(self):
+        if self.is_profiling:
+            scalene_profiler.stop()
+        else:
+            scalene_profiler.start()

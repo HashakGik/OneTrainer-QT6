@@ -3,8 +3,6 @@ from PySide6.QtCore import QCoreApplication as QCA
 import PySide6.QtWidgets as QtW
 import PySide6.QtGui as QtG
 
-from modules.ui.controllers.windows.CaptionController import CaptionController
-from modules.ui.controllers.windows.MaskController import MaskController
 from modules.ui.models.DatasetModel import DatasetModel
 from modules.ui.models.MaskHistoryModel import MaskHistoryModel
 
@@ -132,12 +130,6 @@ class DatasetController(BaseController):
 
         self.ui.canvasLay.addWidget(self.canvas.toolbar)
         self.ui.canvasLay.addWidget(self.canvas)
-
-
-
-        self.mask_window = MaskController(self.loader, parent=self)
-        self.caption_window = CaptionController(self.loader, parent=self)
-
         
         self.leafWidgets = {}
         self.num_files = 0
@@ -405,8 +397,6 @@ Mouse wheel: increase or decrease brush size
         self._connectStateUi(state_ui_connections, DatasetModel.instance(), signal=None, update_after_connect=True)
 
         self.connect(self.ui.openBtn.clicked, self.__openDataset())
-        self.connect(self.ui.generateMaskBtn.clicked, lambda: self.openWindow(self.mask_window, fixed_size=True))
-        self.connect(self.ui.generateCaptionsBtn.clicked, lambda: self.openWindow(self.caption_window, fixed_size=True))
         self.connect(self.ui.helpBtn.clicked, self.__openHelp())
         self.connect(self.ui.browseBtn.clicked, self.__browse())
 
