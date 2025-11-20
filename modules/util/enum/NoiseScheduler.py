@@ -28,8 +28,9 @@ class NoiseScheduler(BaseEnum):
             NoiseScheduler.UNIPC_KARRAS: 'UniPC Karras',
         }[self]
 
-    def is_enabled(self, context=None):
-        return self.value in [
+    @staticmethod
+    def is_enabled(value, context=None):
+        return value in [
             NoiseScheduler.DDIM,
             NoiseScheduler.EULER,
             NoiseScheduler.EULER_A,

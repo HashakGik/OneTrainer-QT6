@@ -129,7 +129,7 @@ class BaseController:
                     elif isinstance(ui_elem, QtW.QLineEdit):
                         self.connect(ui_elem.editingFinished, self.__readLed(ui_elem, var, model), group)
 
-                    callback = functools.partial(self._writeControl, ui_elem, var, model)
+                    callback = functools.partial(BaseController._writeControl, ui_elem, var, model)
                     if signal is not None:
                         self.connect(signal, callback)
                     if update_after_connect:
@@ -157,7 +157,7 @@ class BaseController:
         return lambda: model.setState(var, ui_elem.text())
 
     @staticmethod
-    def _writeControl(ui_elem, var, model):
+    def _writeControl(ui_elem, var, model, *args): # Discard possible signal arguments.
         ui_elem.blockSignals(True)
         val = model.getState(var)
         if val is not None:

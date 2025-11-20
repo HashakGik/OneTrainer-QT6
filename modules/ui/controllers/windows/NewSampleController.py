@@ -12,7 +12,7 @@ class NewSampleController(BaseController):
         super().__init__(loader, "modules/ui/views/windows/new_sample.ui", name=None, parent=parent)
 
     def _setup(self):
-        self.samplingParams = SampleParamsController(self.loader, parent=self.parent)
+        self.samplingParams = SampleParamsController(self.loader, model_instance=SampleModel.instance(), use_idx=True, update_signal=QtW.QApplication.instance().openSample, parent=self.parent)
         self.ui.paramsLay.addWidget(self.samplingParams.ui)
 
     def _connectUIBehavior(self):
@@ -20,21 +20,6 @@ class NewSampleController(BaseController):
 
     def __saveSample(self):
         def f():
-            SampleModel.instance().setState("{}.prompt".format(self.samplingParams.idx), self.samplingParams.ui.promptLed.text())
-            SampleModel.instance().setState("{}.negative_prompt".format(self.samplingParams.idx), self.samplingParams.ui.negativePromptLed.text())
-            SampleModel.instance().setState("{}.width".format(self.samplingParams.idx), self.samplingParams.ui.widthSbx.value())
-            SampleModel.instance().setState("{}.height".format(self.samplingParams.idx), self.samplingParams.ui.heightSbx.value())
-            SampleModel.instance().setState("{}.frames".format(self.samplingParams.idx), self.samplingParams.ui.framesSbx.value())
-            SampleModel.instance().setState("{}.length".format(self.samplingParams.idx), self.samplingParams.ui.lengthSbx.value())
-            SampleModel.instance().setState("{}.seed".format(self.samplingParams.idx), self.samplingParams.ui.seedSbx.value())
-            SampleModel.instance().setState("{}.random_seed".format(self.samplingParams.idx), self.samplingParams.ui.randomSeedCbx.isChecked())
-            SampleModel.instance().setState("{}.cfg_scale".format(self.samplingParams.idx), self.samplingParams.ui.cfgSbx.value())
-            SampleModel.instance().setState("{}.diffusion_steps".format(self.samplingParams.idx), self.samplingParams.ui.stepsSbx.value())
-            SampleModel.instance().setState("{}.noise_scheduler".format(self.samplingParams.idx), self.samplingParams.ui.samplerCmb.currentData())
-            SampleModel.instance().setState("{}.sample_inpainting".format(self.samplingParams.idx), self.samplingParams.ui.inpaintingCbx.isChecked())
-            SampleModel.instance().setState("{}.base_image_path".format(self.samplingParams.idx), self.samplingParams.ui.imagePathLed.text())
-            SampleModel.instance().setState("{}.mask_image_path".format(self.samplingParams.idx), self.samplingParams.ui.maskPathLed.text())
-
             QtW.QApplication.instance().samplesChanged.emit()
             self.ui.hide()
 

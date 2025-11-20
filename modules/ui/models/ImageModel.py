@@ -163,8 +163,6 @@ class ImageModel(SingletonConfigModel):
         self.abort_flag = threading.Event()
         self.progress_fn = None
 
-    ####### FileOperationWindows methods:
-
     def process_files(self, progress_fn=None):
         directory = self.getState("directory")
         self.progress_fn = progress_fn
