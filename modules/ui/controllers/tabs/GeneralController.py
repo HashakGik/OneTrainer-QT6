@@ -6,7 +6,7 @@ from modules.util.enum.GradientReducePrecision import GradientReducePrecision
 
 from modules.ui.models.StateModel import StateModel
 
-import PySide6.QtCore as QtC
+from PySide6.QtCore import Slot
 
 class GeneralController(BaseController):
     state_ui_connections = {
@@ -38,6 +38,7 @@ class GeneralController(BaseController):
     def __init__(self, loader, parent=None):
         super().__init__(loader, "modules/ui/views/tabs/general.ui", name=QCA.translate("main_window_tabs", "General"), parent=parent)
 
+    ###FSM###
 
     def _connectUIBehavior(self):
         self._connectFileDialog(self.ui.workspaceBtn, self.ui.workspaceLed, is_dir=True, save=False,
@@ -47,15 +48,24 @@ class GeneralController(BaseController):
         self._connectFileDialog(self.ui.debugBtn, self.ui.debugLed, is_dir=True, save=False,
                                title=QCA.translate("dialog_window", "Open Debug directory"))
 
-        self.connect(self.ui.workspaceLed.editingFinished, self.__changeWorkspace())
-        self.connect(self.ui.alwaysOnTensorboardCbx.toggled, self.__toggleTensorboard())
+        self._connect(self.ui.workspaceLed.editingFinished, self.__changeWorkspace())
+        self._connect(self.ui.alwaysOnTensorboardCbx.toggled, self.__toggleTensorboard())
 
-        self.connect(self.ui.validateCbx.toggled, self.__updateValidate(), update_after_connect=True, initial_args=[self.ui.validateCbx.isChecked()])
-        self.connect(self.ui.tensorboardCbx.toggled, self.__updateTensorboard(), update_after_connect=True, initial_args=[self.ui.tensorboardCbx.isChecked()])
-        self.connect(self.ui.debugCbx.toggled, self.__updateDebug(), update_after_connect=True, initial_args=[self.ui.debugCbx.isChecked()])
+        self._connect(self.ui.validateCbx.toggled, self.__updateValidate(), update_after_connect=True, initial_args=[self.ui.validateCbx.isChecked()])
+        self._connect(self.ui.tensorboardCbx.toggled, self.__updateTensorboard(), update_after_connect=True, initial_args=[self.ui.tensorboardCbx.isChecked()])
+        self._connect(self.ui.debugCbx.toggled, self.__updateDebug(), update_after_connect=True, initial_args=[self.ui.debugCbx.isChecked()])
 
+    def _loadPresets(self):
+        for e in GradientReducePrecision.enabled_values():
+            self.ui.gradientReduceCmb.addItem(e.pretty_print(), userData=e)
+
+        for e in TimeUnit.enabled_values():
+            self.ui.validateCmb.addItem(e.pretty_print(), userData=e)
+
+    ###Reactions###
 
     def __updateValidate(self):
+        @Slot(bool)
         def f(enabled):
             self.ui.validateLbl.setEnabled(enabled)
             self.ui.validateSbx.setEnabled(enabled)
@@ -63,6 +73,7 @@ class GeneralController(BaseController):
         return f
 
     def __updateTensorboard(self):
+        @Slot(bool)
         def f(enabled):
             self.ui.alwaysOnTensorboardCbx.setEnabled(enabled)
             self.ui.exposeTensorboardCbx.setEnabled(enabled)
@@ -71,6 +82,7 @@ class GeneralController(BaseController):
         return f
 
     def __updateDebug(self):
+        @Slot(bool)
         def f(enabled):
             self.ui.debugLbl.setEnabled(enabled)
             self.ui.debugLed.setEnabled(enabled)
@@ -78,21 +90,17 @@ class GeneralController(BaseController):
         return f
 
     def __changeWorkspace(self):
+        @Slot()
         def f():
-            StateModel.instance().start_tensorboard()
+            if StateModel.instance().getWorkspace("tensorboard_always_on"):
+                StateModel.instance().start_tensorboard()
         return f
 
     def __toggleTensorboard(self):
+        @Slot(bool)
         def f(enabled):
             if enabled:
                 StateModel.instance().start_tensorboard()
             else:
                 StateModel.instance().stop_tensorboard()
         return f
-
-    def _loadPresets(self):
-        for e in GradientReducePrecision.enabled_values():
-            self.ui.gradientReduceCmb.addItem(e.pretty_print(), userData=e)
-
-        for e in TimeUnit.enabled_values():
-            self.ui.validateCmb.addItem(e.pretty_print(), userData=e)

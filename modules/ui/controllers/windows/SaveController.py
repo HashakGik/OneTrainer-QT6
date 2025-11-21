@@ -1,3 +1,5 @@
+from PySide6.QtCore import Slot
+
 from modules.ui.controllers.BaseController import BaseController
 
 import PySide6.QtWidgets as QtW
@@ -8,23 +10,21 @@ class SaveController(BaseController):
     def __init__(self, loader, parent=None):
         super().__init__(loader, "modules/ui/views/windows/save.ui", name=None, parent=parent)
 
+    ###FSM###
 
     def _connectUIBehavior(self):
-        self.connect(self.ui.cancelBtn.clicked, lambda: self.ui.hide())
-        self.connect(self.ui.okBtn.clicked, self.__save())
+        self._connect(self.ui.cancelBtn.clicked, lambda: self.ui.hide())
+        self._connect(self.ui.okBtn.clicked, self.__save())
 
+    ###Reactions###
 
     def __save(self):
+        @Slot()
         def f():
             name = self.ui.configCmb.currentText()
             if name != "" and not name.startswith("#"):
                 StateModel.instance().save_to_file(name)
 
-                QtW.QApplication.instance().stateChanged.emit()
+                QtW.QApplication.instance().savedConfig.emit(name)
                 self.ui.hide()
-
-                # TODO: SET PARENT configCmb TO NEWLY SAVED NAME -> Probably requires new global signal configChanged(idx) because at this point, parent configCmb has not yet updated the content.
-
-            #else: # TODO: alert empty file, check existing files.
-            #    pass
         return f

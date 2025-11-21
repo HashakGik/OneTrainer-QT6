@@ -1,3 +1,5 @@
+from PySide6.QtCore import Slot
+
 from modules.ui.controllers.BaseController import BaseController
 
 import PySide6.QtWidgets as QtW
@@ -13,28 +15,32 @@ class ConceptController(BaseController):
         self.idx = idx
         super().__init__(loader, "modules/ui/views/widgets/concept.ui", name=None, parent=parent)
 
-        # TODO: static connections: enableCbx (text, enabled), conceptBtn (image)
+    ###FSM###
 
     def _connectUIBehavior(self):
-        self.connect(self.ui.conceptBtn.clicked, self.__openConceptWindow())
-        self.connect(self.ui.enableCbx.clicked, self.__enableConcept())
+        self._connect(self.ui.conceptBtn.clicked, self.__openConceptWindow())
+        self._connect(self.ui.enableCbx.clicked, self.__enableConcept())
 
-        self.connect(QtW.QApplication.instance().conceptsChanged, self.__updateConcept(), update_after_connect=True)
+        self._connect(QtW.QApplication.instance().conceptsChanged, self.__updateConcept(), update_after_connect=True)
 
+    ###Reactions###
 
     def __openConceptWindow(self):
+        @Slot()
         def f():
-            self.openWindow(self.concept_window, fixed_size=False)
+            self._openWindow(self.concept_window, fixed_size=False)
             QtW.QApplication.instance().openConcept.emit(self.idx)
         return f
 
     def __enableConcept(self):
+        @Slot()
         def f():
             ConceptModel.instance().setState("{}.enabled".format(self.idx), self.ui.enableCbx.isChecked())
             QtW.QApplication.instance().conceptsChanged.emit()
         return f
 
     def __updateConcept(self):
+        @Slot()
         def f():
             self.ui.enableCbx.setChecked(ConceptModel.instance().getState("{}.enabled".format(self.idx)))
             self.ui.enableCbx.setText(ConceptModel.instance().get_concept_name(self.idx))

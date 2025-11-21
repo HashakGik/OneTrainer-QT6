@@ -1,4 +1,4 @@
-from PySide6.QtCore import QCoreApplication as QCA
+from PySide6.QtCore import QCoreApplication as QCA, Slot
 
 from modules.ui.controllers.BaseController import BaseController
 
@@ -50,32 +50,14 @@ class CloudController(BaseController):
     def __init__(self, loader, parent=None):
         super().__init__(loader, "modules/ui/views/tabs/cloud.ui", name=QCA.translate("main_window_tabs", "Cloud"), parent=parent)
 
+    ###FSM###
 
     def _connectUIBehavior(self):
-        self.connect(self.ui.createCloudBtn.clicked, self.__createCloud())
-        self.connect(self.ui.gpuBtn.clicked, self.__getGPUTypes())
-        self.connect(self.ui.reattachBtn.clicked, self.__reattach())
+        self._connect(self.ui.createCloudBtn.clicked, self.__createCloud())
+        self._connect(self.ui.gpuBtn.clicked, self.__getGPUTypes())
+        self._connect(self.ui.reattachBtn.clicked, self.__reattach())
 
-        self.connect(self.ui.enabledCbx.toggled, self.ui.frame.setEnabled)
-
-    def __reattach(self):
-        def f():
-            TrainingModel.instance().reattach()
-        return f
-
-    def __getGPUTypes(self):
-        def f():
-            self.ui.gpuCmb.clear()
-            for gpu in StateModel.instance().get_gpus():
-                self.ui.gpuCmb.addItem(gpu.name, userData=gpu)
-
-        return f
-
-    def __createCloud(self):
-        def f():
-            if StateModel.instance().getState("cloud.type") == CloudType.RUNPOD:
-                self.openUrl("https://www.runpod.io/console/deploy?template=1a33vbssq9&type=gpu")
-        return f
+        self._connect(self.ui.enabledCbx.toggled, self.ui.frame.setEnabled)
 
 
     def _loadPresets(self):
@@ -91,3 +73,27 @@ class CloudController(BaseController):
 
         for e in CloudSubtype.enabled_values():
             self.ui.subTypeCmb.addItem(e.pretty_print(), userData=e)
+
+    ###Reactions###
+
+    def __reattach(self):
+        @Slot()
+        def f():
+            TrainingModel.instance().reattach()
+        return f
+
+    def __getGPUTypes(self):
+        @Slot()
+        def f():
+            self.ui.gpuCmb.clear()
+            for gpu in StateModel.instance().get_gpus():
+                self.ui.gpuCmb.addItem(gpu.name, userData=gpu)
+
+        return f
+
+    def __createCloud(self):
+        @Slot()
+        def f():
+            if StateModel.instance().getState("cloud.type") == CloudType.RUNPOD:
+                self._openUrl("https://www.runpod.io/console/deploy?template=1a33vbssq9&type=gpu")
+        return f

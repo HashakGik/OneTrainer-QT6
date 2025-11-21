@@ -1,4 +1,4 @@
-from PySide6.QtCore import QCoreApplication as QCA
+from PySide6.QtCore import QCoreApplication as QCA, Slot
 from modules.ui.controllers.BaseController import BaseController
 
 from modules.util.enum.ConfigPart import ConfigPart
@@ -10,6 +10,9 @@ import PySide6.QtWidgets as QtW
 from modules.util.enum.ModelFlags import ModelFlags
 
 from modules.ui.models.StateModel import StateModel
+from modules.util.enum.ModelType import ModelType
+from modules.util.enum.TrainingMethod import TrainingMethod
+
 
 class ModelController(BaseController):
     state_ui_connections = {
@@ -41,6 +44,9 @@ class ModelController(BaseController):
     def __init__(self, loader, parent=None):
         super().__init__(loader, "modules/ui/views/tabs/model.ui", name=QCA.translate("main_window_tabs", "Model"), parent=parent)
 
+
+    ###FSM###
+
     def _connectUIBehavior(self):
         for ui_name in ["baseModel", "prior", "te4", "vae", "effnet", "dec"]:
             btn = self.ui.findChild(QtW.QToolButton, "{}Btn".format(ui_name))
@@ -56,9 +62,25 @@ class ModelController(BaseController):
                                filters=QCA.translate("filetype_filters",
                                                      "Safetensors (*.safetensors);;Diffusers (model_index.json);;Checkpoints (*.ckpt, *.pt, *.bin);;All Files (*.*)"))  # TODO: Maybe refactor filters in ENUM?
 
-        self.connect(QtW.QApplication.instance().modelChanged, self.__updateModel(), update_after_connect=True, initial_args=[StateModel.instance().getState("model_type"), StateModel.instance().getState("training_method")])
+        self._connect(QtW.QApplication.instance().modelChanged, self.__updateModel(), update_after_connect=True, initial_args=[StateModel.instance().getState("model_type"), StateModel.instance().getState("training_method")])
+
+    def _loadPresets(self):
+        for e in ConfigPart.enabled_values():
+            self.ui.configCmb.addItem(e.pretty_print(), userData=e)
+
+        for ui_name in ["weightDTypeCmb", "unetDTypeCmb", "priorDTypeCmb", "te1DTypeCmb", "te2DTypeCmb", "te3DTypeCmb", "te4DTypeCmb",
+                        "vaeDTypeCmb", "effnetDTypeCmb", "decDTypeCmb", "decTeDTypeCmb", "vqganDTypeCmb"]:
+            ui_elem = self.ui.findChild(QtW.QComboBox, ui_name)
+            for e in self.__createDTypes(include_none=(ui_name=="weightDTypeCmb")):
+                ui_elem.addItem(e.pretty_print(), userData=e)
+
+        for e in DataType.enabled_values(context="output_dtype"):
+            self.ui.outputDTypeCmb.addItem(e.pretty_print(), userData=e)
+
+    ###Reactions###
 
     def __updateModel(self):
+        @Slot(ModelType, TrainingMethod)
         def f(model_type, training_method):
             flags = ModelFlags.getFlags(model_type, training_method)
 
@@ -125,18 +147,7 @@ class ModelController(BaseController):
 
         return f
 
-    def _loadPresets(self):
-        for e in ConfigPart.enabled_values():
-            self.ui.configCmb.addItem(e.pretty_print(), userData=e)
-
-        for ui_name in ["weightDTypeCmb", "unetDTypeCmb", "priorDTypeCmb", "te1DTypeCmb", "te2DTypeCmb", "te3DTypeCmb", "te4DTypeCmb",
-                        "vaeDTypeCmb", "effnetDTypeCmb", "decDTypeCmb", "decTeDTypeCmb", "vqganDTypeCmb"]:
-            ui_elem = self.ui.findChild(QtW.QComboBox, ui_name)
-            for e in self.__createDTypes(include_none=(ui_name=="weightDTypeCmb")):
-                ui_elem.addItem(e.pretty_print(), userData=e)
-
-        for e in DataType.enabled_values(context="output_dtype"):
-            self.ui.outputDTypeCmb.addItem(e.pretty_print(), userData=e)
+    ###Utils###
 
     def __createDTypes(self, include_none=True):
         options = DataType.enabled_values(context="model_dtypes")

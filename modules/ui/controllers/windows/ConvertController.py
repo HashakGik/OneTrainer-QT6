@@ -1,4 +1,4 @@
-from PySide6.QtCore import QCoreApplication as QCA
+from PySide6.QtCore import QCoreApplication as QCA, Slot
 from modules.ui.controllers.BaseController import BaseController
 
 from modules.util.enum.ModelType import ModelType
@@ -13,6 +13,8 @@ from modules.ui.utils.WorkerPool import WorkerPool
 class ConvertController(BaseController):
     def __init__(self, loader, parent=None):
         super().__init__(loader, "modules/ui/views/windows/convert.ui", name=None, parent=parent)
+
+    ###FSM###
 
     def _connectUIBehavior(self):
         self._connectFileDialog(self.ui.inputBtn, self.ui.inputLed, is_dir=False, save=False,
@@ -31,29 +33,9 @@ class ConvertController(BaseController):
             "output_dtype": "outputDTypeCmb",
         }
 
-        self._connectStateUi(state_ui_connections, ConvertModel.instance(), update_after_connect=True)
+        self._connectStateUI(state_ui_connections, ConvertModel.instance(), update_after_connect=True)
 
-        self.connect(self.ui.convertBtn.clicked, self.__startConvert())
-
-    def __convert(self):
-        def f():
-            return ConvertModel.instance().convert_model()
-
-        return f
-
-    def __startConvert(self):
-        def f():
-            worker, name = WorkerPool.instance().createNamed(self.__convert(), "convert_model")
-            if worker is not None:
-                worker.connect(init_fn=self.__enableButton(False), result_fn=None, finished_fn=self.__enableButton(True),
-                               errored_fn=self.__enableButton(True), aborted_fn=self.__enableButton(True))
-                WorkerPool.instance().start(name)
-        return f
-
-    def __enableButton(self, enabled):
-        def f():
-            self.ui.convertBtn.setEnabled(enabled)
-        return f
+        self._connect(self.ui.convertBtn.clicked, self.__startConvert())
 
     def _loadPresets(self):
         for e in ModelType.enabled_values(context="convert_window"):
@@ -67,3 +49,30 @@ class ConvertController(BaseController):
 
         for e in ModelFormat.enabled_values(context="convert_window"):
             self.ui.outputFormatCmb.addItem(e.pretty_print(), userData=e)
+
+
+    ###Reactions###
+
+    def __startConvert(self):
+        @Slot()
+        def f():
+            worker, name = WorkerPool.instance().createNamed(self.__convert(), "convert_model")
+            if worker is not None:
+                worker.connect(init_fn=self.__enableButton(False), result_fn=None, finished_fn=self.__enableButton(True),
+                               errored_fn=self.__enableButton(True), aborted_fn=self.__enableButton(True))
+                WorkerPool.instance().start(name)
+        return f
+
+    def __enableButton(self, enabled):
+        @Slot()
+        def f():
+            self.ui.convertBtn.setEnabled(enabled)
+        return f
+
+    ###Utils###
+
+    def __convert(self):
+        def f():
+            return ConvertModel.instance().convert_model()
+
+        return f

@@ -1,4 +1,4 @@
-from PySide6.QtCore import QCoreApplication as QCA
+from PySide6.QtCore import QCoreApplication as QCA, Slot
 
 from modules.ui.controllers.BaseController import BaseController
 
@@ -11,6 +11,7 @@ class BulkCaptionController(BaseController):
     def __init__(self, loader, parent=None):
         super().__init__(loader, "modules/ui/views/windows/bulk_caption.ui", name=None, parent=parent)
 
+    ###FSM###
 
     def _connectUIBehavior(self):
         self._connectFileDialog(self.ui.directoryBtn, self.ui.directoryLed, is_dir=True, save=False, title=
@@ -27,19 +28,20 @@ class BulkCaptionController(BaseController):
             "regex_replace": "regexWithLed",
         }
 
-        self._connectStateUi(state_ui_connections, BulkModel.instance(), update_after_connect=True)
-        self.connect(self.ui.applyBtn.clicked, self.__startProcessFiles(read_only=False))
-        self.connect(self.ui.previewBtn.clicked, self.__startProcessFiles(read_only=True))
+        self._connectStateUI(state_ui_connections, BulkModel.instance(), update_after_connect=True)
+        self._connect(self.ui.applyBtn.clicked, self.__startProcessFiles(read_only=False))
+        self._connect(self.ui.previewBtn.clicked, self.__startProcessFiles(read_only=True))
 
         self.__enableControls(True)()
 
-    def __processFiles(self, read_only):
-        def f(progress_fn=None):
-            return BulkModel.instance().bulk_edit(read_only=read_only, preview_n=10, progress_fn=progress_fn)
 
-        return f
+    def _loadPresets(self):
+        for e in BulkEditMode.enabled_values():
+            self.ui.addCmb.addItem(e.pretty_print(), userData=e)
 
+    ###Reactions###
     def __updateStatus(self):
+        @Slot(dict)
         def f(data):
             if "status" in data:
                 self.ui.statusLbl.setText(data["status"])
@@ -49,6 +51,7 @@ class BulkCaptionController(BaseController):
         return f
 
     def __startProcessFiles(self, read_only):
+        @Slot()
         def f():
             worker, name = WorkerPool.instance().createNamed(self.__processFiles(read_only), "process_bulk_captions", inject_progress_callback=True)
             if worker is not None:
@@ -61,11 +64,17 @@ class BulkCaptionController(BaseController):
         return f
 
     def __enableControls(self, enabled):
+        @Slot()
         def f():
             self.ui.applyBtn.setEnabled(enabled)
             self.ui.previewBtn.setEnabled(enabled)
         return f
 
-    def _loadPresets(self):
-        for e in BulkEditMode.enabled_values():
-            self.ui.addCmb.addItem(e.pretty_print(), userData=e)
+
+    ###Utils###
+
+    def __processFiles(self, read_only):
+        def f(progress_fn=None):
+            return BulkModel.instance().bulk_edit(read_only=read_only, preview_n=10, progress_fn=progress_fn)
+
+        return f

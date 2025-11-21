@@ -1,5 +1,5 @@
 from modules.ui.controllers.BaseController import BaseController
-from PySide6.QtCore import QCoreApplication as QCA
+from PySide6.QtCore import QCoreApplication as QCA, Slot
 import PySide6.QtWidgets as QtW
 import PySide6.QtGui as QtG
 
@@ -22,6 +22,8 @@ import numpy as np
 class DatasetController(BaseController):
     def __init__(self, loader, parent=None):
         super().__init__(loader, "modules/ui/views/windows/dataset.ui", name=None, parent=parent)
+
+    ###FSM###
 
     def _setup(self):
         self.theme = "dark" if QtG.QGuiApplication.styleHints().colorScheme() == QtG.Qt.ColorScheme.Dark else "light"
@@ -140,7 +142,51 @@ class DatasetController(BaseController):
         
         self.leafWidgets = {}
 
+    def _connectUIBehavior(self):
+        state_ui_connections = {
+            "include_subdirectories": "includeSubdirCbx",
+            "file_filter": "fileFilterLed",
+            "file_filter_mode": "fileFilterCmb",
+            "caption_filter": "captionFilterLed",
+            "caption_filter_mode": "captionFilterCmb",
+        }
+
+        self._connectStateUI(state_ui_connections, DatasetModel.instance(), signal=None, update_after_connect=True)
+
+        self._connect(self.ui.openBtn.clicked, self.__openDataset())
+        self._connect(self.ui.browseBtn.clicked, self.__browse())
+
+        self._connect(self.ui.saveCaptionBtn.clicked, self.__saveCaption())
+        self._connect(self.ui.deleteCaptionBtn.clicked, self.__deleteCaption())
+        self._connect(self.ui.resetCaptionBtn.clicked, self.__resetCaption())
+
+        self._connect(self.ui.fileTreeWdg.itemSelectionChanged, self.__selectFile())
+
+        self._connect(self.ui.fileFilterLed.editingFinished, self.__updateDataset())
+        self._connect(self.ui.fileFilterCmb.activated, self.__updateDataset())
+        self._connect(self.ui.captionFilterLed.editingFinished, self.__updateDataset())
+        self._connect(self.ui.captionFilterCmb.activated, self.__updateDataset())
+
+
+        self._connect(self.canvas.clicked, self.__onClicked())
+        self._connect(self.canvas.released, self.__onReleased())
+        self._connect(self.canvas.wheelUp, self.__onWheelUp())
+        self._connect(self.canvas.wheelDown, self.__onWheelDown())
+
+        self.canvas.registerTool(EditMode.DRAW, moved_fn=self.__onDrawMoved(), use_mpl_event=False)
+        self.canvas.registerTool(EditMode.FILL, clicked_fn=self.__onMaskClicked(), use_mpl_event=False)
+
+    def _loadPresets(self):
+        for e in FileFilter.enabled_values():
+            self.ui.fileFilterCmb.addItem(e.pretty_print(), userData=e)
+
+        for e in CaptionFilter.enabled_values():
+            self.ui.captionFilterCmb.addItem(e.pretty_print(), userData=e)
+
+    ###Reactions###
+
     def __openDataset(self):
+        @Slot()
         def f():
             diag = QtW.QFileDialog()
             dir = diag.getExistingDirectory(parent=None, caption=QCA.translate("dialog_window", "Open Dataset directory"), dir=DatasetModel.instance().getState("path"))
@@ -152,13 +198,8 @@ class DatasetController(BaseController):
 
         return f
 
-    def __scan(self):
-        def f(dir):
-            DatasetModel.instance().setState("path", dir)
-            DatasetModel.instance().scan()
-        return f
-
     def __updateDataset(self):
+        @Slot()
         def f():
             files = DatasetModel.instance().getFilteredFiles()
             self.current_index = 0
@@ -177,23 +218,9 @@ class DatasetController(BaseController):
             self.__drawTree(self.ui.fileTreeWdg, file_tree)
         return f
 
-    def __saveChanged(self):
-        if self.current_image_path is not None:
-            choice, new_caption = self.__checkCaptionChanged(cancel=True)
-            if choice != QtW.QMessageBox.StandardButton.Cancel:
-                if choice == QtW.QMessageBox.StandardButton.Yes:
-                    DatasetModel.instance().saveCaption(self.current_image_path, new_caption)
-    
-                choice, new_mask, mask_path = self.__checkMaskChanged(cancel=True)
-                if choice != QtW.QMessageBox.StandardButton.Cancel:
-                    if choice == QtW.QMessageBox.StandardButton.Yes:
-                        Image.fromarray(new_mask, "L").convert("RGB").save(mask_path)
-    
-            return choice != QtW.QMessageBox.StandardButton.Cancel
-        else:
-            return True
 
     def __prevImg(self):
+        @Slot()
         def f():
             if self.num_files > 0 and self.__saveChanged():
                     self.current_index = (self.current_index + self.num_files - 1) % self.num_files
@@ -201,6 +228,7 @@ class DatasetController(BaseController):
         return f
 
     def __nextImg(self):
+        @Slot()
         def f():
             if self.num_files > 0 and self.__saveChanged():
                 self.current_index = (self.current_index + 1) % self.num_files
@@ -208,11 +236,13 @@ class DatasetController(BaseController):
         return f
 
     def __setBrushSize(self):
+        @Slot(int)
         def f(val):
             self.brush = val
         return f
 
     def __setAlpha(self):
+        @Slot(float)
         def f(val):
             self.alpha = val
 
@@ -220,8 +250,9 @@ class DatasetController(BaseController):
         return f
 
     def __clearAll(self):
+        @Slot()
         def f():
-            choice = self.openAlert(QCA.translate("dataset_window", "Clear Mask and Caption"),
+            choice = self._openAlert(QCA.translate("dataset_window", "Clear Mask and Caption"),
                                     QCA.translate("dataset_window",
                                                   "Do you want to clear mask and caption? This operation will not change files on disk."),
                                     type="question",
@@ -235,6 +266,7 @@ class DatasetController(BaseController):
         return f
 
     def __resetMask(self):
+        @Slot()
         def f():
             MaskHistoryModel.instance().reset()
 
@@ -242,6 +274,7 @@ class DatasetController(BaseController):
         return f
 
     def __undo(self):
+        @Slot()
         def f():
             MaskHistoryModel.instance().undo()
 
@@ -249,6 +282,7 @@ class DatasetController(BaseController):
         return f
 
     def __redo(self):
+        @Slot()
         def f():
             MaskHistoryModel.instance().redo()
 
@@ -256,6 +290,7 @@ class DatasetController(BaseController):
         return f
 
     def __saveMask(self):
+        @Slot()
         def f():
             choice, new_mask, mask_path = self.__checkMaskChanged()
             if choice == QtW.QMessageBox.StandardButton.Yes:
@@ -265,47 +300,8 @@ class DatasetController(BaseController):
 
         return f
 
-    def __checkMaskChanged(self, cancel=False):
-        buttons = QtW.QMessageBox.StandardButton.Yes | QtW.QMessageBox.StandardButton.No
-        if cancel:
-            buttons |= QtW.QMessageBox.StandardButton.Cancel
-
-        mask = MaskHistoryModel.instance().getState("original_mask")
-        new_mask = MaskHistoryModel.instance().getState("current_mask")
-        mask_path, mask_exists = DatasetModel.instance().getMaskPath(self.current_image_path)
-
-        choice = QtW.QMessageBox.StandardButton.No
-        if not mask_exists:
-            choice = QtW.QMessageBox.StandardButton.Yes
-        elif np.not_equal(mask, new_mask).any():
-            choice = self.openAlert(QCA.translate("dataset_window", "Save Mask"),
-                                    QCA.translate("dataset_window", "Mask has changed. Do you want to save it?"),
-                                    type="question",
-                                    buttons=buttons)
-
-        return choice, new_mask, mask_path
-
-    def __checkCaptionChanged(self, cancel=False):
-        buttons = QtW.QMessageBox.StandardButton.Yes | QtW.QMessageBox.StandardButton.No
-        if cancel:
-            buttons |= QtW.QMessageBox.StandardButton.Cancel
-
-        _, _, caption = DatasetModel.instance().getSample(self.current_image_path)
-        new_caption = self.ui.captionTed.toPlainText()
-
-        choice = QtW.QMessageBox.StandardButton.No
-
-        if caption is None:
-            choice = QtW.QMessageBox.StandardButton.Yes
-        elif caption.strip() != new_caption.strip():
-            choice = self.openAlert(QCA.translate("dataset_window", "Save Caption"),
-                                    QCA.translate("dataset_window", "Caption has changed. Do you want to save it?"),
-                                    type="question",
-                                    buttons=buttons)
-
-        return choice, new_caption
-
     def __saveCaption(self):
+        @Slot()
         def f():
             choice, new_caption = self.__checkCaptionChanged()
 
@@ -314,9 +310,10 @@ class DatasetController(BaseController):
         return f
 
     def __deleteCaption(self):
+        @Slot()
         def f():
             if self.ui.captionTed.toPlainText().strip() != "":
-                choice = self.openAlert(QCA.translate("dataset_window", "Delete Caption"),
+                choice = self._openAlert(QCA.translate("dataset_window", "Delete Caption"),
                                         QCA.translate("dataset_window", "Do you want to delete caption?"),
                                         type="question",
                                         buttons=QtW.QMessageBox.StandardButton.Yes | QtW.QMessageBox.StandardButton.No)
@@ -326,6 +323,7 @@ class DatasetController(BaseController):
         return f
 
     def __resetCaption(self):
+        @Slot()
         def f():
             _, _, caption = DatasetModel.instance().getSample(self.current_image_path)
             if caption is not None:
@@ -333,9 +331,10 @@ class DatasetController(BaseController):
         return f
 
     def __deleteSample(self):
+        @Slot()
         def f():
             if self.current_image_path is not None:
-                choice = self.openAlert(QCA.translate("dataset_window", "Delete Sample"),
+                choice = self._openAlert(QCA.translate("dataset_window", "Delete Sample"),
                                             QCA.translate("dataset_window", "Do you really want to delete the sample (image, mask and caption)? This is not reversible."),
                                             type="warning",
                                             buttons=QtW.QMessageBox.StandardButton.Yes | QtW.QMessageBox.StandardButton.No)
@@ -346,6 +345,134 @@ class DatasetController(BaseController):
                     self.ui.fileTreeWdg.setCurrentItem(self.leafWidgets[self.current_index])
 
         return f
+
+    def __selectFile(self):
+        @Slot()
+        def f():
+            selected_wdg = self.ui.fileTreeWdg.selectedItems()
+            if len(selected_wdg) > 0:
+                if self.__saveChanged():
+                    self.current_image_path = selected_wdg[0].fullpath
+
+                    idx = selected_wdg[0].idx
+                    if self.current_image_path is not None:
+                        if self.num_files > 0:
+                            if idx is not None:
+                                self.current_index = idx
+                                self.ui.numFilesLbl.setText("{}/{}".format(self.current_index + 1, self.num_files))
+
+                                self.image, mask, caption = DatasetModel.instance().getSample(self.current_image_path)
+
+                                if caption is not None:
+                                    self.ui.captionTed.setPlainText(caption)
+
+                                if mask is None:
+                                    mask = Image.new("L", self.image.size, 1)
+
+                                MaskHistoryModel.instance().loadMask(np.asarray(mask))
+                                self.im = self.ax.imshow(self.image)
+
+                                self.__updateCanvas()
+                else:
+                    self.ui.fileTreeWdg.setCurrentItem(self.leafWidgets[self.current_index])
+
+
+        return f
+
+    def __browse(self):
+        @Slot()
+        def f():
+            path = DatasetModel.instance().getState("path")
+            if path is not None:
+                self._browse(path)
+        return f
+
+    def __onClicked(self):
+        @Slot(MouseButton, int, int)
+        def f(btn, x, y):
+            if btn == MouseButton.MIDDLE:
+                MaskHistoryModel.instance().reset()
+                self.__updateCanvas()
+        return f
+
+    def __onReleased(self):
+        @Slot(MouseButton, int, int)
+        def f(btn, x, y):
+            MaskHistoryModel.instance().commit()
+
+            self.__updateCanvas()
+        return f
+
+    def __onWheelUp(self):
+        @Slot()
+        def f():
+            wdg = self.canvas.toolbar.findChild(QtW.QSpinBox, "brush_sbx")
+            new_val = wdg.value() + wdg.singleStep()
+            wdg.setValue(new_val) # This will emit valueChanged, which is connected to self.__setBrushSize()
+        return f
+
+    def __onWheelDown(self):
+        @Slot()
+        def f():
+            wdg = self.canvas.toolbar.findChild(QtW.QSpinBox, "brush_sbx")
+            new_val = wdg.value() - wdg.singleStep()
+            wdg.setValue(new_val)
+        return f
+
+    def __onMaskClicked(self):
+        @Slot(MouseButton, int, int)
+        def f(btn, x, y):
+            if btn == MouseButton.LEFT:
+                MaskHistoryModel.instance().fill(x, y, 0)
+            elif btn == MouseButton.RIGHT:
+                MaskHistoryModel.instance().fill(x, y, 1)
+            self.__updateCanvas()
+        return f
+
+    def __onDrawMoved(self):
+        @Slot(MouseButton, int, int, int, int)
+        def f(btn, x0, y0, x1, y1):
+            if x0 >= 0 and y0 >= 0 and x1 >= 0 and y1 >= 0:
+                if btn == MouseButton.LEFT:
+                    MaskHistoryModel.instance().paintStroke(x0, y0, x1, y1, int(self.brush), 0, commit=False)  # Draw stroke 0 from x0,y0 to x1,y1
+                    self.__updateCanvas()
+                elif btn == MouseButton.RIGHT:
+                    MaskHistoryModel.instance().paintStroke(x0, y0, x1, y1, int(self.brush), 1, commit=False)
+                    self.__updateCanvas()
+
+        return f
+
+    ###Utils###
+
+    def __scan(self):
+        def f(dir):
+            DatasetModel.instance().setState("path", dir)
+            DatasetModel.instance().scan()
+        return f
+
+    def __saveChanged(self):
+        if self.current_image_path is not None:
+            choice, new_caption = self.__checkCaptionChanged(cancel=True)
+            if choice != QtW.QMessageBox.StandardButton.Cancel:
+                if choice == QtW.QMessageBox.StandardButton.Yes:
+                    DatasetModel.instance().saveCaption(self.current_image_path, new_caption)
+
+                choice, new_mask, mask_path = self.__checkMaskChanged(cancel=True)
+                if choice != QtW.QMessageBox.StandardButton.Cancel:
+                    if choice == QtW.QMessageBox.StandardButton.Yes:
+                        Image.fromarray(new_mask, "L").convert("RGB").save(mask_path)
+
+            return choice != QtW.QMessageBox.StandardButton.Cancel
+        else:
+            return True
+
+    def __updateCanvas(self):
+        if self.im is not None:
+            mask = np.clip(MaskHistoryModel.instance().getState("current_mask")[..., np.newaxis].astype(float), 1 - self.alpha, 1)
+            self.im.set_data((np.asarray(self.image) * mask).astype(np.uint8))
+
+            self.canvas.draw_idle()
+
 
     def __buildTree(self, fullname, tree, idx, name=None):
         if name is None:
@@ -382,141 +509,42 @@ class DatasetController(BaseController):
                 wdg.idx = v[0]
                 self.leafWidgets[v[0]] = wdg
 
+    def __checkMaskChanged(self, cancel=False):
+        buttons = QtW.QMessageBox.StandardButton.Yes | QtW.QMessageBox.StandardButton.No
+        if cancel:
+            buttons |= QtW.QMessageBox.StandardButton.Cancel
 
-    def __selectFile(self):
-        def f():
-            selected_wdg = self.ui.fileTreeWdg.selectedItems()
-            if len(selected_wdg) > 0:
-                if self.__saveChanged():
-                    self.current_image_path = selected_wdg[0].fullpath
+        mask = MaskHistoryModel.instance().getState("original_mask")
+        new_mask = MaskHistoryModel.instance().getState("current_mask")
+        mask_path, mask_exists = DatasetModel.instance().getMaskPath(self.current_image_path)
 
-                    idx = selected_wdg[0].idx
-                    if self.current_image_path is not None:
-                        if self.num_files > 0:
-                            if idx is not None:
-                                self.current_index = idx
-                                self.ui.numFilesLbl.setText("{}/{}".format(self.current_index + 1, self.num_files))
+        choice = QtW.QMessageBox.StandardButton.No
+        if not mask_exists:
+            choice = QtW.QMessageBox.StandardButton.Yes
+        elif np.not_equal(mask, new_mask).any():
+            choice = self._openAlert(QCA.translate("dataset_window", "Save Mask"),
+                                    QCA.translate("dataset_window", "Mask has changed. Do you want to save it?"),
+                                    type="question",
+                                    buttons=buttons)
 
-                                self.image, mask, caption = DatasetModel.instance().getSample(self.current_image_path)
+        return choice, new_mask, mask_path
 
-                                if caption is not None:
-                                    self.ui.captionTed.setPlainText(caption)
+    def __checkCaptionChanged(self, cancel=False):
+        buttons = QtW.QMessageBox.StandardButton.Yes | QtW.QMessageBox.StandardButton.No
+        if cancel:
+            buttons |= QtW.QMessageBox.StandardButton.Cancel
 
-                                if mask is None:
-                                    mask = Image.new("L", self.image.size, 1)
+        _, _, caption = DatasetModel.instance().getSample(self.current_image_path)
+        new_caption = self.ui.captionTed.toPlainText()
 
-                                MaskHistoryModel.instance().loadMask(np.asarray(mask))
-                                self.im = self.ax.imshow(self.image)
+        choice = QtW.QMessageBox.StandardButton.No
 
-                                self.__updateCanvas()
-                else:
-                    self.ui.fileTreeWdg.setCurrentItem(self.leafWidgets[self.current_index])
+        if caption is None:
+            choice = QtW.QMessageBox.StandardButton.Yes
+        elif caption.strip() != new_caption.strip():
+            choice = self._openAlert(QCA.translate("dataset_window", "Save Caption"),
+                                    QCA.translate("dataset_window", "Caption has changed. Do you want to save it?"),
+                                    type="question",
+                                    buttons=buttons)
 
-
-        return f
-
-    def __updateCanvas(self):
-        if self.im is not None:
-            mask = np.clip(MaskHistoryModel.instance().getState("current_mask")[..., np.newaxis].astype(float), 1 - self.alpha, 1)
-            self.im.set_data((np.asarray(self.image) * mask).astype(np.uint8))
-
-            self.canvas.draw_idle()
-
-    def __browse(self):
-        def f():
-            path = DatasetModel.instance().getState("path")
-            if path is not None:
-                self.browse(path)
-        return f
-
-    def __onClicked(self):
-        def f(btn, x, y):
-            if btn == MouseButton.MIDDLE:
-                MaskHistoryModel.instance().reset()
-                self.__updateCanvas()
-        return f
-
-    def __onReleased(self):
-        def f(btn, x, y):
-            MaskHistoryModel.instance().commit()
-
-            self.__updateCanvas()
-        return f
-
-    def __onWheelUp(self):
-        def f():
-            wdg = self.canvas.toolbar.findChild(QtW.QSpinBox, "brush_sbx")
-            new_val = wdg.value() + wdg.singleStep()
-            wdg.setValue(new_val) # This will emit valueChanged, which is connected to self.__setBrushSize()
-        return f
-
-    def __onWheelDown(self):
-        def f():
-            wdg = self.canvas.toolbar.findChild(QtW.QSpinBox, "brush_sbx")
-            new_val = wdg.value() - wdg.singleStep()
-            wdg.setValue(new_val)
-        return f
-
-    def __onMaskClicked(self):
-        def f(btn, x, y):
-            if btn == MouseButton.LEFT:
-                MaskHistoryModel.instance().fill(x, y, 0)
-            elif btn == MouseButton.RIGHT:
-                MaskHistoryModel.instance().fill(x, y, 1)
-            self.__updateCanvas()
-        return f
-
-    def __onDrawMoved(self):
-        def f(btn, x0, y0, x1, y1):
-            if x0 >= 0 and y0 >= 0 and x1 >= 0 and y1 >= 0:
-                if btn == MouseButton.LEFT:
-                    MaskHistoryModel.instance().paintStroke(x0, y0, x1, y1, int(self.brush), 0, commit=False)  # Draw stroke 0 from x0,y0 to x1,y1
-                    self.__updateCanvas()
-                elif btn == MouseButton.RIGHT:
-                    MaskHistoryModel.instance().paintStroke(x0, y0, x1, y1, int(self.brush), 1, commit=False)
-                    self.__updateCanvas()
-
-        return f
-
-    def _connectUIBehavior(self):
-        state_ui_connections = {
-            "include_subdirectories": "includeSubdirCbx",
-            "file_filter": "fileFilterLed",
-            "file_filter_mode": "fileFilterCmb",
-            "caption_filter": "captionFilterLed",
-            "caption_filter_mode": "captionFilterCmb",
-        }
-
-        self._connectStateUi(state_ui_connections, DatasetModel.instance(), signal=None, update_after_connect=True)
-
-        self.connect(self.ui.openBtn.clicked, self.__openDataset())
-        self.connect(self.ui.browseBtn.clicked, self.__browse())
-
-        self.connect(self.ui.saveCaptionBtn.clicked, self.__saveCaption())
-        self.connect(self.ui.deleteCaptionBtn.clicked, self.__deleteCaption())
-        self.connect(self.ui.resetCaptionBtn.clicked, self.__resetCaption())
-
-        self.connect(self.ui.fileTreeWdg.itemSelectionChanged, self.__selectFile())
-
-        self.connect(self.ui.fileFilterLed.editingFinished, self.__updateDataset())
-        self.connect(self.ui.fileFilterCmb.activated, self.__updateDataset())
-        self.connect(self.ui.captionFilterLed.editingFinished, self.__updateDataset())
-        self.connect(self.ui.captionFilterCmb.activated, self.__updateDataset())
-
-
-        self.connect(self.canvas.clicked, self.__onClicked())
-        self.connect(self.canvas.released, self.__onReleased())
-        self.connect(self.canvas.wheelUp, self.__onWheelUp())
-        self.connect(self.canvas.wheelDown, self.__onWheelDown())
-
-        self.canvas.registerTool(EditMode.DRAW, moved_fn=self.__onDrawMoved(), use_mpl_event=False)
-        self.canvas.registerTool(EditMode.FILL, clicked_fn=self.__onMaskClicked(), use_mpl_event=False)
-
-
-
-    def _loadPresets(self):
-        for e in FileFilter.enabled_values():
-            self.ui.fileFilterCmb.addItem(e.pretty_print(), userData=e)
-
-        for e in CaptionFilter.enabled_values():
-            self.ui.captionFilterCmb.addItem(e.pretty_print(), userData=e)
+        return choice, new_caption

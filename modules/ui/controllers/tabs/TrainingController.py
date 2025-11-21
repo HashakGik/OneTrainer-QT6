@@ -1,5 +1,5 @@
 from PySide6 import QtWidgets
-from PySide6.QtCore import QCoreApplication as QCA
+from PySide6.QtCore import QCoreApplication as QCA, Slot
 from modules.ui.controllers.BaseController import BaseController
 
 from modules.ui.controllers.windows.OptimizerController import OptimizerController
@@ -10,7 +10,7 @@ import PySide6.QtGui as QtGui
 
 import random
 
-
+from modules.util.enum.ModelType import ModelType
 from modules.util.enum.TimeUnit import TimeUnit
 from modules.util.enum.TimestepDistribution import TimestepDistribution
 from modules.util.enum.LearningRateScaler import LearningRateScaler
@@ -27,6 +27,8 @@ from modules.ui.models.TimestepGenerator import TimestepGenerator
 
 from modules.ui.utils.FigureWidget import FigureWidget
 from matplotlib import pyplot as plt
+
+from modules.util.enum.TrainingMethod import TrainingMethod
 
 
 class TrainingController(BaseController):
@@ -144,6 +146,8 @@ class TrainingController(BaseController):
     def __init__(self, loader, parent=None):
         super().__init__(loader, "modules/ui/views/tabs/training.ui", name=QCA.translate("main_window_tabs", "Training"), parent=parent)
 
+    ###FSM###
+
     def _setup(self):
         self.optimizer_window = OptimizerController(self.loader, parent=self)
 
@@ -159,7 +163,78 @@ class TrainingController(BaseController):
         self.ax.tick_params(axis='x', which="both")
         self.ax.tick_params(axis='y', which="both")
 
+    def _connectUIBehavior(self):
+        self._connect(self.ui.layerFilterCmb.activated, self.__connectLayerFilter())
+
+        self._connect(QtW.QApplication.instance().stateChanged, self.__updateSchedulerParams(), update_after_connect=True)
+        self._connect(self.ui.tableWidget.currentCellChanged, self.__changeCell())
+        self._connect(self.ui.updatePreviewBtn.clicked, self.__updatePreview())
+
+        self._connect(QtW.QApplication.instance().modelChanged, self.__updateModel(), update_after_connect=True, initial_args=[StateModel.instance().getState("model_type"),
+                 StateModel.instance().getState("training_method")])
+
+
+        cb = self.__enableCustomScheduler()  # This must be connected after __updateModel, otherwise it will not enable/disable custom parameters correctly
+        self._connect(self.ui.schedulerCmb.activated, cb)
+        self._connect(QtW.QApplication.instance().stateChanged, cb, update_after_connect=True)
+
+        self._connect(self.ui.optimizerBtn.clicked, lambda: self._openWindow(self.optimizer_window, fixed_size=True))
+        self._connect(self.ui.optimizerCmb.activated, self.__updateOptimizer())
+
+        # At the beginning invalidate the gui.
+        self.optimizer_window.ui.optimizerCmb.setCurrentIndex(self.ui.optimizerCmb.currentIndex())
+
+        # TODO: MASKED TRAINING ENABLE
+
+    def _connectInputValidation(self):
+        self.ui.resolutionLed.setValidator(QtGui.QRegularExpressionValidator("\d+(x\d+(,\d+x\d+)*)?", self.ui))
+        self._connect(self.ui.minNoisingStrengthSbx.valueChanged, self.__validateNoisingStrength("min"))
+        self._connect(self.ui.maxNoisingStrengthSbx.valueChanged, self.__validateNoisingStrength("max"))
+
+    def _loadPresets(self):
+        for ui_name in ["unetStopCmb", "te1StopTrainingCmb", "te2StopTrainingCmb", "te3StopTrainingCmb", "te4StopTrainingCmb",
+                        "priorStopCmb", "transformerStopCmb"]:
+            ui_elem = self.ui.findChild(QtWidgets.QComboBox, ui_name)
+            for e in TimeUnit.enabled_values():
+                ui_elem.addItem(e.pretty_print(), userData=e)
+
+        for e in TimestepDistribution.enabled_values():
+            self.ui.timestepDistributionCmb.addItem(e.pretty_print(), userData=e)
+
+        for e in LossScaler.enabled_values():
+            self.ui.lossScalerCmb.addItem(e.pretty_print(), userData=e)
+
+        for e in LossWeight.enabled_values():
+            self.ui.lossWeightFunctionCmb.addItem(e.pretty_print(), userData=e)
+
+        for e in GradientCheckpointingMethod.enabled_values():
+            self.ui.gradientCheckpointingCmb.addItem(e.pretty_print(), userData=e)
+
+        for e in EMAMode.enabled_values():
+            self.ui.emaCmb.addItem(e.pretty_print(), userData=e)
+
+        for e in LearningRateScaler.enabled_values():
+            self.ui.scalerCmb.addItem(e.pretty_print(), userData=e)
+
+        for e in Optimizer.enabled_values():
+            self.ui.optimizerCmb.addItem(e.pretty_print(), userData=e)
+            self.optimizer_window.ui.optimizerCmb.addItem(e.pretty_print(), userData=e)
+
+        for e in LearningRateScheduler.enabled_values():
+            self.ui.schedulerCmb.addItem(e.pretty_print(), userData=e)
+
+        for e in DataType.enabled_values(context="training_dtype"):
+            self.ui.trainDTypeCmb.addItem(e.pretty_print(), userData=e)
+
+        for e in DataType.enabled_values(context="training_fallback"):
+            self.ui.fallbackDTypeCmb.addItem(e.pretty_print(), userData=e)
+
+
+
+    ###Reactions###
+
     def __updatePreview(self):
+        @Slot()
         def f():
             resolution = random.randint(512, 1024)
             generator = TimestepGenerator(
@@ -181,12 +256,14 @@ class TrainingController(BaseController):
 
 
     def __updateOptimizer(self):
-        def f(_):
+        @Slot(int)
+        def f(value):
             self.optimizer_window.ui.optimizerCmb.setCurrentIndex(self.ui.optimizerCmb.currentIndex())
             QtW.QApplication.instance().optimizerChanged.emit(self.ui.optimizerCmb.currentData())
         return f
 
     def __updateModel(self):
+        @Slot(ModelType, TrainingMethod)
         def f(model_type, training_method):
             flags = ModelFlags.getFlags(model_type, training_method)
             presets = ModelFlags.getPresets(model_type)
@@ -241,12 +318,9 @@ class TrainingController(BaseController):
 
         return f
 
-    def _connectInputValidation(self):
-        self.ui.resolutionLed.setValidator(QtGui.QRegularExpressionValidator("\d+(x\d+(,\d+x\d+)*)?", self.ui))
-        self.connect(self.ui.minNoisingStrengthSbx.valueChanged, self.__validateNoisingStrength("min"))
-        self.connect(self.ui.maxNoisingStrengthSbx.valueChanged, self.__validateNoisingStrength("max"))
 
     def __validateNoisingStrength(self, direction):
+        @Slot(float)
         def f(value):
             min = self.ui.minNoisingStrengthSbx.value()
             max = self.ui.maxNoisingStrengthSbx.value()
@@ -259,31 +333,9 @@ class TrainingController(BaseController):
 
         return f
 
-    def _connectUIBehavior(self):
-        self.connect(self.ui.layerFilterCmb.activated, self.__connectLayerFilter())
-
-        self.connect(QtW.QApplication.instance().stateChanged, self.__updateSchedulerParams(), update_after_connect=True)
-        self.connect(self.ui.tableWidget.currentCellChanged, self.__changeCell())
-        self.connect(self.ui.updatePreviewBtn.clicked, self.__updatePreview())
-
-        self.connect(QtW.QApplication.instance().modelChanged, self.__updateModel(), update_after_connect=True, initial_args=[StateModel.instance().getState("model_type"),
-                 StateModel.instance().getState("training_method")])
-
-
-        cb = self.__enableCustomScheduler()  # This must be connected after __updateModel, otherwise it will not enable/disable custom parameters correctly
-        self.connect(self.ui.schedulerCmb.activated, cb)
-        self.connect(QtW.QApplication.instance().stateChanged, cb, update_after_connect=True)
-
-        self.connect(self.ui.optimizerBtn.clicked, lambda: self.openWindow(self.optimizer_window, fixed_size=True))
-        self.connect(self.ui.optimizerCmb.activated, self.__updateOptimizer())
-
-        # At the beginning invalidate the gui.
-        self.optimizer_window.ui.optimizerCmb.setCurrentIndex(self.ui.optimizerCmb.currentIndex())
-
-        # TODO: MASKED TRAINING ENABLE
-
 
     def __changeCell(self):
+        @Slot(int, int, int, int)
         def f(currentRow, currentColumn, previousRow, previousColumn):
             total_rows = self.ui.tableWidget.rowCount()
 
@@ -301,6 +353,7 @@ class TrainingController(BaseController):
         return f
 
     def __updateSchedulerParams(self):
+        @Slot()
         def f():
             param_dict = StateModel.instance().getState("scheduler_params")
 
@@ -312,6 +365,7 @@ class TrainingController(BaseController):
         return f
 
     def __enableCustomScheduler(self):
+        @Slot()
         def f():
             self.ui.tableWidget.setEnabled(self.ui.schedulerCmb.currentData() == LearningRateScheduler.CUSTOM)
             self.ui.schedulerClassLed.setEnabled(self.ui.schedulerCmb.currentData() == LearningRateScheduler.CUSTOM)
@@ -320,46 +374,8 @@ class TrainingController(BaseController):
 
 
     def __connectLayerFilter(self):
+        @Slot()
         def f():
             self.ui.layerFilterRegexCbx.setEnabled(self.ui.layerFilterCmb.currentText() == "custom")
             self.ui.layerFilterLed.setText(",".join(self.ui.layerFilterCmb.currentData()))
         return f
-
-    def _loadPresets(self):
-        for ui_name in ["unetStopCmb", "te1StopTrainingCmb", "te2StopTrainingCmb", "te3StopTrainingCmb", "te4StopTrainingCmb",
-                        "priorStopCmb", "transformerStopCmb"]:
-            ui_elem = self.ui.findChild(QtWidgets.QComboBox, ui_name)
-            for e in TimeUnit.enabled_values():
-                ui_elem.addItem(e.pretty_print(), userData=e)
-
-        for e in TimestepDistribution.enabled_values():
-            self.ui.timestepDistributionCmb.addItem(e.pretty_print(), userData=e)
-
-        for e in LossScaler.enabled_values():
-            self.ui.lossScalerCmb.addItem(e.pretty_print(), userData=e)
-
-        for e in LossWeight.enabled_values():
-            self.ui.lossWeightFunctionCmb.addItem(e.pretty_print(), userData=e)
-
-        for e in GradientCheckpointingMethod.enabled_values():
-            self.ui.gradientCheckpointingCmb.addItem(e.pretty_print(), userData=e)
-
-        for e in EMAMode.enabled_values():
-            self.ui.emaCmb.addItem(e.pretty_print(), userData=e)
-
-        for e in LearningRateScaler.enabled_values():
-            self.ui.scalerCmb.addItem(e.pretty_print(), userData=e)
-
-        for e in Optimizer.enabled_values():
-            self.ui.optimizerCmb.addItem(e.pretty_print(), userData=e)
-            self.optimizer_window.ui.optimizerCmb.addItem(e.pretty_print(), userData=e)
-
-        for e in LearningRateScheduler.enabled_values():
-            self.ui.schedulerCmb.addItem(e.pretty_print(), userData=e)
-
-        for e in DataType.enabled_values(context="training_dtype"):
-            self.ui.trainDTypeCmb.addItem(e.pretty_print(), userData=e)
-
-        for e in DataType.enabled_values(context="training_fallback"):
-            self.ui.fallbackDTypeCmb.addItem(e.pretty_print(), userData=e)
-

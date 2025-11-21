@@ -98,15 +98,10 @@ class SamplingModel(SingletonConfigModel):
         train_config.optimizer.optimizer = None
         train_config.ema = EMAMode.OFF
 
-        # if self.commands:
-        #     self.commands.sample_custom(sample)
-        # else:
         if self.model is None:
             # lazy initialization
             self.model = self.__load_model(train_config)
             self.model_sampler = self.__create_sampler(self.model, train_config)
-
-        # TODO: this sometimes fails silently if the train config is not valid.
 
         sample.from_train_config(train_config)
 

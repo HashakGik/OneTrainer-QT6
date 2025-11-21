@@ -4,99 +4,14 @@ from modules.ui.models.VideoModel import VideoModel
 
 from modules.ui.utils.WorkerPool import WorkerPool
 
-from PySide6.QtCore import QCoreApplication as QCA
+from PySide6.QtCore import QCoreApplication as QCA, Slot
 
 
 class VideoController(BaseController):
     def __init__(self, loader, parent=None):
         super().__init__(loader, "modules/ui/views/windows/video.ui", name=None, parent=parent)
 
-    def _setup(self):
-        pass
-
-    def __enableButtons(self, enabled):
-        def f():
-            self.ui.extractSingle1Btn.setEnabled(enabled)
-            self.ui.extractDirectory1Btn.setEnabled(enabled)
-            self.ui.extractSingle2Btn.setEnabled(enabled)
-            self.ui.extractDirectory2Btn.setEnabled(enabled)
-            self.ui.downloadLinkBtn.setEnabled(enabled)
-            self.ui.downloadListBtn.setEnabled(enabled)
-        return f
-
-    def __startClipSingle(self):
-        def f():
-            worker, name = WorkerPool.instance().createNamed(self.__extractClip(), "video_processing", batch_mode=False)
-            if worker is not None:
-                worker.connect(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
-                               errored_fn=self.__enableButtons(True), aborted_fn=self.__enableButtons(True))
-                WorkerPool.instance().start(name)
-        return f
-
-    def __startClipDirectory(self):
-        def f():
-            worker, name = WorkerPool.instance().createNamed(self.__extractClip(), "video_processing", batch_mode=True)
-            if worker is not None:
-                worker.connect(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
-                               errored_fn=self.__enableButtons(True), aborted_fn=self.__enableButtons(True))
-                WorkerPool.instance().start(name)
-        return f
-
-    def __startImageSingle(self):
-        def f():
-            worker, name = WorkerPool.instance().createNamed(self.__extractImage(), "video_processing", batch_mode=False)
-            if worker is not None:
-                worker.connect(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
-                               errored_fn=self.__enableButtons(True), aborted_fn=self.__enableButtons(True))
-                WorkerPool.instance().start(name)
-        return f
-
-    def __startImageDirectory(self):
-        def f():
-            worker, name = WorkerPool.instance().createNamed(self.__extractImage(), "video_processing", batch_mode=True)
-            if worker is not None:
-                worker.connect(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
-                               errored_fn=self.__enableButtons(True), aborted_fn=self.__enableButtons(True))
-                WorkerPool.instance().start(name)
-        return f
-
-    def __startDownloadLink(self):
-        def f():
-            worker, name = WorkerPool.instance().createNamed(self.__download(), "video_processing", batch_mode=False)
-            if worker is not None:
-                worker.connect(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
-                               errored_fn=self.__enableButtons(True), aborted_fn=self.__enableButtons(True))
-                WorkerPool.instance().start(name)
-        return f
-
-    def __startDownloadList(self):
-        def f():
-            worker, name = WorkerPool.instance().createNamed(self.__download(), "video_processing", batch_mode=True)
-            if worker is not None:
-                worker.connect(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
-                               errored_fn=self.__enableButtons(True), aborted_fn=self.__enableButtons(True))
-                WorkerPool.instance().start(name)
-        return f
-
-    def __extractClip(self):
-        def f(batch_mode):
-            return VideoModel.instance().extract_clips_multi(batch_mode)
-
-        return f
-
-    def __extractImage(self):
-        def f(batch_mode):
-            return VideoModel.instance().extract_images_multi(batch_mode)
-
-        return f
-
-
-    def __download(self):
-        def f(batch_mode):
-            return VideoModel.instance().download_multi(batch_mode)
-
-        return f
-
+    ###FSM###
 
     def _connectUIBehavior(self):
         self._connectFileDialog(self.ui.linkListBtn, self.ui.linkListLed, is_dir=False, save=False,
@@ -124,7 +39,7 @@ class VideoController(BaseController):
         self._connectFileDialog(self.ui.output3Btn, self.ui.output3Led, is_dir=True, save=True,
                                title=QCA.translate("dialog_window", "Save Video directory"))
 
-        self.connect(self.ui.infoBtn.clicked, lambda: self.openUrl("https://github.com/yt-dlp/yt-dlp?tab=readme-ov-file#usage-and-options"))
+        self._connect(self.ui.infoBtn.clicked, lambda: self._openUrl("https://github.com/yt-dlp/yt-dlp?tab=readme-ov-file#usage-and-options"))
 
         state_ui_connections = {
             "clips.single_video": "singleVideo1Led",
@@ -155,14 +70,109 @@ class VideoController(BaseController):
             "download.output": "output3Led",
             "download.additional_args": "additionalArgsTed",
         }
-        self._connectStateUi(state_ui_connections, VideoModel.instance(), update_after_connect=True)
+        self._connectStateUI(state_ui_connections, VideoModel.instance(), update_after_connect=True)
 
 
-        self.connect(self.ui.extractSingle1Btn.clicked, self.__startClipSingle())
-        self.connect(self.ui.extractDirectory1Btn.clicked, self.__startClipDirectory())
-        self.connect(self.ui.extractSingle2Btn.clicked, self.__startImageSingle())
-        self.connect(self.ui.extractDirectory2Btn.clicked, self.__startImageDirectory())
-        self.connect(self.ui.downloadLinkBtn.clicked, self.__startDownloadLink())
-        self.connect(self.ui.downloadListBtn.clicked, self.__startDownloadList())
+        self._connect(self.ui.extractSingle1Btn.clicked, self.__startClipSingle())
+        self._connect(self.ui.extractDirectory1Btn.clicked, self.__startClipDirectory())
+        self._connect(self.ui.extractSingle2Btn.clicked, self.__startImageSingle())
+        self._connect(self.ui.extractDirectory2Btn.clicked, self.__startImageDirectory())
+        self._connect(self.ui.downloadLinkBtn.clicked, self.__startDownloadLink())
+        self._connect(self.ui.downloadListBtn.clicked, self.__startDownloadList())
 
         self.__enableButtons(True)()
+
+
+    ###Reactions###
+
+    def __enableButtons(self, enabled):
+        @Slot()
+        def f():
+            self.ui.extractSingle1Btn.setEnabled(enabled)
+            self.ui.extractDirectory1Btn.setEnabled(enabled)
+            self.ui.extractSingle2Btn.setEnabled(enabled)
+            self.ui.extractDirectory2Btn.setEnabled(enabled)
+            self.ui.downloadLinkBtn.setEnabled(enabled)
+            self.ui.downloadListBtn.setEnabled(enabled)
+        return f
+
+    def __startClipSingle(self):
+        @Slot()
+        def f():
+            worker, name = WorkerPool.instance().createNamed(self.__extractClip(), "video_processing", batch_mode=False)
+            if worker is not None:
+                worker.connect(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
+                               errored_fn=self.__enableButtons(True), aborted_fn=self.__enableButtons(True))
+                WorkerPool.instance().start(name)
+        return f
+
+    def __startClipDirectory(self):
+        @Slot()
+        def f():
+            worker, name = WorkerPool.instance().createNamed(self.__extractClip(), "video_processing", batch_mode=True)
+            if worker is not None:
+                worker.connect(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
+                               errored_fn=self.__enableButtons(True), aborted_fn=self.__enableButtons(True))
+                WorkerPool.instance().start(name)
+        return f
+
+    def __startImageSingle(self):
+        @Slot()
+        def f():
+            worker, name = WorkerPool.instance().createNamed(self.__extractImage(), "video_processing", batch_mode=False)
+            if worker is not None:
+                worker.connect(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
+                               errored_fn=self.__enableButtons(True), aborted_fn=self.__enableButtons(True))
+                WorkerPool.instance().start(name)
+        return f
+
+    def __startImageDirectory(self):
+        @Slot()
+        def f():
+            worker, name = WorkerPool.instance().createNamed(self.__extractImage(), "video_processing", batch_mode=True)
+            if worker is not None:
+                worker.connect(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
+                               errored_fn=self.__enableButtons(True), aborted_fn=self.__enableButtons(True))
+                WorkerPool.instance().start(name)
+        return f
+
+    def __startDownloadLink(self):
+        @Slot()
+        def f():
+            worker, name = WorkerPool.instance().createNamed(self.__download(), "video_processing", batch_mode=False)
+            if worker is not None:
+                worker.connect(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
+                               errored_fn=self.__enableButtons(True), aborted_fn=self.__enableButtons(True))
+                WorkerPool.instance().start(name)
+        return f
+
+    def __startDownloadList(self):
+        @Slot()
+        def f():
+            worker, name = WorkerPool.instance().createNamed(self.__download(), "video_processing", batch_mode=True)
+            if worker is not None:
+                worker.connect(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
+                               errored_fn=self.__enableButtons(True), aborted_fn=self.__enableButtons(True))
+                WorkerPool.instance().start(name)
+        return f
+
+    ###Utils###
+
+    def __extractClip(self):
+        def f(batch_mode):
+            return VideoModel.instance().extract_clips_multi(batch_mode)
+
+        return f
+
+    def __extractImage(self):
+        def f(batch_mode):
+            return VideoModel.instance().extract_images_multi(batch_mode)
+
+        return f
+
+
+    def __download(self):
+        def f(batch_mode):
+            return VideoModel.instance().download_multi(batch_mode)
+
+        return f

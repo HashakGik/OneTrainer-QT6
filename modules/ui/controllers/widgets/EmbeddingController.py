@@ -13,7 +13,7 @@ class EmbeddingController(BaseController):
         self.idx = idx
         super().__init__(loader, "modules/ui/views/widgets/embedding.ui", name=None, parent=parent)
 
-
+    ###FSM###
 
     def _connectUIBehavior(self):
         self._connectFileDialog(self.ui.baseEmbeddingBtn, self.ui.baseEmbeddingLed, is_dir=False, save=False,
@@ -32,7 +32,7 @@ class EmbeddingController(BaseController):
             "additional_embeddings.{idx}.initial_embedding_text": "initialEmbeddingLed",
         }
 
-        self._connectStateUi(self.dynamic_state_ui_connections, StateModel.instance(),
+        self._connectStateUI(self.dynamic_state_ui_connections, StateModel.instance(),
                              signal=QtW.QApplication.instance().embeddingsChanged, update_after_connect=True,
                              idx=self.idx)
 

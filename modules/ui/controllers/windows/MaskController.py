@@ -1,6 +1,6 @@
 from modules.ui.controllers.BaseController import BaseController
 
-from PySide6.QtCore import QCoreApplication as QCA
+from PySide6.QtCore import QCoreApplication as QCA, Slot
 
 from modules.util.enum.GenerateMasksModel import GenerateMasksModel, GenerateMasksAction
 
@@ -11,6 +11,8 @@ from modules.ui.utils.WorkerPool import WorkerPool
 class MaskController(BaseController):
     def __init__(self, loader, parent=None):
         super().__init__(loader, "modules/ui/views/windows/generate_mask.ui", name=None, parent=parent)
+
+    ###FSM###
 
     def _connectUIBehavior(self):
         self._connectFileDialog(self.ui.folderBtn, self.ui.folderLed, is_dir=True, save=False, title=
@@ -28,20 +30,23 @@ class MaskController(BaseController):
             "include_subdirectories": "includeSubfolderCbx"
         }
 
-        self._connectStateUi(state_ui_connections, MaskModel.instance(), update_after_connect=True)
+        self._connectStateUI(state_ui_connections, MaskModel.instance(), update_after_connect=True)
 
         self.__enableControls(True)()
 
-        self.connect(self.ui.createMaskBtn.clicked, self.__startMask())
+        self._connect(self.ui.createMaskBtn.clicked, self.__startMask())
 
+    def _loadPresets(self):
+        for e in GenerateMasksModel.enabled_values():
+            self.ui.modelCmb.addItem(e.pretty_print(), userData=e)
 
-    def __createMask(self):
-        def f(progress_fn=None):
-            return MaskModel.instance().create_masks(progress_fn=progress_fn)
+        for e in GenerateMasksAction.enabled_values():
+            self.ui.modeCmb.addItem(e.pretty_print(), userData=e)
 
-        return f
+    ###Reactions###
 
     def __startMask(self):
+        @Slot()
         def f():
             worker, name = WorkerPool.instance().createNamed(self.__createMask(), "create_mask", inject_progress_callback=True)
             if worker is not None:
@@ -54,15 +59,18 @@ class MaskController(BaseController):
         return f
 
     def __enableControls(self, enabled):
+        @Slot()
         def f():
             self.ui.createMaskBtn.setEnabled(enabled)
             if enabled:
                 self.ui.progressBar.setValue(0)
         return f
 
-    def _loadPresets(self):
-        for e in GenerateMasksModel.enabled_values():
-            self.ui.modelCmb.addItem(e.pretty_print(), userData=e)
 
-        for e in GenerateMasksAction.enabled_values():
-            self.ui.modeCmb.addItem(e.pretty_print(), userData=e)
+    ###Utils###
+
+    def __createMask(self):
+        def f(progress_fn=None):
+            return MaskModel.instance().create_masks(progress_fn=progress_fn)
+
+        return f

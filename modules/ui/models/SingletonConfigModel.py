@@ -6,6 +6,10 @@ import traceback
 from contextlib import contextmanager
 import copy
 
+# TODO: Cleanup
+# 1) Naming convention is all over the place (camelCase, snake_case, inconsistent visibility __method vs _method vs method)
+
+
 # Base class for config models. It provides a Singleton interface and a single mutex shared across all the subclasses.
 class SingletonConfigModel:
     _instance = None

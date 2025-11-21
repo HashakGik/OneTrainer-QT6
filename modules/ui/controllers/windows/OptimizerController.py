@@ -1,5 +1,5 @@
 from modules.ui.controllers.BaseController import BaseController
-from PySide6.QtCore import QCoreApplication as QCA
+from PySide6.QtCore import QCoreApplication as QCA, Slot
 import PySide6.QtWidgets as QtW
 
 from modules.ui.utils.SNLineEdit import SNLineEdit
@@ -610,6 +610,7 @@ class OptimizerController(BaseController):
     def __init__(self, loader, parent=None):
         super().__init__(loader, "modules/ui/views/windows/optimizer.ui", name=None, parent=parent)
 
+    ###FSM###
 
     def _setup(self):
         row = 0
@@ -639,6 +640,26 @@ class OptimizerController(BaseController):
 
             row += 1
 
+    def __loadDefaults(self):
+        def f():
+            optimizer = self.ui.optimizerCmb.currentData()
+            for k, v in OPTIMIZER_DEFAULT_PARAMETERS[optimizer].items():
+                StateModel.instance().setState("optimizer.{}".format(k), v)
+            QtW.QApplication.instance().stateChanged.emit()
+            QtW.QApplication.instance().optimizerChanged.emit(optimizer)
+        return f
+
+    def _connectUIBehavior(self):
+        self._connect(self.ui.optimizerCmb.activated, self.__updateOptimizer(from_index=True))
+        self._connect(self.ui.loadDefaultsBtn.clicked, self.__loadDefaults())
+
+
+        callback = self.__updateOptimizer(from_index=False)
+        self._connect(QtW.QApplication.instance().optimizerChanged, callback)
+        self._connect(QtW.QApplication.instance().stateChanged, lambda: callback(StateModel.instance().getState("optimizer.optimizer")))
+
+    ###Reactions####
+
     def __updateOptimizer(self, from_index=False):
         def f(idx):
             self.parent.ui.optimizerCmb.blockSignals(True)
@@ -656,6 +677,8 @@ class OptimizerController(BaseController):
             self.__updateOptimizerControls(optimizer)
 
         return f if from_index else g
+
+    ###Utils###
 
     def __updateOptimizerControls(self, optimizer):
         # QGridLayout has no direct children, therefore, we must retrieve them in a different way.
@@ -675,20 +698,3 @@ class OptimizerController(BaseController):
                 if wdg is not None:
                     wdg.setVisible(k in OPTIMIZER_DEFAULT_PARAMETERS[optimizer])
 
-    def __loadDefaults(self):
-        def f():
-            optimizer = self.ui.optimizerCmb.currentData()
-            for k, v in OPTIMIZER_DEFAULT_PARAMETERS[optimizer].items():
-                StateModel.instance().setState("optimizer.{}".format(k), v)
-            QtW.QApplication.instance().stateChanged.emit()
-            QtW.QApplication.instance().optimizerChanged.emit(optimizer)
-        return f
-
-    def _connectUIBehavior(self):
-        self.connect(self.ui.optimizerCmb.activated, self.__updateOptimizer(from_index=True))
-        self.connect(self.ui.loadDefaultsBtn.clicked, self.__loadDefaults())
-
-
-        callback = self.__updateOptimizer(from_index=False)
-        self.connect(QtW.QApplication.instance().optimizerChanged, callback)
-        self.connect(QtW.QApplication.instance().stateChanged, lambda: callback(StateModel.instance().getState("optimizer.optimizer")))

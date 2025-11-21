@@ -8,7 +8,7 @@ from modules.util.enum.Optimizer import Optimizer
 class OnetrainerApplication(QApplication):
     # Signal for global UI invalidation (e.g., when a config file is reloaded from disk).
     stateChanged = Signal()
-    cloudReattached = Signal() # TODO: maybe not needed?
+    savedConfig = Signal(str)
 
     # Signals for dynamic widget lists and sub windows. The passed value is the currently selected element.
     conceptsChanged = Signal()

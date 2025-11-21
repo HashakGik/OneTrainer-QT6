@@ -1,4 +1,4 @@
-from PySide6.QtCore import QCoreApplication as QCA
+from PySide6.QtCore import QCoreApplication as QCA, Slot
 from modules.ui.controllers.BaseController import BaseController
 
 from modules.ui.controllers.windows.ConceptController import ConceptController as WinConceptController
@@ -14,35 +14,38 @@ class ConceptsController(BaseController):
     def __init__(self, loader, parent=None):
         super().__init__(loader, "modules/ui/views/tabs/concepts.ui", name=QCA.translate("main_window_tabs", "Concepts"), parent=parent)
 
+    ###FSM###
+
     def _setup(self):
         self.concept_window = WinConceptController(self.loader, parent=self)
 
-
     def _connectUIBehavior(self):
-        self.connect(self.ui.addConceptBtn.clicked, self.__appendConcept())
-        self.connect(self.ui.disableConceptsBtn.clicked, self.__disableConcepts())
+        self._connect(self.ui.addConceptBtn.clicked, self.__appendConcept())
+        self._connect(self.ui.disableConceptsBtn.clicked, self.__disableConcepts())
 
-        self.connect(QtW.QApplication.instance().stateChanged, self.__updateConfigs(), update_after_connect=True)
+        self._connect(QtW.QApplication.instance().stateChanged, self.__updateConfigs(), update_after_connect=True)
 
         cb2 = self.__saveConfig()
-        self.connect(QtW.QApplication.instance().aboutToQuit, cb2)
-        self.connect(QtW.QApplication.instance().conceptsChanged, cb2)
+        self._connect(QtW.QApplication.instance().aboutToQuit, cb2)
+        self._connect(QtW.QApplication.instance().conceptsChanged, cb2)
 
-        self.connect(self.ui.presetCmb.textActivated, self.__loadConfig(), update_after_connect=True, initial_args=[self.ui.presetCmb.currentText()])
+        self._connect(self.ui.presetCmb.textActivated, self.__loadConfig(), update_after_connect=True, initial_args=[self.ui.presetCmb.currentText()])
 
         cb4 = self.__updateConcepts()
-        self.connect(QtW.QApplication.instance().conceptsChanged, cb4)
-        self.connect(QtW.QApplication.instance().stateChanged, cb4, update_after_connect=True)
+        self._connect(QtW.QApplication.instance().conceptsChanged, cb4)
+        self._connect(QtW.QApplication.instance().stateChanged, cb4, update_after_connect=True)
 
+    ###Reactions###
 
     def __updateConfigs(self):
+        @Slot()
         def f():
             configs = ConceptModel.instance().load_available_config_names("training_concepts", include_default=False)
             if len(configs) == 0:
                 configs.append(("concepts", "training_concepts/concepts.json"))
 
             for c in self.children:
-                c.disconnectAll()
+                c._disconnectAll()
 
             self.ui.presetCmb.clear()
             for k, v in configs:
@@ -52,32 +55,37 @@ class ConceptsController(BaseController):
         return f
 
     def __loadConfig(self):
+        @Slot(str)
         def f(filename):
             ConceptModel.instance().load_config(filename)
             QtW.QApplication.instance().conceptsChanged.emit()
         return f
 
     def __saveConfig(self):
+        @Slot()
         def f():
             ConceptModel.instance().save_config()
         return f
 
     def __appendConcept(self):
+        @Slot()
         def f():
             ConceptModel.instance().create_new_concept()
             QtW.QApplication.instance().conceptsChanged.emit()
         return f
 
     def __disableConcepts(self):
+        @Slot()
         def f():
             ConceptModel.instance().disable_concepts()
             QtW.QApplication.instance().conceptsChanged.emit()
         return f
 
     def __updateConcepts(self):
+        @Slot()
         def f():
             for c in self.children:
-                c.disconnectAll()
+                c._disconnectAll()
 
             self.ui.listWidget.clear()
             self.children = []
@@ -90,6 +98,7 @@ class ConceptsController(BaseController):
         return f
 
     def __cloneConcept(self, idx):
+        @Slot()
         def f():
             ConceptModel.instance().clone_concept(idx)
             QtW.QApplication.instance().conceptsChanged.emit()
@@ -97,6 +106,7 @@ class ConceptsController(BaseController):
         return f
 
     def __deleteConcept(self, idx):
+        @Slot()
         def f():
             ConceptModel.instance().delete_concept(idx)
             QtW.QApplication.instance().conceptsChanged.emit()

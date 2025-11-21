@@ -22,7 +22,7 @@ from modules.util.enum.ModelType import ModelType
 
 from modules.util.enum.ModelFlags import ModelFlags
 
-from PySide6.QtCore import QCoreApplication as QCA
+from PySide6.QtCore import QCoreApplication as QCA, Slot
 import PySide6.QtWidgets as QtW
 
 import PySide6.QtGui as QtG
@@ -41,6 +41,8 @@ class OnetrainerController(BaseController):
     def __init__(self, loader):
         super().__init__(loader, "modules/ui/views/windows/onetrainer.ui", name="OneTrainer", parent=None)
 
+    ###FSM###
+
     def _setup(self):
         self.save_window = SaveController(self.loader, parent=self)
         self.children = {}
@@ -49,7 +51,40 @@ class OnetrainerController(BaseController):
 
         # TODO: AT STARTUP LOAD #.json!
 
+    def _connectUIBehavior(self):
+        self._connect(self.ui.wikiBtn.clicked, lambda: self._openUrl("https://github.com/Nerogar/OneTrainer/wiki"))
+        self._connect(self.ui.saveConfigBtn.clicked, lambda: self._openWindow(self.save_window, fixed_size=True))
+        self._connect(self.ui.exportBtn.clicked, lambda: self.__exportConfig())
+
+        self._connect(self.ui.trainingTypeCmb.activated, self.__changeModel())
+        self._connect(self.ui.modelTypeCmb.activated, self.__changeModel())
+
+        self._connect(self.ui.configCmb.activated, lambda idx: self.__loadConfig(self.ui.configCmb.currentData(), idx))
+
+        self._connect(self.ui.modelTypeCmb.activated, self.__updateModel(), update_after_connect=True)
+        self._connect(QtW.QApplication.instance().stateChanged, self.__updateConfigs(), update_after_connect=True)
+        self._connect(QtW.QApplication.instance().stateChanged, self.__changeModel(), update_after_connect=True)
+
+        self._connect(QtW.QApplication.instance().savedConfig, self.__updateSelectedConfig())
+
+        self._connect(self.ui.startBtn.clicked, self.__toggleTrain())
+
+        self.__enableControls("enabled")()
+
+    def _loadPresets(self):
+        for e in ModelType.enabled_values(context="main_window"):
+            self.ui.modelTypeCmb.addItem(e.pretty_print(), userData=e)
+
+    ###Reactions###
+
+    def __updateSelectedConfig(self):
+        @Slot(str)
+        def f(config):
+            self.ui.configCmb.setCurrentText(config)
+        return f
+
     def __updateConfigs(self):
+        @Slot()
         def f():
             configs = StateModel.instance().load_available_config_names("training_presets")
             self.ui.configCmb.clear()
@@ -61,6 +96,7 @@ class OnetrainerController(BaseController):
         return f
 
     def __updateModel(self):
+        @Slot()
         def f():
             flags = ModelFlags.getFlags(self.ui.modelTypeCmb.currentData(), self.ui.trainingTypeCmb.currentData())
 
@@ -79,48 +115,8 @@ class OnetrainerController(BaseController):
 
         return f
 
-    def __createTabs(self):
-        for name, controller in [
-            ("general", GeneralController),
-            ("model", ModelController),
-            ("data", DataController),
-            ("concepts", ConceptsController),
-            ("training", TrainingController),
-            ("sampling", SamplingController),
-            ("backup", BackupController),
-            ("tools", ToolsController),
-            ("additional_embeddings", AdditionalEmbeddingsController),
-            ("cloud", CloudController),
-            ("lora", LoraController),
-            ("embedding", EmbeddingsController)
-        ]:
-            c = controller(self.loader, parent=self)
-            self.children[name] = {"controller": c, "index": len(self.children)}
-            self.ui.tabWidget.addTab(c.ui, c.name)
-
-        self.ui.tabWidget.setTabVisible(self.children["lora"]["index"], False)
-        self.ui.tabWidget.setTabVisible(self.children["embedding"]["index"], False)
-
-
-    def _connectUIBehavior(self):
-        self.connect(self.ui.wikiBtn.clicked, lambda: self.openUrl("https://github.com/Nerogar/OneTrainer/wiki"))
-        self.connect(self.ui.saveConfigBtn.clicked, lambda: self.openWindow(self.save_window, fixed_size=True))
-        self.connect(self.ui.exportBtn.clicked, lambda: self.__exportConfig())
-
-        self.connect(self.ui.trainingTypeCmb.activated, self.__changeModel())
-        self.connect(self.ui.modelTypeCmb.activated, self.__changeModel())
-
-        self.connect(self.ui.configCmb.activated, lambda idx: self.__loadConfig(self.ui.configCmb.currentData(), idx))
-
-        self.connect(self.ui.modelTypeCmb.activated, self.__updateModel(), update_after_connect=True)
-        self.connect(QtW.QApplication.instance().stateChanged, self.__updateConfigs(), update_after_connect=True)
-        self.connect(QtW.QApplication.instance().stateChanged, self.__changeModel(), update_after_connect=True)
-
-        self.connect(self.ui.startBtn.clicked, self.__toggleTrain())
-
-        self.__enableControls("enabled")()
-
     def __enableControls(self, state):
+        @Slot()
         def f():
             if state == "enabled": # Startup and successful termination.
                 self.training = False
@@ -147,6 +143,7 @@ class OnetrainerController(BaseController):
         return f
 
     def __updateStatus(self):
+        @Slot(dict)
         def f(data):
             print(data)
             if "status" in data:
@@ -164,15 +161,8 @@ class OnetrainerController(BaseController):
 
         return f
 
-    def __loadConfig(self, config, idx=None):
-        StateModel.instance().load_config(config)
-        QtW.QApplication.instance().stateChanged.emit()
-        QtW.QApplication.instance().embeddingsChanged.emit()
-        if idx is not None:
-            self.ui.configCmb.setCurrentIndex(idx)
-
-
     def __changeModel(self):
+        @Slot()
         def f():
             model_type = self.ui.modelTypeCmb.currentData()
             training_type = self.ui.trainingTypeCmb.currentData()
@@ -182,8 +172,55 @@ class OnetrainerController(BaseController):
             # TODO: also training_type allowed values must change here...
 
             QtW.QApplication.instance().modelChanged.emit(model_type, training_type)
-            self.connect(QtW.QApplication.instance().aboutToQuit, lambda: StateModel.instance().save_default()) # TODO: actually need to call __close() for tensorboard and workspace cleanup
+            self._connect(QtW.QApplication.instance().aboutToQuit, lambda: StateModel.instance().save_default()) # TODO: actually need to call __close() for tensorboard and workspace cleanup
         return f
+
+    def __toggleTrain(self):
+        @Slot()
+        def f():
+            if self.training:
+                self.__stopTrain()
+            else:
+                worker, name = WorkerPool.instance().createNamed(self.__train(), "train", inject_progress_callback=True)
+                if worker is not None:
+                    worker.connect(init_fn=self.__enableControls("running"), result_fn=None,
+                                   finished_fn=self.__enableControls("enabled"),
+                                   errored_fn=self.__enableControls("cancelled"), aborted_fn=self.__enableControls("cancelled"),
+                                   progress_fn=self.__updateStatus())
+                    WorkerPool.instance().start(name)
+
+        return f
+
+    ###Utils###
+
+    def __createTabs(self):
+        for name, controller in [
+            ("general", GeneralController),
+            ("model", ModelController),
+            ("data", DataController),
+            ("concepts", ConceptsController),
+            ("training", TrainingController),
+            ("sampling", SamplingController),
+            ("backup", BackupController),
+            ("tools", ToolsController),
+            ("additional_embeddings", AdditionalEmbeddingsController),
+            ("cloud", CloudController),
+            ("lora", LoraController),
+            ("embedding", EmbeddingsController)
+        ]:
+            c = controller(self.loader, parent=self)
+            self.children[name] = {"controller": c, "index": len(self.children)}
+            self.ui.tabWidget.addTab(c.ui, c.name)
+
+        self.ui.tabWidget.setTabVisible(self.children["lora"]["index"], False)
+        self.ui.tabWidget.setTabVisible(self.children["embedding"]["index"], False)
+
+    def __loadConfig(self, config, idx=None):
+        StateModel.instance().load_config(config)
+        QtW.QApplication.instance().stateChanged.emit()
+        QtW.QApplication.instance().embeddingsChanged.emit()
+        if idx is not None:
+            self.ui.configCmb.setCurrentIndex(idx)
 
 
     def __exportConfig(self):
@@ -200,24 +237,6 @@ class OnetrainerController(BaseController):
             TrainingModel.instance().train(progress_fn=progress_fn)
         return f
 
-    def __toggleTrain(self):
-        def f():
-            if self.training:
-                self.__stopTrain()
-            else:
-                worker, name = WorkerPool.instance().createNamed(self.__train(), "train", inject_progress_callback=True)
-                if worker is not None:
-                    worker.connect(init_fn=self.__enableControls("running"), result_fn=None,
-                                   finished_fn=self.__enableControls("enabled"),
-                                   errored_fn=self.__enableControls("cancelled"), aborted_fn=self.__enableControls("cancelled"),
-                                   progress_fn=self.__updateStatus())
-                    WorkerPool.instance().start(name)
-
-        return f
-
     def __stopTrain(self):
         TrainingModel.instance().stop_training()
 
-    def _loadPresets(self):
-        for e in ModelType.enabled_values(context="main_window"):
-            self.ui.modelTypeCmb.addItem(e.pretty_print(), userData=e)

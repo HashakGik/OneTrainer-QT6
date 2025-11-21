@@ -1,5 +1,5 @@
 from modules.ui.controllers.BaseController import BaseController
-from PySide6.QtCore import QCoreApplication as QCA
+from PySide6.QtCore import QCoreApplication as QCA, Slot
 
 from modules.util.enum.GenerateCaptionsModel import GenerateCaptionsModel, GenerateCaptionsAction
 
@@ -9,6 +9,8 @@ from modules.ui.utils.WorkerPool import WorkerPool
 class CaptionController(BaseController):
     def __init__(self, loader, parent=None):
         super().__init__(loader, "modules/ui/views/windows/generate_caption.ui", name=None, parent=parent)
+
+    ###FSM###
 
     def _connectUIBehavior(self):
         self._connectFileDialog(self.ui.folderBtn, self.ui.folderLed, is_dir=True, save=False, title=
@@ -24,18 +26,22 @@ class CaptionController(BaseController):
             "include_subdirectories": "includeSubfolderCbx"
         }
 
-        self._connectStateUi(state_ui_connections, CaptionModel.instance(), update_after_connect=True)
-        self.connect(self.ui.createMaskBtn.clicked, self.__startCaption())
+        self._connectStateUI(state_ui_connections, CaptionModel.instance(), update_after_connect=True)
+        self._connect(self.ui.createMaskBtn.clicked, self.__startCaption())
 
         self.__enableControls(True)()
 
-    def __createCaption(self):
-        def f(progress_fn=None):
-            return CaptionModel.instance().create_captions(progress_fn=progress_fn)
+    def _loadPresets(self):
+        for e in GenerateCaptionsModel.enabled_values():
+            self.ui.modelCmb.addItem(e.pretty_print(), userData=e)
 
-        return f
+        for e in GenerateCaptionsAction.enabled_values():
+            self.ui.modeCmb.addItem(e.pretty_print(), userData=e)
+
+    ###Reactions###
 
     def __startCaption(self):
+        @Slot()
         def f():
             worker, name = WorkerPool.instance().createNamed(self.__createCaption(), "create_caption", inject_progress_callback=True)
             if worker is not None:
@@ -48,15 +54,17 @@ class CaptionController(BaseController):
         return f
 
     def __enableControls(self, enabled):
+        @Slot()
         def f():
             self.ui.createMaskBtn.setEnabled(enabled)
             if enabled:
                 self.ui.progressBar.setValue(0)
         return f
 
-    def _loadPresets(self):
-        for e in GenerateCaptionsModel.enabled_values():
-            self.ui.modelCmb.addItem(e.pretty_print(), userData=e)
+    ###Utils###
 
-        for e in GenerateCaptionsAction.enabled_values():
-            self.ui.modeCmb.addItem(e.pretty_print(), userData=e)
+    def __createCaption(self):
+        def f(progress_fn=None):
+            return CaptionModel.instance().create_captions(progress_fn=progress_fn)
+
+        return f

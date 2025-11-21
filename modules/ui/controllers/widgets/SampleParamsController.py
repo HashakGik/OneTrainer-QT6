@@ -4,7 +4,7 @@ from modules.util.enum.NoiseScheduler import NoiseScheduler
 
 from modules.ui.models.SampleModel import SampleModel
 
-from PySide6.QtCore import QCoreApplication as QCA
+from PySide6.QtCore import QCoreApplication as QCA, Slot
 
 import PySide6.QtWidgets as QtW
 
@@ -17,6 +17,7 @@ class SampleParamsController(BaseController):
 
         super().__init__(loader, "modules/ui/views/widgets/sampling_params.ui", name=None, parent=parent)
 
+    ###FSM###
 
     def _connectUIBehavior(self):
         self._connectFileDialog(self.ui.imagePathBtn, self.ui.imagePathLed, is_dir=False, save=False,
@@ -47,20 +48,21 @@ class SampleParamsController(BaseController):
             self.dynamic_state_ui_connections = {"{{idx}}.{}".format(k): v for k, v in self.dynamic_state_ui_connections.items()}
 
         if self.update_signal is not None: # If we have a dynamic connection, we connect the signal to the update.
-            self.connect(self.update_signal, self.__reconnectControls())
+            self._connect(self.update_signal, self.__reconnectControls())
         else:
             self.__reconnectControls()() # In case we have a static connection, we update now instead.
-
-
-    def __reconnectControls(self):
-        def f(idx=None):
-            if self.use_idx:
-                self.disconnectGroup("idx")
-                self._connectStateUi(self.dynamic_state_ui_connections, self.model_instance, signal=self.update_signal, group="idx", update_after_connect=True, idx=idx)
-            else:
-                self._connectStateUi(self.dynamic_state_ui_connections, self.model_instance, update_after_connect=True, signal=self.update_signal)
-        return f
 
     def _loadPresets(self):
         for e in NoiseScheduler.enabled_values():
             self.ui.samplerCmb.addItem(e.pretty_print(), userData=e)
+
+    ###Reactions###
+
+    def __reconnectControls(self):
+        def f(idx=None):
+            if self.use_idx:
+                self._disconnectGroup("idx")
+                self._connectStateUI(self.dynamic_state_ui_connections, self.model_instance, signal=self.update_signal, group="idx", update_after_connect=True, idx=idx)
+            else:
+                self._connectStateUI(self.dynamic_state_ui_connections, self.model_instance, update_after_connect=True, signal=self.update_signal)
+        return f

@@ -1,3 +1,5 @@
+from PySide6.QtCore import Slot
+
 from modules.ui.controllers.BaseController import BaseController
 
 from modules.ui.models.SampleModel import SampleModel
@@ -11,8 +13,10 @@ class SampleController(BaseController):
 
         super().__init__(loader, "modules/ui/views/widgets/sample.ui", name=None, parent=parent)
 
+    ###FSM###
+
     def _connectUIBehavior(self):
-        self.connect(self.ui.openWindowBtn.clicked, self.__openSampleWindow())
+        self._connect(self.ui.openWindowBtn.clicked, self.__openSampleWindow())
 
         self.dynamic_state_ui_connections = {
             "{idx}.enabled": "enabledCbx",
@@ -22,11 +26,14 @@ class SampleController(BaseController):
             "{idx}.prompt": "promptLed",
         }
 
-        self._connectStateUi(self.dynamic_state_ui_connections, SampleModel.instance(),
+        self._connectStateUI(self.dynamic_state_ui_connections, SampleModel.instance(),
                              signal=QtW.QApplication.instance().samplesChanged, update_after_connect=True, idx=self.idx)
 
+    ###Reactions###
+
     def __openSampleWindow(self):
+        @Slot()
         def f():
-            self.openWindow(self.sample_window, fixed_size=True)
+            self._openWindow(self.sample_window, fixed_size=True)
             QtW.QApplication.instance().openSample.emit(self.idx)
         return f

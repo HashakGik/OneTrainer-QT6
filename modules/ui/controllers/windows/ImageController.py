@@ -1,4 +1,4 @@
-from PySide6.QtCore import QCoreApplication as QCA
+from PySide6.QtCore import QCoreApplication as QCA, Slot
 from modules.ui.controllers.BaseController import BaseController
 
 from modules.ui.models.ImageModel import ImageModel
@@ -12,6 +12,7 @@ class ImageController(BaseController):
     def __init__(self, loader, parent=None):
         super().__init__(loader, "modules/ui/views/windows/image.ui", name=None, parent=parent)
 
+    ###FSM###
 
     def _connectUIBehavior(self):
         self._connectFileDialog(self.ui.directoryBtn, self.ui.directoryLed, is_dir=True, save=False, title=
@@ -29,13 +30,62 @@ class ImageController(BaseController):
             "resize_custom_megapixels": "customSbx",
         }
 
-        self._connectStateUi(state_ui_connections, ImageModel.instance(), update_after_connect=True)
-        self.connect(self.ui.processBtn.clicked, self.__startProcessFiles())
-        self.connect(self.ui.cancelBtn.clicked, self.__stopProcessFiles())
-        self.connect(self.ui.resizeCmb.activated, self.__enableCustom(), update_after_connect=True)
+        self._connectStateUI(state_ui_connections, ImageModel.instance(), update_after_connect=True)
+        self._connect(self.ui.processBtn.clicked, self.__startProcessFiles())
+        self._connect(self.ui.cancelBtn.clicked, self.__stopProcessFiles())
+        self._connect(self.ui.resizeCmb.activated, self.__enableCustom(), update_after_connect=True)
 
         self.__enableControls(True)()
 
+    def _loadPresets(self):
+        for e in ImageOptimization.enabled_values():
+            self.ui.optimizationCmb.addItem(e.pretty_print(), userData=e)
+
+        for e in ImageMegapixels.enabled_values():
+            self.ui.resizeCmb.addItem(e.pretty_print(), userData=e)
+
+
+    def _connectInputValidation(self):
+        self.ui.colorLed.setValidator(QtGui.QRegularExpressionValidator("random|-1|#[0-9a-f]{6}|[a-z]+", self.ui))
+
+    ###Reactions###
+
+    def __startProcessFiles(self):
+        @Slot()
+        def f():
+            worker, name = WorkerPool.instance().createNamed(self.__processFiles(), "process_images", abort_flag=ImageModel.instance().abort_flag, inject_progress_callback=True)
+            if worker is not None:
+                worker.connect(init_fn=self.__enableControls(False), result_fn=None,
+                               finished_fn=self.__enableControls(True),
+                               errored_fn=self.__enableControls(True), aborted_fn=self.__enableControls(True),
+                               progress_fn=self.__updateStatus())
+                WorkerPool.instance().start(name)
+
+        return f
+
+    def __stopProcessFiles(self):
+        @Slot()
+        def f():
+            ImageModel.instance().abort_flag.set()
+        return f
+
+    def __enableControls(self, enabled):
+        @Slot()
+        def f():
+            self.ui.processBtn.setEnabled(enabled)
+            self.ui.cancelBtn.setEnabled(not enabled)
+            if enabled:
+                self.ui.progressBar.setValue(0)
+        return f
+
+    def __enableCustom(self):
+        @Slot()
+        def f():
+            self.ui.customLbl.setEnabled(self.ui.resizeCmb.currentData() == ImageMegapixels.CUSTOM)
+            self.ui.customSbx.setEnabled(self.ui.resizeCmb.currentData() == ImageMegapixels.CUSTOM)
+        return f
+
+    ###Utils###
 
     def __processFiles(self):
         def f(progress_fn=None):
@@ -53,46 +103,3 @@ class ImageController(BaseController):
 
             progress_fn(data)
         return f
-
-    def __startProcessFiles(self):
-        def f():
-            worker, name = WorkerPool.instance().createNamed(self.__processFiles(), "process_images", abort_flag=ImageModel.instance().abort_flag, inject_progress_callback=True)
-            if worker is not None:
-                worker.connect(init_fn=self.__enableControls(False), result_fn=None,
-                               finished_fn=self.__enableControls(True),
-                               errored_fn=self.__enableControls(True), aborted_fn=self.__enableControls(True),
-                               progress_fn=self.__updateStatus())
-                WorkerPool.instance().start(name)
-
-        return f
-
-    def __stopProcessFiles(self):
-        def f():
-            ImageModel.instance().abort_flag.set()
-        return f
-
-    def __enableControls(self, enabled):
-        def f():
-            self.ui.processBtn.setEnabled(enabled)
-            self.ui.cancelBtn.setEnabled(not enabled)
-            if enabled:
-                self.ui.progressBar.setValue(0)
-        return f
-
-    def __enableCustom(self):
-        def f():
-            self.ui.customLbl.setEnabled(self.ui.resizeCmb.currentData() == ImageMegapixels.CUSTOM)
-            self.ui.customSbx.setEnabled(self.ui.resizeCmb.currentData() == ImageMegapixels.CUSTOM)
-        return f
-
-
-    def _loadPresets(self):
-        for e in ImageOptimization.enabled_values():
-            self.ui.optimizationCmb.addItem(e.pretty_print(), userData=e)
-
-        for e in ImageMegapixels.enabled_values():
-            self.ui.resizeCmb.addItem(e.pretty_print(), userData=e)
-
-
-    def _connectInputValidation(self):
-        self.ui.colorLed.setValidator(QtGui.QRegularExpressionValidator("random|-1|#[0-9a-f]{6}|[a-z]+", self.ui))

@@ -18,6 +18,8 @@ class ToolsController(BaseController):
     def __init__(self, loader, parent=None):
         super().__init__(loader, "modules/ui/views/tabs/tools.ui", name=QCA.translate("main_window_tabs", "Tools"), parent=parent)
 
+    ###FSM###
+
     def _setup(self):
 
         self.children = {"dataset": DatasetController(self.loader, parent=None),
@@ -30,23 +32,21 @@ class ToolsController(BaseController):
                         "sample": SampleController(self.loader, parent=None),
                         "profile": ProfileController(self.loader, parent=None)}
 
+    def _connectUIBehavior(self):
+        self._connect(self.ui.datasetBtn.clicked, lambda: self.__open("dataset"))
+        self._connect(self.ui.imageBtn.clicked, lambda: self.__open("image"))
+        self._connect(self.ui.maskBtn.clicked, lambda: self.__open("mask"))
+        self._connect(self.ui.captionBtn.clicked, lambda: self.__open("caption"))
+        self._connect(self.ui.bulkCaptionBtn.clicked, lambda: self.__open("bulk_caption"))
+        self._connect(self.ui.videoBtn.clicked, lambda: self.__open("video"))
+        self._connect(self.ui.convertBtn.clicked, lambda: self.__open("convert"))
+        self._connect(self.ui.samplingBtn.clicked, lambda: self.__open("sample"))
+        self._connect(self.ui.profilingBtn.clicked, lambda: self.__open("profile"))
+
+    ###Utils###
 
     def __open(self, window):
         if self.children[window].ui.isHidden():
-            if window == "sample":
-                QtW.QApplication.instance().openSample.emit(-1)
-
-            self.openWindow(self.children[window], fixed_size=window != "dataset")
+            self._openWindow(self.children[window], fixed_size=window != "dataset") # TODO: Maybe we want to allow any window to resize?
         else:
             self.children[window].ui.activateWindow()
-
-    def _connectUIBehavior(self):
-        self.connect(self.ui.datasetBtn.clicked, lambda: self.__open("dataset"))
-        self.connect(self.ui.imageBtn.clicked, lambda: self.__open("image"))
-        self.connect(self.ui.maskBtn.clicked, lambda: self.__open("mask"))
-        self.connect(self.ui.captionBtn.clicked, lambda: self.__open("caption"))
-        self.connect(self.ui.bulkCaptionBtn.clicked, lambda: self.__open("bulk_caption"))
-        self.connect(self.ui.videoBtn.clicked, lambda: self.__open("video"))
-        self.connect(self.ui.convertBtn.clicked, lambda: self.__open("convert"))
-        self.connect(self.ui.samplingBtn.clicked, lambda: self.__open("sample"))
-        self.connect(self.ui.profilingBtn.clicked, lambda: self.__open("profile"))

@@ -1,4 +1,4 @@
-from PySide6.QtCore import QCoreApplication as QCA
+from PySide6.QtCore import QCoreApplication as QCA, Slot
 from modules.ui.controllers.BaseController import BaseController
 
 import PySide6.QtWidgets as QtW
@@ -12,26 +12,31 @@ class AdditionalEmbeddingsController(BaseController):
     def __init__(self, loader, parent=None):
         super().__init__(loader, "modules/ui/views/tabs/additional_embeddings.ui", name=QCA.translate("main_window_tabs", "Additional Embeddings"), parent=parent)
 
+    ###FSM###
+
     def _connectUIBehavior(self):
-        self.connect(self.ui.addEmbeddingBtn.clicked, self.__appendEmbedding())
+        self._connect(self.ui.addEmbeddingBtn.clicked, self.__appendEmbedding())
 
         cb = self.__updateEmbeddings()
-        self.connect(QtW.QApplication.instance().embeddingsChanged, cb)
-        self.connect(QtW.QApplication.instance().stateChanged, cb, update_after_connect=True)
+        self._connect(QtW.QApplication.instance().embeddingsChanged, cb)
+        self._connect(QtW.QApplication.instance().stateChanged, cb, update_after_connect=True)
 
-        self.connect(self.ui.enableBtn.clicked, self.__enableEmbeddings())
+        self._connect(self.ui.enableBtn.clicked, self.__enableEmbeddings())
 
+    ###Reactions###
 
     def __enableEmbeddings(self):
+        @Slot()
         def f():
             StateModel.instance().enable_embeddings()
             QtW.QApplication.instance().embeddingsChanged.emit()
         return f
 
     def __updateEmbeddings(self):
+        @Slot()
         def f():
             for c in self.children:
-                c.disconnectAll()
+                c._disconnectAll()
 
             self.ui.listWidget.clear()
             self.children = []
@@ -44,18 +49,21 @@ class AdditionalEmbeddingsController(BaseController):
         return f
 
     def __cloneEmbedding(self, idx):
+        @Slot()
         def f():
             StateModel.instance().clone_embedding(idx)
             QtW.QApplication.instance().embeddingsChanged.emit()
         return f
 
     def __deleteEmbedding(self, idx):
+        @Slot()
         def f():
             StateModel.instance().delete_embedding(idx)
             QtW.QApplication.instance().embeddingsChanged.emit()
         return f
 
     def __appendEmbedding(self):
+        @Slot()
         def f():
             StateModel.instance().create_new_embedding()
             QtW.QApplication.instance().embeddingsChanged.emit()

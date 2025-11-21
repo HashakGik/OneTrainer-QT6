@@ -2,6 +2,7 @@ import os
 import functools
 import PySide6.QtWidgets as QtW
 import PySide6.QtCore as QtC
+from PySide6.QtCore import Slot
 
 from PySide6.QtCore import Qt
 
@@ -15,12 +16,13 @@ from modules.ui.utils.SNLineEdit import SNLineEdit
 from modules.ui.models.StateModel import StateModel
 
 # TODO: CLEANUP:
-# 1) Naming convention is all over the place (camelCase, snake_case, inconsistent visibility __method vs _method vs method)
-# 2) Use self.openAlert to provide user feedback.
+# 2) Use self._openAlert to provide user feedback.
 # 3) Uniform error logging (sometimes it is print, others it uses logger.logging) and exceptions (print(e) vs full traceback)
-# 4) Sort methods in a meaningful way (finite-state-machine -> helper methods -> UI callbacks). Annotate each section with a comment
 
-# Abstract controller with some utility methods.
+# Abstract controller with some utility methods. Each controller is a Finite-State Machine executing:
+# super()__init__ -> _setup -> _loadPresets -> _connectStateUI -> _connectUIBehavior -> _connectInputValidation -> _invalidateUI -> self.__init__
+# After it is initialized, a controller reacts to external signals by using the slots connected with self._connect(), possibly with some helper methods.
+# For legibility, the methods are grouped into: ###FSM###, ###Reactions###, ###Utils###
 class BaseController:
     state_ui_connections = {} # Class attribute, but it will be overwritten by every subclass.
 
@@ -34,77 +36,25 @@ class BaseController:
         self.invalidation_callbacks = []
 
         self._setup()
-
         self._loadPresets()
-
-        self._connectStateUi(self.state_ui_connections, StateModel.instance(), signal=QtW.QApplication.instance().stateChanged, update_after_connect=True, **kwargs)
+        self._connectStateUI(self.state_ui_connections, StateModel.instance(), signal=QtW.QApplication.instance().stateChanged, update_after_connect=True, **kwargs)
         self._connectUIBehavior()
         self._connectInputValidation()
-
         self._invalidateUI()
 
-    # Use this method to initialize auxiliary attributes of each controller.
+    ###FSM###
+
+    # Override this method to initialize auxiliary attributes of each controller.
     def _setup(self):
         pass
 
-    # Use this method to connect signals and slots for visual behavior.
-    def _connectUIBehavior(self):
-        pass
-
-    # Use this method to handle complex field validation OTHER than the automatic validations defined in *.ui files.
-    def _connectInputValidation(self):
-        pass
-
-    # Use this method to load preset values for each control.
+    # Override this method to load preset values for each control.
     def _loadPresets(self):
         pass
 
-    def _invalidateUI(self):
-        for fn, *args in self.invalidation_callbacks:
-            if len(args) > 0 and args[0] is not None:
-                fn(*args)
-            else:
-                fn()
-
-    def connect(self, signal, slot, key="global", update_after_connect=False, initial_args=None):
-        c = signal.connect(slot)
-        if key not in self.connections:
-            self.connections[key] = []
-        self.connections[key].append(c)
-
-        # Schedule every update to be executed at the end of __init__
-        if update_after_connect:
-            if initial_args is None:
-                self.invalidation_callbacks.append((slot, None))
-            else:
-                self.invalidation_callbacks.append((slot, *initial_args))
-
-    def disconnectAll(self):
-        for k, v in self.connections.items():
-            for c in v:
-                self.ui.disconnect(c)
-
-        self.connections = {}
-
-    def disconnectGroup(self, key):
-        if key in self.connections:
-            for c in self.connections[key]:
-                self.ui.disconnect(c)
-            self.connections[key] = []
-
-    def _appendExtension(self, file, filter):
-        patterns = filter.split("(")[1].split(")")[0].split(", ")
-        for p in patterns:
-            if re.match(p.replace(".", "\\.").replace("*", ".*"), file): # If the file already has a valid extension, return it as is.
-                return file
-
-        if "*" not in patterns[0]: # The pattern is a fixed filename, returning it regardless of the user selected name.
-            return patterns[0] # TODO: maybe returning folder/patterns[0] is more reasonable? In original code there is: path_modifier=lambda x: Path(x).parent.absolute() if x.endswith(".json") else x (removes file and returns base folder instead)
-        else:
-            return "{}.{}".format(file, patterns[0].split("*.")[1]) # Append the first valid extension to file.
-
-
-    def _connectStateUi(self, connection_dict, model, signal=None, update_after_connect=False, group="global", **kwargs):
+    # DO NOT override this method. It connects UI elements to SingletonConfigModel internal variables.
+    # It will be automatically called for StateModel, but you should call it manually for other models.
+    def _connectStateUI(self, connection_dict, model, signal=None, update_after_connect=False, group="global", **kwargs):
         for var, ui_names in connection_dict.items():
             if len(kwargs) > 0:
                 var = var.format(**kwargs)
@@ -117,21 +67,167 @@ class BaseController:
                     print("ERROR: {} not found.".format(ui_name))
                 else:
                     if isinstance(ui_elem, QtW.QCheckBox):
-                        self.connect(ui_elem.stateChanged, self.__readCbx(ui_elem, var, model), group)
+                        self._connect(ui_elem.stateChanged, self.__readCbx(ui_elem, var, model), group)
                     elif isinstance(ui_elem, QtW.QComboBox):
-                        self.connect(ui_elem.activated, self.__readCbm(ui_elem, var, model), group)
+                        self._connect(ui_elem.activated, self.__readCbm(ui_elem, var, model), group)
                     elif isinstance(ui_elem, QtW.QSpinBox) or isinstance(ui_elem, QtW.QDoubleSpinBox):
-                        self.connect(ui_elem.valueChanged, self.__readSbx(ui_elem, var, model), group)
+                        self._connect(ui_elem.valueChanged, self.__readSbx(ui_elem, var, model), group)
                     elif isinstance(ui_elem, SNLineEdit): # IMPORTANT: keep this above base class!
-                        self.connect(ui_elem.editingFinished, self.__readSNLed(ui_elem, var, model), group)
+                        self._connect(ui_elem.editingFinished, self.__readSNLed(ui_elem, var, model), group)
                     elif isinstance(ui_elem, QtW.QLineEdit):
-                        self.connect(ui_elem.editingFinished, self.__readLed(ui_elem, var, model), group)
+                        self._connect(ui_elem.editingFinished, self.__readLed(ui_elem, var, model), group)
 
                     callback = functools.partial(BaseController._writeControl, ui_elem, var, model)
                     if signal is not None:
-                        self.connect(signal, callback)
+                        self._connect(signal, callback)
                     if update_after_connect:
                         callback()
+
+    # Override this method to connect signals and slots intended for visual behavior (e.g., enable/disable controls).
+    def _connectUIBehavior(self):
+        pass
+
+    # Override this method to handle complex field validation OTHER than the automatic validations defined in *.ui files.
+    def _connectInputValidation(self):
+        pass
+
+    # DO NOT override this method. It triggers the UI updates queued by _connect(), at the end of super().__init__.
+    def _invalidateUI(self):
+        for fn, *args in self.invalidation_callbacks:
+            if len(args) > 0 and args[0] is not None:
+                fn(*args)
+            else:
+                fn()
+
+    ###Reactions###
+
+    # Connects a signal to a slot, possibly segregating it into a named category (for selectively disconnecting it later).
+    # If update_after_connect is true, notifies the controller that the slot must be fired at the end of __init__. initial_args is a list of values to be passed during this initial firing.
+    def _connect(self, signal, slot, key="global", update_after_connect=False, initial_args=None):
+        c = signal.connect(slot)
+        if key not in self.connections:
+            self.connections[key] = []
+        self.connections[key].append(c)
+
+        # Schedule every update to be executed at the end of __init__
+        if update_after_connect:
+            if initial_args is None:
+                self.invalidation_callbacks.append((slot, None))
+            else:
+                self.invalidation_callbacks.append((slot, *initial_args))
+
+    # Disconnects all the UI connections.
+    def _disconnectAll(self):
+        for k, v in self.connections.items():
+            for c in v:
+                self.ui.disconnect(c)
+
+        self.connections = {}
+
+    # Selectively disconnects only the connections belonging to a specific key (e.g., concept indexes).
+    def _disconnectGroup(self, key):
+        if key in self.connections:
+            for c in self.connections[key]:
+                self.ui.disconnect(c)
+            self.connections[key] = []
+
+    def _updateProgress(self, elem):
+        @Slot(dict)
+        def f(data):
+            if "value" in data and "max_value" in data:
+                val = int(elem.minimum() + data["value"] / data["max_value"] * (
+                            elem.maximum() - elem.minimum())) if data["max_value"] > elem.minimum() else elem.minimum()
+                if isinstance(elem, QtW.QProgressBar):
+                    elem.setValue(val)
+                elif isinstance(elem, QtW.QLabel):
+                    elem.setText(str(val))
+        return f
+
+    ###Utils###
+
+    # Opens a file dialog window when tool_button is pressed, then populates edit_box with the returned value.
+    # Filters for file extensions follow QT6 syntax.
+    def _connectFileDialog(self, tool_button, edit_box, is_dir=False, save=False, title=None, filters=None):
+        def f(elem):
+            diag = QtW.QFileDialog()
+
+            if is_dir:
+                dir = None
+                if os.path.isdir(elem.text()):
+                    dir = elem.text()
+                txt = diag.getExistingDirectory(parent=None, caption=title, dir=dir)
+                if txt != "":
+                    elem.setText(self._removeWorkingDir(txt))
+                    elem.editingFinished.emit()
+            else:
+                file = None
+                if os.path.exists(elem.text()):
+                    file = self._removeWorkingDir(elem.text())
+
+                if save:
+                    txt, flt = diag.getSaveFileName(parent=None, caption=title, dir=file, filter=filters)
+                    if txt != "":
+                        elem.setText(self._removeWorkingDir(self._appendExtension(txt, flt)))
+                        elem.editingFinished.emit()
+                else:
+                    txt, _ = diag.getOpenFileName(parent=None, caption=title, dir=file, filter=filters)
+                    if txt != "":
+                        elem.setText(self._removeWorkingDir(txt))
+                        elem.editingFinished.emit()
+
+        self._connect(tool_button.clicked, functools.partial(f, edit_box))
+
+    # Log a message with the given severity.
+    def _log(self, severity, message):
+        # TODO: if you prefer a GUI text area, print on it instead: https://stackoverflow.com/questions/24469662/how-to-redirect-logger-output-into-pyqt-text-widget
+        # In that case it is important to register a global logger widget (e.g. on a window with different tabs for each severity level)
+        # For high severity, maybe an alertbox can also be opened automatically
+        StateModel.instance().log(severity, message) # TODO: refactor every message in the controller to use this. Do something similar with SingletonConfigModel
+
+    # Open a subwindow.
+    def _openWindow(self, controller, fixed_size=False):
+        if fixed_size:
+            controller.ui.setWindowFlag(Qt.WindowCloseButtonHint)
+            controller.ui.setWindowFlag(Qt.WindowMaximizeButtonHint, on=False)
+            controller.ui.setFixedSize(controller.ui.size())
+        controller.ui.show()
+
+    # Open an alert window. Remember to translate the messages.
+    def _openAlert(self, title, message, type="about", buttons=QtW.QMessageBox.StandardButton.Ok):
+        wnd = None
+        if type == "about":
+            QtW.QMessageBox.about(self.ui, title, message) # About has no buttons nor return values.
+        elif type == "critical":
+            wnd = QtW.QMessageBox.critical(self.ui, title, message, buttons=buttons)
+        elif type == "information":
+            wnd = QtW.QMessageBox.information(self.ui, title, message, buttons=buttons)
+        elif type == "question":
+            wnd = QtW.QMessageBox.question(self.ui, title, message, buttons=buttons)
+        elif type == "warning":
+            wnd = QtW.QMessageBox.warning(self.ui, title, message, buttons=buttons)
+
+        return wnd
+
+    # Open an URL in the default web browser.
+    def _openUrl(self, url):
+        webbrowser.open(url, new=0, autoraise=False)
+
+    # Open a directory in the OS' file browser.
+    def _browse(self, dir):
+        if os.path.isdir(dir):
+            show_in_file_manager(dir)
+
+
+    def _appendExtension(self, file, filter):
+        patterns = filter.split("(")[1].split(")")[0].split(", ")
+        for p in patterns:
+            if re.match(p.replace(".", "\\.").replace("*", ".*"), file): # If the file already has a valid extension, return it as is.
+                return file
+
+        if "*" not in patterns[0]: # The pattern is a fixed filename, returning it regardless of the user selected name.
+            return patterns[0] # TODO: maybe returning folder/patterns[0] is more reasonable? In original code there is: path_modifier=lambda x: Path(x).parent.absolute() if x.endswith(".json") else x (removes file and returns base folder instead)
+        else:
+            return "{}.{}".format(file, patterns[0].split("*.")[1]) # Append the first valid extension to file.
 
     # These methods cannot use directly lambdas, because variable names would be reassigned within the loop.
     @staticmethod
@@ -173,35 +269,6 @@ class BaseController:
                 ui_elem.setText(val)
         ui_elem.blockSignals(False)
 
-    def _connectFileDialog(self, tool_button, edit_box, is_dir=False, save=False, title=None, filters=None):
-        def f(elem):
-            diag = QtW.QFileDialog()
-
-            if is_dir:
-                dir = None
-                if os.path.isdir(elem.text()):
-                    dir = elem.text()
-                txt = diag.getExistingDirectory(parent=None, caption=title, dir=dir)
-                elem.setText(self._removeWorkingDir(txt))
-                elem.editingFinished.emit()
-            else:
-                file = None
-                if os.path.exists(elem.text()):
-                    file = self._removeWorkingDir(elem.text())
-
-                if save:
-                    txt, flt = diag.getSaveFileName(parent=None, caption=title, dir=file, filter=filters)
-                    if txt != "":
-                        elem.setText(self._removeWorkingDir(self._appendExtension(txt, flt)))
-                        elem.editingFinished.emit()
-                else:
-                    txt, _ = diag.getOpenFileName(parent=None, caption=title, dir=file, filter=filters)
-                    if txt != "":
-                        elem.setText(self._removeWorkingDir(txt))
-                        elem.editingFinished.emit()
-
-        self.connect(tool_button.clicked, functools.partial(f, edit_box))
-
     def _removeWorkingDir(self, txt):
         cwd = os.getcwd()
         if txt.startswith(cwd):
@@ -219,54 +286,11 @@ class BaseController:
         list_widget.setItemWidget(item, controller.ui)
 
         if self_delete_fn is not None:
-            self.connect(controller.ui.deleteBtn.clicked, self_delete_fn)
+            self._connect(controller.ui.deleteBtn.clicked, self_delete_fn)
 
         if self_clone_fn is not None:
-            self.connect(controller.ui.cloneBtn.clicked, self_clone_fn)
-
-    def _updateProgress(self, elem):
-        def f(data):
-            if "value" in data and "max_value" in data:
-                val = int(elem.minimum() + data["value"] / data["max_value"] * (
-                            elem.maximum() - elem.minimum())) if data["max_value"] > elem.minimum() else elem.minimum()
-                if isinstance(elem, QtW.QProgressBar):
-                    elem.setValue(val)
-                elif isinstance(elem, QtW.QLabel):
-                    elem.setText(str(val))
-        return f
-
-    def _log(self, severity, message):
-        # TODO: if you prefer a GUI text area, print on it instead: https://stackoverflow.com/questions/24469662/how-to-redirect-logger-output-into-pyqt-text-widget
-        # In that case it is important to register a global logger widget (e.g. on a window with different tabs for each severity level)
-        # For high severity, maybe an alertbox can also be opened automatically
-        StateModel.instance().log(severity, message) # TODO: refactor every message in the controller to use this. Do something similar with SingletonConfigModel
-
-    def openWindow(self, controller, fixed_size=False):
-        if fixed_size:
-            controller.ui.setWindowFlag(Qt.WindowCloseButtonHint)
-            controller.ui.setWindowFlag(Qt.WindowMaximizeButtonHint, on=False)
-            controller.ui.setFixedSize(controller.ui.size())
-        controller.ui.show()
-
-    def openAlert(self, title, message, type="about", buttons=QtW.QMessageBox.StandardButton.Ok):
-        wnd = None
-        if type == "about":
-            QtW.QMessageBox.about(self.ui, title, message) # About has no buttons nor return values.
-        elif type == "critical":
-            wnd = QtW.QMessageBox.critical(self.ui, title, message, buttons=buttons)
-        elif type == "information":
-            wnd = QtW.QMessageBox.information(self.ui, title, message, buttons=buttons)
-        elif type == "question":
-            wnd = QtW.QMessageBox.question(self.ui, title, message, buttons=buttons)
-        elif type == "warning":
-            wnd = QtW.QMessageBox.warning(self.ui, title, message, buttons=buttons)
-
-        return wnd # TODO: check outcome with if openAlert(...) == QMessageBox.StandardButton.Ok
+            self._connect(controller.ui.cloneBtn.clicked, self_clone_fn)
 
 
-    def openUrl(self, url):
-        webbrowser.open(url, new=0, autoraise=False)
 
-    def browse(self, dir):
-        if os.path.isdir(dir):
-            show_in_file_manager(dir)
+

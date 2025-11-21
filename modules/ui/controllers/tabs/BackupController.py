@@ -1,4 +1,4 @@
-from PySide6.QtCore import QCoreApplication as QCA
+from PySide6.QtCore import QCoreApplication as QCA, Slot
 from modules.ui.controllers.BaseController import BaseController
 
 from modules.util.enum.TimeUnit import TimeUnit
@@ -20,28 +20,40 @@ class BackupController(BaseController):
 
     def __init__(self, loader, parent=None):
         super().__init__(loader, "modules/ui/views/tabs/backup.ui", name=QCA.translate("main_window_tabs", "Backup"), parent=parent)
-        pass
+
+    ###FSM###
 
     def _connectUIBehavior(self):
-        self.connect(self.ui.backupCmb.activated, self.__updateBackup(), update_after_connect=True)
-        self.connect(self.ui.rollingBackupCbx.toggled, self.__updateRollingBackup(), update_after_connect=True, initial_args=[self.ui.rollingBackupCbx.isChecked()])
-        self.connect(self.ui.saveCmb.activated, self.__updateSave(), update_after_connect=True)
+        self._connect(self.ui.backupCmb.activated, self.__updateBackup(), update_after_connect=True)
+        self._connect(self.ui.rollingBackupCbx.toggled, self.__updateRollingBackup(), update_after_connect=True, initial_args=[self.ui.rollingBackupCbx.isChecked()])
+        self._connect(self.ui.saveCmb.activated, self.__updateSave(), update_after_connect=True)
 
-        self.connect(self.ui.backupBtn.clicked, self.__backupNow())
-        self.connect(self.ui.saveBtn.clicked, self.__saveNow())
+        self._connect(self.ui.backupBtn.clicked, self.__backupNow())
+        self._connect(self.ui.saveBtn.clicked, self.__saveNow())
 
+    def _loadPresets(self):
+        for e in TimeUnit.enabled_values():
+            self.ui.backupCmb.addItem(e.pretty_print(), userData=e)
+        for e in TimeUnit.enabled_values():
+            self.ui.saveCmb.addItem(e.pretty_print(), userData=e)
+
+
+    ###Reactions###
 
     def __backupNow(self):
+        @Slot()
         def f():
             TrainingModel.instance().backup_now()
         return f
 
     def __saveNow(self):
+        @Slot()
         def f():
             TrainingModel.instance().save_now()
         return f
 
     def __updateBackup(self):
+        @Slot()
         def f():
             enabled = self.ui.backupCmb.currentData() != TimeUnit.NEVER
 
@@ -53,6 +65,7 @@ class BackupController(BaseController):
         return f
 
     def __updateRollingBackup(self):
+        @Slot(bool)
         def f(enabled):
             self.ui.rollingCountSbx.setEnabled(enabled)
             self.ui.rollingCountLbl.setEnabled(enabled)
@@ -60,6 +73,7 @@ class BackupController(BaseController):
         return f
 
     def __updateSave(self):
+        @Slot()
         def f():
             enabled = self.ui.saveCmb.currentData() != TimeUnit.NEVER
 
@@ -71,10 +85,3 @@ class BackupController(BaseController):
             self.ui.savePrefixLbl.setEnabled(enabled)
 
         return f
-
-    def _loadPresets(self):
-        for e in TimeUnit.enabled_values():
-            self.ui.backupCmb.addItem(e.pretty_print(), userData=e)
-        for e in TimeUnit.enabled_values():
-            self.ui.saveCmb.addItem(e.pretty_print(), userData=e)
-

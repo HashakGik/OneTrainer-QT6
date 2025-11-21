@@ -17,6 +17,8 @@ class EmbeddingsController(BaseController):
         super().__init__(loader, "modules/ui/views/tabs/embeddings.ui", name=QCA.translate("main_window_tabs", "Embeddings"), parent=parent)
         pass
 
+    ###FSM###
+
     def _connectUIBehavior(self):
         self._connectFileDialog(self.ui.baseEmbeddingBtn, self.ui.baseEmbeddingLed, is_dir=False, save=False,
                                title=QCA.translate("dialog_window", "Open base embeddings"),

@@ -3,7 +3,7 @@ from modules.ui.controllers.BaseController import BaseController
 from modules.ui.utils.FigureWidget import FigureWidget
 from modules.ui.utils.WorkerPool import WorkerPool
 
-from PySide6.QtCore import QCoreApplication as QCA
+from PySide6.QtCore import QCoreApplication as QCA, Slot
 import PySide6.QtWidgets as QtW
 
 from modules.util.enum.BalancingStrategy import BalancingStrategy
@@ -25,6 +25,8 @@ class ConceptController(BaseController):
     def __init__(self, loader, parent=None):
         super().__init__(loader, "modules/ui/views/windows/concept.ui", name=None, parent=parent)
 
+    ###FSM###
+
     def _setup(self):
         self.idx = 0
         self.file_index = 0
@@ -36,157 +38,6 @@ class ConceptController(BaseController):
         self.ui.histogramLay.addWidget(self.canvas.toolbar) # Matplotlib toolbar, in case we want the user to zoom in.
         self.ui.histogramLay.addWidget(self.canvas)
 
-    def __reconnectControls(self):
-        def f():
-            self.disconnectGroup("idx")
-            self._connectStateUi(self.dynamic_state_ui_connections, ConceptModel.instance(), signal=None, group="idx", update_after_connect=True, idx=self.idx)
-        return f
-
-
-    def __updateStats(self):
-        def f():
-            self.__enableScanBtn(True)()
-            stats_dict = ConceptModel.instance().pretty_print_stats(self.idx)
-
-            for k, v in {
-                "fileSizeLbl": "file_size",
-                "processingTimeLbl": "processing_time",
-                "dirCountLbl": "dir_count",
-                "imageCountLbl": "image_count",
-                "imageCountMaskLbl": "image_count_mask",
-                "imageCountCaptionLbl": "image_count_caption",
-                "videoCountLbl": "video_count",
-                "videoCountCaptionLbl": "video_count_caption",
-                "maskCountLbl": "mask_count",
-                "maskCountUnpairedLbl": "mask_count_unpaired",
-                "captionCountLbl": "caption_count",
-                "unpairedCaptionsLbl": "unpaired_captions",
-                "maxPixelsLbl": "max_pixels",
-                "avgPixelsLbl": "avg_pixels",
-                "minPixelsLbl": "min_pixels",
-                "lengthMaxLbl": "length_max",
-                "lengthAvgLbl": "length_avg",
-                "lengthMinLbl": "length_min",
-                "fpsMaxLbl": "fps_max",
-                "fpsAvgLbl": "fps_avg",
-                "fpsMinLbl": "fps_min",
-                "captionMaxLbl": "caption_max",
-                "captionAvgLbl": "caption_avg",
-                "captionMinLbl": "caption_min",
-                "smallBucketLbl": "small_bucket",
-            }.items():
-                self.ui.findChild(QtW.QLabel, k).setText(str(stats_dict[v]))
-
-            self.__updateHistogram(stats_dict)
-        return f
-
-    def __updateHistogram(self, stats_dict):
-        self.bucket_ax.cla()
-        self.canvas.figure.tight_layout()
-        self.canvas.figure.subplots_adjust(bottom=0.15)
-        self.bucket_ax.spines['top'].set_visible(False)
-        self.bucket_ax.tick_params(axis='x', which="both")
-        self.bucket_ax.tick_params(axis='y', which="both")
-        aspects = [str(x) for x in list(stats_dict["aspect_buckets"].keys())]
-        aspect_ratios = [ConceptModel.instance().decimal_to_aspect_ratio(x) for x in
-                         list(stats_dict["aspect_buckets"].keys())]
-        counts = list(stats_dict["aspect_buckets"].values())
-        b = self.bucket_ax.bar(aspect_ratios, counts)
-        self.bucket_ax.bar_label(b)
-        sec = self.bucket_ax.secondary_xaxis(location=-0.1)
-        sec.spines["bottom"].set_linewidth(0)
-        sec.set_xticks([0, (len(aspects) - 1) / 2, len(aspects) - 1], labels=["Wide", "Square", "Tall"])
-        sec.tick_params('x', length=0)
-        self.canvas.draw_idle()
-
-    def __scanConcept(self):
-        def f(advanced_scanning):
-            return ConceptModel.instance().get_concept_stats(self.idx, advanced_scanning)
-        return f
-
-    def __startScan(self, advanced_scanning):
-        def f():
-            worker, name = WorkerPool.instance().createNamed(self.__scanConcept(), "scan_concept", abort_flag=ConceptModel.instance().cancel_scan_flag, advanced_scanning=advanced_scanning)
-            if worker is not None:
-                worker.connect(init_fn=self.__enableScanBtn(False), result_fn=None, finished_fn=self.__updateStats(), errored_fn=self.__enableScanBtn(True), aborted_fn=self.__enableScanBtn(True))
-                WorkerPool.instance().start(name)
-
-        return f
-
-    def __startDownload(self):
-        def f():
-            worker, name = WorkerPool.instance().createNamed(self.__downloadConcept(), "download_concept")
-            if worker is not None:
-                worker.connect(init_fn=self.__enableDownloadBtn(False), result_fn=None, finished_fn=self.__enableDownloadBtn(True),
-                               errored_fn=self.__enableDownloadBtn(True), aborted_fn=self.__enableDownloadBtn(True))
-                WorkerPool.instance().start(name)
-        return f
-
-    def __downloadConcept(self):
-        def f():
-            ConceptModel.instance().download_dataset(self.idx)
-        return f
-
-    def __abortScan(self):
-        def f():
-            ConceptModel.instance().cancel_scan_flag.set()
-        return f
-
-    def __enablePromptSource(self):
-        def f(_):
-            if self.ui.promptSourceCmb.currentData() != "concept": # TODO: Replace with "PromptSource.CONCEPT" when ConceptConfig will accept enum instead of string.
-                self.ui.promptSourceLed.setEnabled(False)
-                self.ui.promptSourceBtn.setEnabled(False)
-            else:
-                self.ui.promptSourceLed.setEnabled(True)
-                self.ui.promptSourceBtn.setEnabled(True)
-        return f
-
-    def __prevImage(self):
-        def f():
-            image_count = ConceptModel.instance().getState("{}.concept_stats.image_count".format(self.idx))
-            if image_count is not None and image_count > 0:
-                self.file_index = (self.file_index + image_count - 1) % image_count
-            else:
-                self.file_index = max(0, self.file_index - 1)
-            self.__updateImage()
-        return f
-
-    def __nextImage(self):
-        def f():
-            image_count = ConceptModel.instance().getState("{}.concept_stats.image_count".format(self.idx))
-            if image_count is not None and image_count > 0:
-                self.file_index = (self.file_index + 1) % image_count
-            else:
-                self.file_index += 1
-            self.__updateImage()
-        return f
-
-    def __updateImage(self):
-        def f():
-            img, filename, caption = ConceptModel.instance().getImage(self.idx, self.file_index, show_augmentations=self.ui.showAugmentationsCbx.isChecked())
-            self.ui.previewLbl.setPixmap(QtGui.QPixmap.fromImage(ImageQt(img)))
-            self.ui.filenameLbl.setText(filename)
-            self.ui.promptTed.setPlainText(caption)
-        return f
-
-    def __updateConcept(self):
-        def f(idx):
-            self.idx = idx
-            self.file_index = 0
-
-            self.ui.nameLed.setText(ConceptModel.instance().get_concept_name(self.idx)) # Name has a different logic than other controls and cannot exploit the connection dictionary.
-        return f
-
-    def __saveConcept(self):
-        def f():
-            ConceptModel.instance().setState("{}.name".format(self.idx), self.ui.nameLed.text())
-
-            # No need to store statistics, as they are handled directly by the model.
-            QtW.QApplication.instance().conceptsChanged.emit()
-            self.ui.hide()
-        return f
-
     def _connectUIBehavior(self):
         self._connectFileDialog(self.ui.pathBtn, self.ui.pathLed, is_dir=True, title=QCA.translate("dialog_window", "Open Dataset directory"))
         self._connectFileDialog(self.ui.promptSourceBtn, self.ui.promptSourceLed, is_dir=False,
@@ -194,12 +45,12 @@ class ConceptController(BaseController):
                                filters=QCA.translate("filetype_filters",
                                                      "Text (*.txt)"))
 
-        self.connect(QtW.QApplication.instance().openConcept, self.__updateConcept())
-        self.connect(QtW.QApplication.instance().openConcept, self.__updateStats())
-        self.connect(self.ui.okBtn.clicked, self.__saveConcept())
+        self._connect(QtW.QApplication.instance().openConcept, self.__updateConcept())
+        self._connect(QtW.QApplication.instance().openConcept, self.__updateStats())
+        self._connect(self.ui.okBtn.clicked, self.__saveConcept())
 
 
-        self.connect(QtW.QApplication.instance().openConcept, self.__updateImage())
+        self._connect(QtW.QApplication.instance().openConcept, self.__updateImage())
 
         self.dynamic_state_ui_connections = {
             # General tab.
@@ -253,16 +104,16 @@ class ConceptController(BaseController):
             "{idx}.text.caps_randomize_lowercase": "forceLowercaseCbx",
         }
 
-        self.connect(QtW.QApplication.instance().openConcept, self.__reconnectControls())
+        self._connect(QtW.QApplication.instance().openConcept, self.__reconnectControls())
 
-        self.connect(self.ui.promptSourceCmb.activated, self.__enablePromptSource())
-        self.connect(self.ui.refreshBasicBtn.clicked, self.__startScan(advanced_scanning=False))
-        self.connect(self.ui.refreshAdvancedBtn.clicked, self.__startScan(advanced_scanning=True))
-        self.connect(self.ui.abortScanBtn.clicked, self.__abortScan())
-        self.connect(self.ui.downloadNowBtn.clicked, self.__startDownload())
-        self.connect(self.ui.updatePreviewBtn.clicked, self.__updateImage())
-        self.connect(self.ui.prevBtn.clicked, self.__prevImage())
-        self.connect(self.ui.nextBtn.clicked, self.__nextImage())
+        self._connect(self.ui.promptSourceCmb.activated, self.__enablePromptSource())
+        self._connect(self.ui.refreshBasicBtn.clicked, self.__startScan(advanced_scanning=False))
+        self._connect(self.ui.refreshAdvancedBtn.clicked, self.__startScan(advanced_scanning=True))
+        self._connect(self.ui.abortScanBtn.clicked, self.__abortScan())
+        self._connect(self.ui.downloadNowBtn.clicked, self.__startDownload())
+        self._connect(self.ui.updatePreviewBtn.clicked, self.__updateImage())
+        self._connect(self.ui.prevBtn.clicked, self.__prevImage())
+        self._connect(self.ui.nextBtn.clicked, self.__nextImage())
 
         self.__enableDownloadBtn(True)()
         self.__enableScanBtn(True)()
@@ -288,15 +139,182 @@ class ConceptController(BaseController):
     def _connectInputValidation(self):
         self.ui.resolutionOverrideLed.setValidator(QtGui.QRegularExpressionValidator("\d+(x\d+(,\d+x\d+)*)?", self.ui))
 
+    ###Reactions###
+
+    def __reconnectControls(self):
+        @Slot()
+        def f():
+            self._disconnectGroup("idx")
+            self._connectStateUI(self.dynamic_state_ui_connections, ConceptModel.instance(), signal=None, group="idx", update_after_connect=True, idx=self.idx)
+        return f
+
+    def __updateStats(self):
+        @Slot()
+        def f():
+            self.__enableScanBtn(True)()
+            stats_dict = ConceptModel.instance().pretty_print_stats(self.idx)
+
+            for k, v in {
+                "fileSizeLbl": "file_size",
+                "processingTimeLbl": "processing_time",
+                "dirCountLbl": "dir_count",
+                "imageCountLbl": "image_count",
+                "imageCountMaskLbl": "image_count_mask",
+                "imageCountCaptionLbl": "image_count_caption",
+                "videoCountLbl": "video_count",
+                "videoCountCaptionLbl": "video_count_caption",
+                "maskCountLbl": "mask_count",
+                "maskCountUnpairedLbl": "mask_count_unpaired",
+                "captionCountLbl": "caption_count",
+                "unpairedCaptionsLbl": "unpaired_captions",
+                "maxPixelsLbl": "max_pixels",
+                "avgPixelsLbl": "avg_pixels",
+                "minPixelsLbl": "min_pixels",
+                "lengthMaxLbl": "length_max",
+                "lengthAvgLbl": "length_avg",
+                "lengthMinLbl": "length_min",
+                "fpsMaxLbl": "fps_max",
+                "fpsAvgLbl": "fps_avg",
+                "fpsMinLbl": "fps_min",
+                "captionMaxLbl": "caption_max",
+                "captionAvgLbl": "caption_avg",
+                "captionMinLbl": "caption_min",
+                "smallBucketLbl": "small_bucket",
+            }.items():
+                self.ui.findChild(QtW.QLabel, k).setText(str(stats_dict[v]))
+
+            self.__updateHistogram(stats_dict)
+        return f
+
+    def __startScan(self, advanced_scanning):
+        @Slot()
+        def f():
+            worker, name = WorkerPool.instance().createNamed(self.__scanConcept(), "scan_concept", abort_flag=ConceptModel.instance().cancel_scan_flag, advanced_scanning=advanced_scanning)
+            if worker is not None:
+                worker.connect(init_fn=self.__enableScanBtn(False), result_fn=None, finished_fn=self.__updateStats(), errored_fn=self.__enableScanBtn(True), aborted_fn=self.__enableScanBtn(True))
+                WorkerPool.instance().start(name)
+
+        return f
+
+    def __startDownload(self):
+        @Slot()
+        def f():
+            worker, name = WorkerPool.instance().createNamed(self.__downloadConcept(), "download_concept")
+            if worker is not None:
+                worker.connect(init_fn=self.__enableDownloadBtn(False), result_fn=None, finished_fn=self.__enableDownloadBtn(True),
+                               errored_fn=self.__enableDownloadBtn(True), aborted_fn=self.__enableDownloadBtn(True))
+                WorkerPool.instance().start(name)
+        return f
+
+    def __downloadConcept(self):
+        @Slot()
+        def f():
+            ConceptModel.instance().download_dataset(self.idx)
+        return f
+
+    def __abortScan(self):
+        @Slot()
+        def f():
+            ConceptModel.instance().cancel_scan_flag.set()
+        return f
+
+    def __enablePromptSource(self):
+        @Slot(int)
+        def f(value):
+            if self.ui.promptSourceCmb.currentData() != "concept": # TODO: Replace with "PromptSource.CONCEPT" when ConceptConfig will accept enum instead of string.
+                self.ui.promptSourceLed.setEnabled(False)
+                self.ui.promptSourceBtn.setEnabled(False)
+            else:
+                self.ui.promptSourceLed.setEnabled(True)
+                self.ui.promptSourceBtn.setEnabled(True)
+        return f
+
+    def __prevImage(self):
+        @Slot()
+        def f():
+            image_count = ConceptModel.instance().getState("{}.concept_stats.image_count".format(self.idx))
+            if image_count is not None and image_count > 0:
+                self.file_index = (self.file_index + image_count - 1) % image_count
+            else:
+                self.file_index = max(0, self.file_index - 1)
+            self.__updateImage()
+        return f
+
+    def __nextImage(self):
+        @Slot()
+        def f():
+            image_count = ConceptModel.instance().getState("{}.concept_stats.image_count".format(self.idx))
+            if image_count is not None and image_count > 0:
+                self.file_index = (self.file_index + 1) % image_count
+            else:
+                self.file_index += 1
+            self.__updateImage()
+        return f
+
+    def __updateImage(self):
+        @Slot()
+        def f():
+            img, filename, caption = ConceptModel.instance().getImage(self.idx, self.file_index, show_augmentations=self.ui.showAugmentationsCbx.isChecked())
+            self.ui.previewLbl.setPixmap(QtGui.QPixmap.fromImage(ImageQt(img)))
+            self.ui.filenameLbl.setText(filename)
+            self.ui.promptTed.setPlainText(caption)
+        return f
+
+    def __updateConcept(self):
+        @Slot(int)
+        def f(idx):
+            self.idx = idx
+            self.file_index = 0
+
+            self.ui.nameLed.setText(ConceptModel.instance().get_concept_name(self.idx)) # Name has a different logic than other controls and cannot exploit the connection dictionary.
+        return f
+
+    def __saveConcept(self):
+        @Slot()
+        def f():
+            ConceptModel.instance().setState("{}.name".format(self.idx), self.ui.nameLed.text())
+
+            # No need to store statistics, as they are handled directly by the model.
+            QtW.QApplication.instance().conceptsChanged.emit()
+            self.ui.hide()
+        return f
 
     def __enableDownloadBtn(self, enabled):
+        @Slot()
         def f():
             self.ui.downloadNowBtn.setEnabled(enabled)
         return f
 
     def __enableScanBtn(self, enabled):
+        @Slot()
         def f():
             self.ui.refreshBasicBtn.setEnabled(enabled)
             self.ui.refreshAdvancedBtn.setEnabled(enabled)
             self.ui.abortScanBtn.setEnabled(not enabled)
+        return f
+
+    ###Utils###
+
+    def __updateHistogram(self, stats_dict):
+        self.bucket_ax.cla()
+        self.canvas.figure.tight_layout()
+        self.canvas.figure.subplots_adjust(bottom=0.15)
+        self.bucket_ax.spines['top'].set_visible(False)
+        self.bucket_ax.tick_params(axis='x', which="both")
+        self.bucket_ax.tick_params(axis='y', which="both")
+        aspects = [str(x) for x in list(stats_dict["aspect_buckets"].keys())]
+        aspect_ratios = [ConceptModel.instance().decimal_to_aspect_ratio(x) for x in
+                         list(stats_dict["aspect_buckets"].keys())]
+        counts = list(stats_dict["aspect_buckets"].values())
+        b = self.bucket_ax.bar(aspect_ratios, counts)
+        self.bucket_ax.bar_label(b)
+        sec = self.bucket_ax.secondary_xaxis(location=-0.1)
+        sec.spines["bottom"].set_linewidth(0)
+        sec.set_xticks([0, (len(aspects) - 1) / 2, len(aspects) - 1], labels=["Wide", "Square", "Tall"])
+        sec.tick_params('x', length=0)
+        self.canvas.draw_idle()
+
+    def __scanConcept(self):
+        def f(advanced_scanning):
+            return ConceptModel.instance().get_concept_stats(self.idx, advanced_scanning)
         return f
