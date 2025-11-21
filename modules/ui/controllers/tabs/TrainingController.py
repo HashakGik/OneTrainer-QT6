@@ -260,7 +260,7 @@ class TrainingController(BaseController):
         return f
 
     def _connectUIBehavior(self):
-        self.connect(self.ui.layerFilterCmb.activated, lambda _: self.__connectLayerFilter())
+        self.connect(self.ui.layerFilterCmb.activated, self.__connectLayerFilter())
 
         self.connect(QtW.QApplication.instance().stateChanged, self.__updateSchedulerParams(), update_after_connect=True)
         self.connect(self.ui.tableWidget.currentCellChanged, self.__changeCell())
@@ -320,8 +320,10 @@ class TrainingController(BaseController):
 
 
     def __connectLayerFilter(self):
-        self.ui.layerFilterRegexCbx.setEnabled(self.ui.layerFilterCmb.currentText() == "custom")
-        self.ui.layerFilterLed.setText(",".join(self.ui.layerFilterCmb.currentData()))
+        def f():
+            self.ui.layerFilterRegexCbx.setEnabled(self.ui.layerFilterCmb.currentText() == "custom")
+            self.ui.layerFilterLed.setText(",".join(self.ui.layerFilterCmb.currentData()))
+        return f
 
     def _loadPresets(self):
         for ui_name in ["unetStopCmb", "te1StopTrainingCmb", "te2StopTrainingCmb", "te3StopTrainingCmb", "te4StopTrainingCmb",

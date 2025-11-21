@@ -27,49 +27,55 @@ class VideoController(BaseController):
     def __startClipSingle(self):
         def f():
             worker, name = WorkerPool.instance().createNamed(self.__extractClip(), "video_processing", batch_mode=False)
-            worker.connect(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
-                           errored_fn=self.__enableButtons(True), aborted_fn=self.__enableButtons(True))
-            WorkerPool.instance().start(name)
+            if worker is not None:
+                worker.connect(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
+                               errored_fn=self.__enableButtons(True), aborted_fn=self.__enableButtons(True))
+                WorkerPool.instance().start(name)
         return f
 
     def __startClipDirectory(self):
         def f():
             worker, name = WorkerPool.instance().createNamed(self.__extractClip(), "video_processing", batch_mode=True)
-            worker.connect(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
-                           errored_fn=self.__enableButtons(True), aborted_fn=self.__enableButtons(True))
-            WorkerPool.instance().start(name)
+            if worker is not None:
+                worker.connect(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
+                               errored_fn=self.__enableButtons(True), aborted_fn=self.__enableButtons(True))
+                WorkerPool.instance().start(name)
         return f
 
     def __startImageSingle(self):
         def f():
             worker, name = WorkerPool.instance().createNamed(self.__extractImage(), "video_processing", batch_mode=False)
-            worker.connect(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
-                           errored_fn=self.__enableButtons(True), aborted_fn=self.__enableButtons(True))
-            WorkerPool.instance().start(name)
+            if worker is not None:
+                worker.connect(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
+                               errored_fn=self.__enableButtons(True), aborted_fn=self.__enableButtons(True))
+                WorkerPool.instance().start(name)
         return f
 
     def __startImageDirectory(self):
         def f():
             worker, name = WorkerPool.instance().createNamed(self.__extractImage(), "video_processing", batch_mode=True)
-            worker.connect(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
-                           errored_fn=self.__enableButtons(True), aborted_fn=self.__enableButtons(True))
-            WorkerPool.instance().start(name)
+            if worker is not None:
+                worker.connect(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
+                               errored_fn=self.__enableButtons(True), aborted_fn=self.__enableButtons(True))
+                WorkerPool.instance().start(name)
         return f
 
     def __startDownloadLink(self):
         def f():
             worker, name = WorkerPool.instance().createNamed(self.__download(), "video_processing", batch_mode=False)
-            worker.connect(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
-                           errored_fn=self.__enableButtons(True), aborted_fn=self.__enableButtons(True))
-            WorkerPool.instance().start(name)
+            if worker is not None:
+                worker.connect(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
+                               errored_fn=self.__enableButtons(True), aborted_fn=self.__enableButtons(True))
+                WorkerPool.instance().start(name)
         return f
 
     def __startDownloadList(self):
         def f():
             worker, name = WorkerPool.instance().createNamed(self.__download(), "video_processing", batch_mode=True)
-            worker.connect(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
-                           errored_fn=self.__enableButtons(True), aborted_fn=self.__enableButtons(True))
-            WorkerPool.instance().start(name)
+            if worker is not None:
+                worker.connect(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
+                               errored_fn=self.__enableButtons(True), aborted_fn=self.__enableButtons(True))
+                WorkerPool.instance().start(name)
         return f
 
     def __extractClip(self):
@@ -160,7 +166,3 @@ class VideoController(BaseController):
         self.connect(self.ui.downloadListBtn.clicked, self.__startDownloadList())
 
         self.__enableButtons(True)()
-
-
-    def _connectInputValidation(self):
-        pass # TODO: validate ranges based on model? Is it enough to fix the ranges in the ui?

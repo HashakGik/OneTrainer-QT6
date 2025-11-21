@@ -43,12 +43,13 @@ class MaskController(BaseController):
 
     def __startMask(self):
         def f():
-            worker, name = WorkerPool.instance().createNamed(self.__createMask(), "create_mask", inject_progress_callback=True) # TODO: choose if it should be shared with other GPU-intensive tools
-            worker.connect(init_fn=self.__enableControls(False), result_fn=None,
-                           finished_fn=self.__enableControls(True),
-                           errored_fn=self.__enableControls(True), aborted_fn=self.__enableControls(True),
-                           progress_fn=self._updateProgress(self.ui.progressBar))
-            WorkerPool.instance().start(name)
+            worker, name = WorkerPool.instance().createNamed(self.__createMask(), "create_mask", inject_progress_callback=True)
+            if worker is not None:
+                worker.connect(init_fn=self.__enableControls(False), result_fn=None,
+                               finished_fn=self.__enableControls(True),
+                               errored_fn=self.__enableControls(True), aborted_fn=self.__enableControls(True),
+                               progress_fn=self._updateProgress(self.ui.progressBar))
+                WorkerPool.instance().start(name)
 
         return f
 

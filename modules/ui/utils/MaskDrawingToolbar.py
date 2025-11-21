@@ -48,6 +48,7 @@ class MaskDrawingToolbar(NavigationToolbar):
             wdg2.setValue(value)
             if "fn" in tool:
                 wdg2.valueChanged.connect(tool["fn"])
+                tool["fn"](value)
 
             wdg.setBuddy(wdg2)
             if "icon" in tool:

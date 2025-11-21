@@ -676,15 +676,17 @@ class OptimizerController(BaseController):
                     wdg.setVisible(k in OPTIMIZER_DEFAULT_PARAMETERS[optimizer])
 
     def __loadDefaults(self):
-        optimizer = self.ui.optimizerCmb.currentData()
-        for k, v in OPTIMIZER_DEFAULT_PARAMETERS[optimizer].items():
-            StateModel.instance().setState("optimizer.{}".format(k), v)
-        QtW.QApplication.instance().stateChanged.emit()
-        QtW.QApplication.instance().optimizerChanged.emit(optimizer)
+        def f():
+            optimizer = self.ui.optimizerCmb.currentData()
+            for k, v in OPTIMIZER_DEFAULT_PARAMETERS[optimizer].items():
+                StateModel.instance().setState("optimizer.{}".format(k), v)
+            QtW.QApplication.instance().stateChanged.emit()
+            QtW.QApplication.instance().optimizerChanged.emit(optimizer)
+        return f
 
     def _connectUIBehavior(self):
         self.connect(self.ui.optimizerCmb.activated, self.__updateOptimizer(from_index=True))
-        self.connect(self.ui.loadDefaultsBtn.clicked, lambda: self.__loadDefaults())
+        self.connect(self.ui.loadDefaultsBtn.clicked, self.__loadDefaults())
 
 
         callback = self.__updateOptimizer(from_index=False)

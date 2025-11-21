@@ -12,7 +12,7 @@ class SampleController(BaseController):
         super().__init__(loader, "modules/ui/views/widgets/sample.ui", name=None, parent=parent)
 
     def _connectUIBehavior(self):
-        self.connect(self.ui.openWindowBtn.clicked, lambda: self.__openSampleWindow())
+        self.connect(self.ui.openWindowBtn.clicked, self.__openSampleWindow())
 
         self.dynamic_state_ui_connections = {
             "{idx}.enabled": "enabledCbx",
@@ -26,5 +26,7 @@ class SampleController(BaseController):
                              signal=QtW.QApplication.instance().samplesChanged, update_after_connect=True, idx=self.idx)
 
     def __openSampleWindow(self):
-        self.openWindow(self.sample_window, fixed_size=True)
-        QtW.QApplication.instance().openSample.emit(self.idx)
+        def f():
+            self.openWindow(self.sample_window, fixed_size=True)
+            QtW.QApplication.instance().openSample.emit(self.idx)
+        return f

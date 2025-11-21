@@ -151,7 +151,7 @@ class DatasetModel(SingletonConfigModel):
 
         return [convert(c) for c in re.split(r"(\d+)", s)]
 
-    def getSample(self, path): # TODO: should this become a controller method instead?
+    def getSample(self, path):
         image = None
         caption = None
         mask = None
@@ -165,12 +165,46 @@ class DatasetModel(SingletonConfigModel):
             image = Image.open(image_path).convert("RGB")
 
         if os.path.exists(mask_path):
-            mask = Image.open(mask_path).convert("L") # TODO: Save as RGB only at the end.
+            mask = Image.open(mask_path).convert("L")
 
         if os.path.exists(caption_path):
             caption = caption_path.read_text(encoding="utf-8").strip()
 
         return image, mask, caption
+
+    def getMaskPath(self, path):
+        basepath = self.getState("path")
+        image_path = Path(basepath) / path
+        mask_path = image_path.with_name(f"{image_path.stem}-masklabel.png")
+
+        return mask_path, os.path.exists(mask_path)
+
+
+    def saveCaption(self, path, caption):
+        basepath = self.getState("path")
+        image_path = Path(basepath) / path
+        caption_path = image_path.with_suffix(".txt")
+        caption_path.write_text(caption.strip(), encoding="utf-8")
+
+    def deleteCaption(self, path):
+        basepath = self.getState("path")
+        image_path = Path(basepath) / path
+        caption_path = image_path.with_suffix(".txt")
+        caption_path.unlink(missing_ok=True)
+
+    def deleteSample(self, path):
+        basepath = self.getState("path")
+        image_path = Path(basepath) / path
+        mask_path = image_path.with_name(f"{image_path.stem}-masklabel.png")
+        caption_path = image_path.with_suffix(".txt")
+
+        image_path.unlink(missing_ok=True)
+        mask_path.unlink(missing_ok=True)
+        caption_path.unlink(missing_ok=True)
+
+        with self.critical_region():
+            if path in self.config.files:
+                self.config.files.remove(path)
 
 
     def __is_supported(self, filename):

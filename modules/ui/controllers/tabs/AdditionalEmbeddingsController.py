@@ -13,7 +13,7 @@ class AdditionalEmbeddingsController(BaseController):
         super().__init__(loader, "modules/ui/views/tabs/additional_embeddings.ui", name=QCA.translate("main_window_tabs", "Additional Embeddings"), parent=parent)
 
     def _connectUIBehavior(self):
-        self.connect(self.ui.addEmbeddingBtn.clicked, lambda: self.__appendEmbedding())
+        self.connect(self.ui.addEmbeddingBtn.clicked, self.__appendEmbedding())
 
         cb = self.__updateEmbeddings()
         self.connect(QtW.QApplication.instance().embeddingsChanged, cb)
@@ -56,5 +56,7 @@ class AdditionalEmbeddingsController(BaseController):
         return f
 
     def __appendEmbedding(self):
-        StateModel.instance().create_new_embedding()
-        QtW.QApplication.instance().embeddingsChanged.emit()
+        def f():
+            StateModel.instance().create_new_embedding()
+            QtW.QApplication.instance().embeddingsChanged.emit()
+        return f

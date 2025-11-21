@@ -79,9 +79,6 @@ class MaskHistoryModel(SingletonConfigModel):
             self.config.ptr = 0
             self.config.current_mask = self.config.original_mask.copy()
 
-    @SingletonConfigModel.atomic
-    def isChanged(self):
-        return self.config.original_mask != self.config.current_mask
 
     @SingletonConfigModel.atomic
     def reset(self):

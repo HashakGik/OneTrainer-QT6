@@ -206,12 +206,12 @@ class OnetrainerController(BaseController):
                 self.__stopTrain()
             else:
                 worker, name = WorkerPool.instance().createNamed(self.__train(), "train", inject_progress_callback=True)
-                # TODO: if already running, the pool returns None -> use worker instead of self.training?
-                worker.connect(init_fn=self.__enableControls("running"), result_fn=None,
-                               finished_fn=self.__enableControls("enabled"),
-                               errored_fn=self.__enableControls("cancelled"), aborted_fn=self.__enableControls("cancelled"),
-                               progress_fn=self.__updateStatus())
-                WorkerPool.instance().start(name)
+                if worker is not None:
+                    worker.connect(init_fn=self.__enableControls("running"), result_fn=None,
+                                   finished_fn=self.__enableControls("enabled"),
+                                   errored_fn=self.__enableControls("cancelled"), aborted_fn=self.__enableControls("cancelled"),
+                                   progress_fn=self.__updateStatus())
+                    WorkerPool.instance().start(name)
 
         return f
 

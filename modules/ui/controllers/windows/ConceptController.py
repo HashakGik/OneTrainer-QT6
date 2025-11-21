@@ -107,17 +107,19 @@ class ConceptController(BaseController):
     def __startScan(self, advanced_scanning):
         def f():
             worker, name = WorkerPool.instance().createNamed(self.__scanConcept(), "scan_concept", abort_flag=ConceptModel.instance().cancel_scan_flag, advanced_scanning=advanced_scanning)
-            worker.connect(init_fn=self.__enableScanBtn(False), result_fn=None, finished_fn=self.__updateStats(), errored_fn=self.__enableScanBtn(True), aborted_fn=self.__enableScanBtn(True))
-            WorkerPool.instance().start(name)
+            if worker is not None:
+                worker.connect(init_fn=self.__enableScanBtn(False), result_fn=None, finished_fn=self.__updateStats(), errored_fn=self.__enableScanBtn(True), aborted_fn=self.__enableScanBtn(True))
+                WorkerPool.instance().start(name)
 
         return f
 
     def __startDownload(self):
         def f():
             worker, name = WorkerPool.instance().createNamed(self.__downloadConcept(), "download_concept")
-            worker.connect(init_fn=self.__enableDownloadBtn(False), result_fn=None, finished_fn=self.__enableDownloadBtn(True),
-                           errored_fn=self.__enableDownloadBtn(True), aborted_fn=self.__enableDownloadBtn(True))
-            WorkerPool.instance().start(name)
+            if worker is not None:
+                worker.connect(init_fn=self.__enableDownloadBtn(False), result_fn=None, finished_fn=self.__enableDownloadBtn(True),
+                               errored_fn=self.__enableDownloadBtn(True), aborted_fn=self.__enableDownloadBtn(True))
+                WorkerPool.instance().start(name)
         return f
 
     def __downloadConcept(self):
@@ -161,10 +163,12 @@ class ConceptController(BaseController):
         return f
 
     def __updateImage(self):
-        img, filename, caption = ConceptModel.instance().getImage(self.idx, self.file_index, show_augmentations=self.ui.showAugmentationsCbx.isChecked())
-        self.ui.previewLbl.setPixmap(QtGui.QPixmap.fromImage(ImageQt(img)))
-        self.ui.filenameLbl.setText(filename)
-        self.ui.promptTed.setPlainText(caption)
+        def f():
+            img, filename, caption = ConceptModel.instance().getImage(self.idx, self.file_index, show_augmentations=self.ui.showAugmentationsCbx.isChecked())
+            self.ui.previewLbl.setPixmap(QtGui.QPixmap.fromImage(ImageQt(img)))
+            self.ui.filenameLbl.setText(filename)
+            self.ui.promptTed.setPlainText(caption)
+        return f
 
     def __updateConcept(self):
         def f(idx):
@@ -195,7 +199,7 @@ class ConceptController(BaseController):
         self.connect(self.ui.okBtn.clicked, self.__saveConcept())
 
 
-        self.connect(QtW.QApplication.instance().openConcept, lambda: self.__updateImage())
+        self.connect(QtW.QApplication.instance().openConcept, self.__updateImage())
 
         self.dynamic_state_ui_connections = {
             # General tab.
@@ -256,7 +260,7 @@ class ConceptController(BaseController):
         self.connect(self.ui.refreshAdvancedBtn.clicked, self.__startScan(advanced_scanning=True))
         self.connect(self.ui.abortScanBtn.clicked, self.__abortScan())
         self.connect(self.ui.downloadNowBtn.clicked, self.__startDownload())
-        self.connect(self.ui.updatePreviewBtn.clicked, lambda: self.__updateImage())
+        self.connect(self.ui.updatePreviewBtn.clicked, self.__updateImage())
         self.connect(self.ui.prevBtn.clicked, self.__prevImage())
         self.connect(self.ui.nextBtn.clicked, self.__nextImage())
 

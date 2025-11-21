@@ -16,10 +16,9 @@ from modules.ui.models.StateModel import StateModel
 
 # TODO: CLEANUP:
 # 1) Naming convention is all over the place (camelCase, snake_case, inconsistent visibility __method vs _method vs method)
-# 2) Some callbacks are invoked as lambdas, others as self.__method() which returns a function f(). Choose one!
-# 4) Use self.openAlert to provide user feedback.
-# 5) Uniform error logging (sometimes it is print, others it uses logger.logging) and exceptions (print(e) vs full traceback)
-# 6) Mark every slot as @Slot for perfomance improvement
+# 2) Use self.openAlert to provide user feedback.
+# 3) Uniform error logging (sometimes it is print, others it uses logger.logging) and exceptions (print(e) vs full traceback)
+# 4) Sort methods in a meaningful way (finite-state-machine -> helper methods -> UI callbacks). Annotate each section with a comment
 
 # Abstract controller with some utility methods.
 class BaseController:

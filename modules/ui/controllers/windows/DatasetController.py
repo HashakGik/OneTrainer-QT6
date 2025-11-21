@@ -118,11 +118,18 @@ class DatasetController(BaseController):
                 "fn": self.__deleteSample(),
                 "type": ToolType.BUTTON,
                 "icon": "resources/icons/buttons/{}/trash-2.svg".format(self.theme),
-                "tooltip": QCA.translate("toolbar_item", "Delete image and caption (CTRL+Del)"),
+                "tooltip": QCA.translate("toolbar_item", "Delete image, mask and caption (CTRL+Del)"),
                 "shortcut": "Ctrl+Del"
             },
         ]
 
+        self.num_files = 0
+        self.current_index = 0
+        self.alpha = 1.0
+        self.brush = 1
+        self.im = None
+        self.image = None
+        self.current_image_path = None
 
         self.canvas = FigureWidget(parent=self.ui, width=7, height=5, zoom_tools=True, other_tools=self.tools, emit_clicked=True, emit_moved=True, emit_wheel=True, emit_released=True, use_data_coordinates=True)
         self.ax = self.canvas.figure.subplots() # TODO: when panning, the drawing area changes size. Probably there is some matplotlib option to set.
@@ -132,19 +139,16 @@ class DatasetController(BaseController):
         self.ui.canvasLay.addWidget(self.canvas)
         
         self.leafWidgets = {}
-        self.num_files = 0
-        self.current_index = 0
-        self.alpha = 0.05 # TODO: read/write from toolbar
-        self.brush = 1.0 # TODO read/write from toolbar
-        self.im = None
 
     def __openDataset(self):
         def f():
             diag = QtW.QFileDialog()
             dir = diag.getExistingDirectory(parent=None, caption=QCA.translate("dialog_window", "Open Dataset directory"), dir=DatasetModel.instance().getState("path"))
 
-            worker = WorkerPool.instance().runNamed(self.__scan(), name="open_dataset", dir=dir)
-            worker.connect(finished_fn=self.__updateDataset())
+            worker, name = WorkerPool.instance().createNamed(self.__scan(), name="open_dataset", dir=dir)
+            if worker is not None:
+                worker.connect(finished_fn=self.__updateDataset())
+                WorkerPool.instance().start(name)
 
         return f
 
@@ -171,21 +175,34 @@ class DatasetController(BaseController):
             self.ui.fileTreeWdg.clear()
             self.leafWidgets = {}
             self.__drawTree(self.ui.fileTreeWdg, file_tree)
-
         return f
+
+    def __saveChanged(self):
+        if self.current_image_path is not None:
+            choice, new_caption = self.__checkCaptionChanged(cancel=True)
+            if choice != QtW.QMessageBox.StandardButton.Cancel:
+                if choice == QtW.QMessageBox.StandardButton.Yes:
+                    DatasetModel.instance().saveCaption(self.current_image_path, new_caption)
+    
+                choice, new_mask, mask_path = self.__checkMaskChanged(cancel=True)
+                if choice != QtW.QMessageBox.StandardButton.Cancel:
+                    if choice == QtW.QMessageBox.StandardButton.Yes:
+                        Image.fromarray(new_mask, "L").convert("RGB").save(mask_path)
+    
+            return choice != QtW.QMessageBox.StandardButton.Cancel
+        else:
+            return True
 
     def __prevImg(self):
         def f():
-            if self.num_files > 0:
-                # TODO: if mask or caption is changed, ask for save (Yes: save and move to next, No: discard and move to next, Cancel: do not move and undo gui selection
-                self.current_index = (self.current_index + self.num_files - 1) % self.num_files
-                self.ui.fileTreeWdg.setCurrentItem(self.leafWidgets[self.current_index])
+            if self.num_files > 0 and self.__saveChanged():
+                    self.current_index = (self.current_index + self.num_files - 1) % self.num_files
+                    self.ui.fileTreeWdg.setCurrentItem(self.leafWidgets[self.current_index])
         return f
 
     def __nextImg(self):
         def f():
-            if self.num_files > 0:
-                # TODO: if mask or caption is changed, ask for save (Yes: save and move to next, No: discard and move to next, Cancel: do not move and undo gui selection
+            if self.num_files > 0 and self.__saveChanged():
                 self.current_index = (self.current_index + 1) % self.num_files
                 self.ui.fileTreeWdg.setCurrentItem(self.leafWidgets[self.current_index])
         return f
@@ -204,14 +221,22 @@ class DatasetController(BaseController):
 
     def __clearAll(self):
         def f():
-            pass  # TODO: ASK FOR CONFIRMATION.
+            choice = self.openAlert(QCA.translate("dataset_window", "Clear Mask and Caption"),
+                                    QCA.translate("dataset_window",
+                                                  "Do you want to clear mask and caption? This operation will not change files on disk."),
+                                    type="question",
+                                    buttons=QtW.QMessageBox.StandardButton.Yes | QtW.QMessageBox.StandardButton.No)
+            if choice == QtW.QMessageBox.StandardButton.Yes:
+                MaskHistoryModel.instance().reset()
+                MaskHistoryModel.instance().clearHistory()
+                self.ui.captionTed.setPlainText("")
 
-            self.__updateCanvas()
+                self.__updateCanvas()
         return f
 
     def __resetMask(self):
         def f():
-            pass # TODO: Push empty mask on history buffer
+            MaskHistoryModel.instance().reset()
 
             self.__updateCanvas()
         return f
@@ -232,13 +257,94 @@ class DatasetController(BaseController):
 
     def __saveMask(self):
         def f():
-            pass # TODO: Do we also need a __saveCaption?
+            choice, new_mask, mask_path = self.__checkMaskChanged()
+            if choice == QtW.QMessageBox.StandardButton.Yes:
+                new_mask = Image.fromarray(new_mask, "L")
+                MaskHistoryModel.instance().loadMask(new_mask)
+                new_mask.convert("RGB").save(mask_path)
+
+        return f
+
+    def __checkMaskChanged(self, cancel=False):
+        buttons = QtW.QMessageBox.StandardButton.Yes | QtW.QMessageBox.StandardButton.No
+        if cancel:
+            buttons |= QtW.QMessageBox.StandardButton.Cancel
+
+        mask = MaskHistoryModel.instance().getState("original_mask")
+        new_mask = MaskHistoryModel.instance().getState("current_mask")
+        mask_path, mask_exists = DatasetModel.instance().getMaskPath(self.current_image_path)
+
+        choice = QtW.QMessageBox.StandardButton.No
+        if not mask_exists:
+            choice = QtW.QMessageBox.StandardButton.Yes
+        elif np.not_equal(mask, new_mask).any():
+            choice = self.openAlert(QCA.translate("dataset_window", "Save Mask"),
+                                    QCA.translate("dataset_window", "Mask has changed. Do you want to save it?"),
+                                    type="question",
+                                    buttons=buttons)
+
+        return choice, new_mask, mask_path
+
+    def __checkCaptionChanged(self, cancel=False):
+        buttons = QtW.QMessageBox.StandardButton.Yes | QtW.QMessageBox.StandardButton.No
+        if cancel:
+            buttons |= QtW.QMessageBox.StandardButton.Cancel
+
+        _, _, caption = DatasetModel.instance().getSample(self.current_image_path)
+        new_caption = self.ui.captionTed.toPlainText()
+
+        choice = QtW.QMessageBox.StandardButton.No
+
+        if caption is None:
+            choice = QtW.QMessageBox.StandardButton.Yes
+        elif caption.strip() != new_caption.strip():
+            choice = self.openAlert(QCA.translate("dataset_window", "Save Caption"),
+                                    QCA.translate("dataset_window", "Caption has changed. Do you want to save it?"),
+                                    type="question",
+                                    buttons=buttons)
+
+        return choice, new_caption
+
+    def __saveCaption(self):
+        def f():
+            choice, new_caption = self.__checkCaptionChanged()
+
+            if choice == QtW.QMessageBox.StandardButton.Yes:
+                DatasetModel.instance().saveCaption(self.current_image_path, new_caption)
+        return f
+
+    def __deleteCaption(self):
+        def f():
+            if self.ui.captionTed.toPlainText().strip() != "":
+                choice = self.openAlert(QCA.translate("dataset_window", "Delete Caption"),
+                                        QCA.translate("dataset_window", "Do you want to delete caption?"),
+                                        type="question",
+                                        buttons=QtW.QMessageBox.StandardButton.Yes | QtW.QMessageBox.StandardButton.No)
+                if choice == QtW.QMessageBox.StandardButton.Yes:
+                    DatasetModel.instance().deleteCaption(self.current_image_path)
+                    self.ui.captionTed.setPlainText("")
+        return f
+
+    def __resetCaption(self):
+        def f():
+            _, _, caption = DatasetModel.instance().getSample(self.current_image_path)
+            if caption is not None:
+                self.ui.captionTed.setPlainText(caption.strip())
         return f
 
     def __deleteSample(self):
         def f():
-            # TODO: When deleting the image, also update the model (and trigger a tree update)!
-            pass
+            if self.current_image_path is not None:
+                choice = self.openAlert(QCA.translate("dataset_window", "Delete Sample"),
+                                            QCA.translate("dataset_window", "Do you really want to delete the sample (image, mask and caption)? This is not reversible."),
+                                            type="warning",
+                                            buttons=QtW.QMessageBox.StandardButton.Yes | QtW.QMessageBox.StandardButton.No)
+                if choice == QtW.QMessageBox.StandardButton.Yes:
+                    DatasetModel.instance().deleteSample(self.current_image_path)
+                    self.__updateDataset()()
+                    self.__selectFile()()
+                    self.ui.fileTreeWdg.setCurrentItem(self.leafWidgets[self.current_index])
+
         return f
 
     def __buildTree(self, fullname, tree, idx, name=None):
@@ -262,10 +368,11 @@ class DatasetController(BaseController):
                 wdg.idx = None
                 self.__drawTree(wdg, v)
             else:
-                # TODO: MAYBE ADD ICON TO SHOW WHICH IMAGES HAVE CAPTIONS AND WHICH HAVE MASKS? (change "files" to list of (img, mask, caption) in model)
+                # TODO: We may decide to add icons to files, to show at a glance which images are associated with captions and/or masks. It requires to change DatasetModel.config.files to a triple (image file, mask file, caption file), possibly causing heavy changes to multiple methods.
                 # wdg.setIcon(0, QtG.QIcon("resources/icons/buttons/{}/???.svg".format(self.theme)))
                 # setTooltip to tell whether captions and masks exist
                 #
+                # A proposal of icons:
                 # file-x-corner -> img only ("No caption or mask found")
                 # file-scan -> img + mask ("Missing caption")
                 # file-minus-corner -> img + caption ("Missing mask")
@@ -280,27 +387,31 @@ class DatasetController(BaseController):
         def f():
             selected_wdg = self.ui.fileTreeWdg.selectedItems()
             if len(selected_wdg) > 0:
-                path = selected_wdg[0].fullpath
-                idx = selected_wdg[0].idx
-                if path is not None:
-                    if self.num_files > 0:
-                        if idx is not None:
-                            self.current_index = idx
-                            self.ui.numFilesLbl.setText("{}/{}".format(self.current_index + 1, self.num_files))
-    
-                            # TODO: use DatasetModel.instance().getState("files")[self.current_index] to load image and caption (OR SAVE CURRENT PATH LOCALLY FROM path when not None)
-                            self.image, mask, self.original_caption = DatasetModel.instance().getSample(path)
+                if self.__saveChanged():
+                    self.current_image_path = selected_wdg[0].fullpath
 
-                            if self.original_caption is not None:
-                                self.ui.captionTed.setPlainText(self.original_caption) # TODO: WHEN SAVING CHECK: file exists and caption has changed, file does not exist and caption is not empty (create file), file exists and caption ted is empty (delete file)
+                    idx = selected_wdg[0].idx
+                    if self.current_image_path is not None:
+                        if self.num_files > 0:
+                            if idx is not None:
+                                self.current_index = idx
+                                self.ui.numFilesLbl.setText("{}/{}".format(self.current_index + 1, self.num_files))
 
-                            if mask is None:
-                                mask = Image.new("L", self.image.size, 1)
+                                self.image, mask, caption = DatasetModel.instance().getSample(self.current_image_path)
 
-                            MaskHistoryModel.instance().loadMask(np.asarray(mask))
-                            self.im = self.ax.imshow(self.image)
+                                if caption is not None:
+                                    self.ui.captionTed.setPlainText(caption)
 
-                            self.__updateCanvas()
+                                if mask is None:
+                                    mask = Image.new("L", self.image.size, 1)
+
+                                MaskHistoryModel.instance().loadMask(np.asarray(mask))
+                                self.im = self.ax.imshow(self.image)
+
+                                self.__updateCanvas()
+                else:
+                    self.ui.fileTreeWdg.setCurrentItem(self.leafWidgets[self.current_index])
+
 
         return f
 
@@ -311,30 +422,11 @@ class DatasetController(BaseController):
 
             self.canvas.draw_idle()
 
-    def __browse(self): # TODO: MOVE IN BASE CONTROLLER ALONG WITH OPEN_URL, ETC. (TO AVOID CREATING A MISC MODEL)?
+    def __browse(self):
         def f():
-            pass # We might consider adding a dependency to: https://pypi.org/project/show-in-file-manager/
-        return f
-
-    def __openHelp(self):
-        def f():
-            self.openAlert(QCA.translate("dialog_window", "Dataset Tools Help"),
-                    QCA.translate("help_dataset",
-"""
-Keyboard shortcuts when focusing on the prompt input field:
-Up arrow: previous image
-Down arrow: next image
-Return: save
-Ctrl+M: only show the mask
-Ctrl+D: draw mask editing mode
-Ctrl+F: fill mask editing mode
-
-When editing masks:
-Left click: add mask
-Right click: remove mask
-Mouse wheel: increase or decrease brush size
-"""),
-            type="information")
+            path = DatasetModel.instance().getState("path")
+            if path is not None:
+                self.browse(path)
         return f
 
     def __onClicked(self):
@@ -372,6 +464,7 @@ Mouse wheel: increase or decrease brush size
             elif btn == MouseButton.RIGHT:
                 MaskHistoryModel.instance().fill(x, y, 1)
             self.__updateCanvas()
+        return f
 
     def __onDrawMoved(self):
         def f(btn, x0, y0, x1, y1):
@@ -397,8 +490,11 @@ Mouse wheel: increase or decrease brush size
         self._connectStateUi(state_ui_connections, DatasetModel.instance(), signal=None, update_after_connect=True)
 
         self.connect(self.ui.openBtn.clicked, self.__openDataset())
-        self.connect(self.ui.helpBtn.clicked, self.__openHelp())
         self.connect(self.ui.browseBtn.clicked, self.__browse())
+
+        self.connect(self.ui.saveCaptionBtn.clicked, self.__saveCaption())
+        self.connect(self.ui.deleteCaptionBtn.clicked, self.__deleteCaption())
+        self.connect(self.ui.resetCaptionBtn.clicked, self.__resetCaption())
 
         self.connect(self.ui.fileTreeWdg.itemSelectionChanged, self.__selectFile())
 

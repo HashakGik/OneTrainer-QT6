@@ -51,11 +51,12 @@ class BulkCaptionController(BaseController):
     def __startProcessFiles(self, read_only):
         def f():
             worker, name = WorkerPool.instance().createNamed(self.__processFiles(read_only), "process_bulk_captions", inject_progress_callback=True)
-            worker.connect(init_fn=self.__enableControls(False), result_fn=None,
-                           finished_fn=self.__enableControls(True),
-                           errored_fn=self.__enableControls(True), aborted_fn=self.__enableControls(True),
-                           progress_fn=self.__updateStatus())
-            WorkerPool.instance().start(name)
+            if worker is not None:
+                worker.connect(init_fn=self.__enableControls(False), result_fn=None,
+                               finished_fn=self.__enableControls(True),
+                               errored_fn=self.__enableControls(True), aborted_fn=self.__enableControls(True),
+                               progress_fn=self.__updateStatus())
+                WorkerPool.instance().start(name)
 
         return f
 

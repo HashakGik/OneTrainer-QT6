@@ -44,9 +44,10 @@ class ConvertController(BaseController):
     def __startConvert(self):
         def f():
             worker, name = WorkerPool.instance().createNamed(self.__convert(), "convert_model")
-            worker.connect(init_fn=self.__enableButton(False), result_fn=None, finished_fn=self.__enableButton(True),
-                           errored_fn=self.__enableButton(True), aborted_fn=self.__enableButton(True))
-            WorkerPool.instance().start(name)
+            if worker is not None:
+                worker.connect(init_fn=self.__enableButton(False), result_fn=None, finished_fn=self.__enableButton(True),
+                               errored_fn=self.__enableButton(True), aborted_fn=self.__enableButton(True))
+                WorkerPool.instance().start(name)
         return f
 
     def __enableButton(self, enabled):
