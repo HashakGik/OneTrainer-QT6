@@ -56,11 +56,7 @@ class ModelController(BaseController):
                                filters=QCA.translate("filetype_filters",
                                                      "Safetensors (*.safetensors);;Diffusers (model_index.json);;Checkpoints (*.ckpt, *.pt, *.bin);;All Files (*.*)"))  # TODO: Maybe refactor filters in ENUM?
 
-        callback = self.__updateModel()
-        QtW.QApplication.instance().modelChanged.connect(callback)
-
-
-        self._connectInvalidateCallback(callback, StateModel.instance().getState("model_type"), StateModel.instance().getState("training_method"))
+        self.connect(QtW.QApplication.instance().modelChanged, self.__updateModel(), update_after_connect=True, initial_args=[StateModel.instance().getState("model_type"), StateModel.instance().getState("training_method")])
 
     def __updateModel(self):
         def f(model_type, training_method):

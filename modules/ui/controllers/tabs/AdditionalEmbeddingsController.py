@@ -17,10 +17,16 @@ class AdditionalEmbeddingsController(BaseController):
 
         cb = self.__updateEmbeddings()
         self.connect(QtW.QApplication.instance().embeddingsChanged, cb)
-        self.connect(QtW.QApplication.instance().stateChanged, cb)
+        self.connect(QtW.QApplication.instance().stateChanged, cb, update_after_connect=True)
 
-        self._connectInvalidateCallback(cb)
+        self.connect(self.ui.enableBtn.clicked, self.__enableEmbeddings())
 
+
+    def __enableEmbeddings(self):
+        def f():
+            StateModel.instance().enable_embeddings()
+            QtW.QApplication.instance().embeddingsChanged.emit()
+        return f
 
     def __updateEmbeddings(self):
         def f():

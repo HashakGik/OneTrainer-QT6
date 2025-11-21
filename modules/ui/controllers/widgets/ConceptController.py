@@ -19,10 +19,8 @@ class ConceptController(BaseController):
         self.connect(self.ui.conceptBtn.clicked, self.__openConceptWindow())
         self.connect(self.ui.enableCbx.clicked, self.__enableConcept())
 
-        cb = self.__updateConcept()
-        self.connect(QtW.QApplication.instance().conceptsChanged, cb)
+        self.connect(QtW.QApplication.instance().conceptsChanged, self.__updateConcept(), update_after_connect=True)
 
-        self._connectInvalidateCallback(cb)
 
     def __openConceptWindow(self):
         def f():

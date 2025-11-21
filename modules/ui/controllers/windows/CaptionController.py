@@ -25,10 +25,9 @@ class CaptionController(BaseController):
         }
 
         self._connectStateUi(state_ui_connections, CaptionModel.instance(), update_after_connect=True)
-
-        self._connectInvalidateCallback(self.__enableControls(True))
-
         self.connect(self.ui.createMaskBtn.clicked, self.__startCaption())
+
+        self.__enableControls(True)()
 
     def __createCaption(self):
         def f(progress_fn=None):

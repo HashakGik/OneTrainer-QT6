@@ -159,7 +159,7 @@ class VideoController(BaseController):
         self.connect(self.ui.downloadLinkBtn.clicked, self.__startDownloadLink())
         self.connect(self.ui.downloadListBtn.clicked, self.__startDownloadList())
 
-        self._connectInvalidateCallback(self.__enableButtons(True))
+        self.__enableButtons(True)()
 
 
     def _connectInputValidation(self):

@@ -6,7 +6,7 @@ from modules.ui.controllers.windows.NewSampleController import NewSampleControll
 
 from modules.util.enum.TimeUnit import TimeUnit
 from modules.util.enum.ImageFormat import ImageFormat
-
+from modules.ui.models.StateModel import StateModel
 
 from modules.ui.models.SampleModel import SampleModel
 
@@ -38,24 +38,15 @@ class SamplingController(BaseController):
 
         cb = self.__updateSamples() # Requires self.sample_window
         self.connect(QtW.QApplication.instance().samplesChanged, cb)
-        self.connect(QtW.QApplication.instance().stateChanged, cb)
-        self._connectInvalidateCallback(cb)
+        self.connect(QtW.QApplication.instance().stateChanged, cb, update_after_connect=True)
 
-        cb2 = self.__loadConfig()
-        self.connect(self.ui.configCmb.textActivated, cb2)
-        self._connectInvalidateCallback(cb2, self.ui.configCmb.currentText())
-
-
-
-        cb3 = self.__updateConfigs()
-        self.connect(QtW.QApplication.instance().stateChanged, cb3)
+        self.connect(self.ui.configCmb.textActivated, self.__loadConfig(), update_after_connect=True, initial_args=[self.ui.configCmb.currentText()])
+        self.connect(QtW.QApplication.instance().stateChanged, self.__updateConfigs(), update_after_connect=True)
 
         cb4 = self.__saveConfig()
         self.connect(QtW.QApplication.instance().aboutToQuit, cb4)
         self.connect(QtW.QApplication.instance().samplesChanged, cb4)
-        # TODO: this callback should also be invoked when training/sampling starts
 
-        self._connectInvalidateCallback(cb3)
 
     def __loadConfig(self):
         def f(filename):
@@ -77,21 +68,24 @@ class SamplingController(BaseController):
             self.ui.configCmb.clear()
             for k, v in configs:
                 self.ui.configCmb.addItem(k, userData=v)
+
+            self.ui.configCmb.setCurrentIndex(self.ui.configCmb.findData(StateModel.instance().getState("sample_definition_file_name")))
         return f
 
     def __updateSamples(self):
         def f():
-
             for c in self.children:
                 c.disconnectAll()
 
-            self.ui.listWidget.clear()
+            self.ui.listWidget.clear()  # TODO: CHECK: IS IT CLEARING CORRECTLY?
             self.children = []
 
             for idx, _ in enumerate(SampleModel.instance().getState("")):
                wdg = SampleController(self.loader, self.sample_window, idx, parent=self)
                self.children.append(wdg)
                self._appendWidget(self.ui.listWidget, wdg, self_delete_fn=self.__deleteSample(idx), self_clone_fn=self.__cloneSample(idx))
+
+
 
         return f
 

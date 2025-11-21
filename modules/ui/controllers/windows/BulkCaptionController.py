@@ -31,7 +31,7 @@ class BulkCaptionController(BaseController):
         self.connect(self.ui.applyBtn.clicked, self.__startProcessFiles(read_only=False))
         self.connect(self.ui.previewBtn.clicked, self.__startProcessFiles(read_only=True))
 
-        self._connectInvalidateCallback(self.__enableControls(True))
+        self.__enableControls(True)()
 
     def __processFiles(self, read_only):
         def f(progress_fn=None):

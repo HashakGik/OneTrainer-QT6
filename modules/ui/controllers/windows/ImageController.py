@@ -32,10 +32,9 @@ class ImageController(BaseController):
         self._connectStateUi(state_ui_connections, ImageModel.instance(), update_after_connect=True)
         self.connect(self.ui.processBtn.clicked, self.__startProcessFiles())
         self.connect(self.ui.cancelBtn.clicked, self.__stopProcessFiles())
-        self.connect(self.ui.resizeCmb.activated, self.__enableCustom())
+        self.connect(self.ui.resizeCmb.activated, self.__enableCustom(), update_after_connect=True)
 
-        self._connectInvalidateCallback(self.__enableControls(True))
-        self._connectInvalidateCallback(self.__enableCustom())
+        self.__enableControls(True)()
 
 
     def __processFiles(self):

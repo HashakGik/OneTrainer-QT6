@@ -6,6 +6,7 @@ from modules.ui.controllers.windows.OptimizerController import OptimizerControll
 
 from modules.util.enum.ModelFlags import ModelFlags
 import PySide6.QtWidgets as QtW
+import PySide6.QtGui as QtGui
 
 import random
 
@@ -65,12 +66,12 @@ class TrainingController(BaseController):
         "mse_strength": "mseSbx",
         "mae_strength": "maeSbx",
         "log_cosh_strength": "logcoshSbx",
-        "vb_loss_strength": "vbLossSbx", # TODO: show/hide Sbx/Lbl
-        "loss_weight_fn": "lossWeightFunctionCmb", # TODO LIST OF VALUES
+        "vb_loss_strength": "vbLossSbx",
+        "loss_weight_fn": "lossWeightFunctionCmb",
         "loss_weight_strength": "gammaSbx",
         "loss_scaler": "lossScalerCmb",
 
-        "layer_filter_preset": "layerFilterCmb", # TODO LIST OF PRESETS
+        "layer_filter_preset": "layerFilterCmb",
         "layer_filter": "layerFilterLed",
         "layer_filter_regex": "layerFilterRegexCbx",
 
@@ -137,7 +138,7 @@ class TrainingController(BaseController):
         "prior.attention_mask": "transformerAttnMaskCbx",
         "prior.guidance_scale": "transformerGuidanceSbx",
 
-        "custom_learning_rate_scheduler": "schedulerClassLed", # TODO: DOUBLE CHECK WHETHER THE STRING CAN BE PASSED AS IS OR MODIFIED
+        "custom_learning_rate_scheduler": "schedulerClassLed",
     }
 
     def __init__(self, loader, parent=None):
@@ -241,41 +242,49 @@ class TrainingController(BaseController):
         return f
 
     def _connectInputValidation(self):
-        pass # TODO: resolutionLed validation, learningRateLed validation, minNoisingStrengthSbx <= maxNoisingStrengthSbx
+        self.ui.resolutionLed.setValidator(QtGui.QRegularExpressionValidator("\d+(x\d+(,\d+x\d+)*)?", self.ui))
+        self.connect(self.ui.minNoisingStrengthSbx.valueChanged, self.__validateNoisingStrength("min"))
+        self.connect(self.ui.maxNoisingStrengthSbx.valueChanged, self.__validateNoisingStrength("max"))
+
+    def __validateNoisingStrength(self, direction):
+        def f(value):
+            min = self.ui.minNoisingStrengthSbx.value()
+            max = self.ui.maxNoisingStrengthSbx.value()
+
+            if direction == "min" and min > max:
+                self.ui.minNoisingStrengthSbx.setValue(max)
+
+            if direction == "max" and max < min:
+                self.ui.maxNoisingStrengthSbx.setValue(min)
+
+        return f
 
     def _connectUIBehavior(self):
         self.connect(self.ui.layerFilterCmb.activated, lambda _: self.__connectLayerFilter())
 
-        cb2 = self.__updateSchedulerParams()
-        self.connect(QtW.QApplication.instance().stateChanged, cb2)
-
-        self._connectInvalidateCallback(cb2)
-
+        self.connect(QtW.QApplication.instance().stateChanged, self.__updateSchedulerParams(), update_after_connect=True)
         self.connect(self.ui.tableWidget.currentCellChanged, self.__changeCell())
         self.connect(self.ui.updatePreviewBtn.clicked, self.__updatePreview())
 
-        callback = self.__updateModel()
-        self.connect(QtW.QApplication.instance().modelChanged, callback)
+        self.connect(QtW.QApplication.instance().modelChanged, self.__updateModel(), update_after_connect=True, initial_args=[StateModel.instance().getState("model_type"),
+                 StateModel.instance().getState("training_method")])
 
-        self._connectInvalidateCallback(callback, StateModel.instance().getState("model_type"),
-                 StateModel.instance().getState("training_method"))
 
         cb = self.__enableCustomScheduler()  # This must be connected after __updateModel, otherwise it will not enable/disable custom parameters correctly
         self.connect(self.ui.schedulerCmb.activated, cb)
-        self.connect(QtW.QApplication.instance().stateChanged, cb)
+        self.connect(QtW.QApplication.instance().stateChanged, cb, update_after_connect=True)
 
         self.connect(self.ui.optimizerBtn.clicked, lambda: self.openWindow(self.optimizer_window, fixed_size=True))
         self.connect(self.ui.optimizerCmb.activated, self.__updateOptimizer())
 
         # At the beginning invalidate the gui.
-
         self.optimizer_window.ui.optimizerCmb.setCurrentIndex(self.ui.optimizerCmb.currentIndex())
-        self._connectInvalidateCallback(cb)
+
+        # TODO: MASKED TRAINING ENABLE
 
 
     def __changeCell(self):
         def f(currentRow, currentColumn, previousRow, previousColumn):
-            #row, column = self.ui.tableWidget.selectedIndexes()[0].row(), self.ui.tableWidget.selectedIndexes()[0].column()
             total_rows = self.ui.tableWidget.rowCount()
 
             key = self.ui.tableWidget.item(previousRow, 0)
@@ -287,7 +296,7 @@ class TrainingController(BaseController):
                 if previousRow == total_rows - 1 and previousColumn == 1:
                     self.ui.tableWidget.insertRow(total_rows)
                     self.ui.tableWidget.editItem(self.ui.tableWidget.item(total_rows, 0))
-                    self.ui.tableWidget.setCurrentCell(total_rows, 0)
+                    self.ui.tableWidget.setCurrentCell(total_rows, 0) # TODO: it inserts correctly a new cell, but tab selection returns to the first cell
 
         return f
 
@@ -304,7 +313,6 @@ class TrainingController(BaseController):
 
     def __enableCustomScheduler(self):
         def f():
-            # TODO: BUG: IT DOESN'T ALWAYS WORK
             self.ui.tableWidget.setEnabled(self.ui.schedulerCmb.currentData() == LearningRateScheduler.CUSTOM)
             self.ui.schedulerClassLed.setEnabled(self.ui.schedulerCmb.currentData() == LearningRateScheduler.CUSTOM)
             self.ui.schedulerLbl.setEnabled(self.ui.schedulerCmb.currentData() == LearningRateScheduler.CUSTOM)

@@ -26,7 +26,19 @@ class LoraController(BaseController):
                                title=QCA.translate("dialog_window", "Open LoRA/LoHA base model"),
                                filters=QCA.translate("filetype_filters", "Safetensors (*.safetensors);;Diffusers (model_index.json);;Checkpoints (*.ckpt, *.pt, *.bin);;All Files (*.*)")) # TODO: Maybe refactor filters in ENUM?
 
-        self.connect(self.ui.typeCmb.activated, lambda: self.ui.doraFrm.setEnabled(self.ui.typeCmb.currentData() == PeftType.LORA))
+        self.connect(self.ui.typeCmb.activated, self.__updateLora(), update_after_connect=True)
+        self.connect(self.ui.decomposeCbx.toggled, self.__updateDora(), update_after_connect=True, initial_args=[self.ui.decomposeCbx.isChecked()])
+
+    def __updateDora(self):
+        def f(enabled):
+            self.ui.normCbx.setEnabled(enabled)
+            self.ui.outputAxisCbx.setEnabled(enabled)
+        return f
+
+    def __updateLora(self):
+        def f():
+            self.ui.doraFrm.setEnabled(self.ui.typeCmb.currentData() == PeftType.LORA)
+        return f
 
 
 

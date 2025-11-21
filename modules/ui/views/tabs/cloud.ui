@@ -671,22 +671,5 @@
   <tabstop>onDetachedErrorCmb</tabstop>
  </tabstops>
  <resources/>
- <connections>
-  <connection>
-   <sender>enabledCbx</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>frame</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>60</x>
-     <y>32</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>43</x>
-     <y>56</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

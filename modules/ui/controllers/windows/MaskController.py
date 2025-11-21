@@ -30,7 +30,7 @@ class MaskController(BaseController):
 
         self._connectStateUi(state_ui_connections, MaskModel.instance(), update_after_connect=True)
 
-        self._connectInvalidateCallback(self.__enableControls(True))
+        self.__enableControls(True)()
 
         self.connect(self.ui.createMaskBtn.clicked, self.__startMask())
 

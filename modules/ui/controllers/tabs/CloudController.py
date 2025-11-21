@@ -1,10 +1,14 @@
 from PySide6.QtCore import QCoreApplication as QCA
+
 from modules.ui.controllers.BaseController import BaseController
 
 from modules.util.enum.CloudAction import CloudAction
 from modules.util.enum.CloudType import CloudType
 from modules.util.enum.CloudSubtype import CloudSubtype
 from modules.util.enum.CloudFileSync import CloudFileSync
+
+from modules.ui.models.StateModel import StateModel
+from modules.ui.models.TrainingModel import TrainingModel
 
 class CloudController(BaseController):
     state_ui_connections = {
@@ -45,6 +49,33 @@ class CloudController(BaseController):
 
     def __init__(self, loader, parent=None):
         super().__init__(loader, "modules/ui/views/tabs/cloud.ui", name=QCA.translate("main_window_tabs", "Cloud"), parent=parent)
+
+
+    def _connectUIBehavior(self):
+        self.connect(self.ui.createCloudBtn.clicked, self.__createCloud())
+        self.connect(self.ui.gpuBtn.clicked, self.__getGPUTypes())
+        self.connect(self.ui.reattachBtn.clicked, self.__reattach())
+
+        self.connect(self.ui.enabledCbx.toggled, self.ui.frame.setEnabled)
+
+    def __reattach(self):
+        def f():
+            TrainingModel.instance().reattach()
+        return f
+
+    def __getGPUTypes(self):
+        def f():
+            self.ui.gpuCmb.clear()
+            for gpu in StateModel.instance().get_gpus():
+                self.ui.gpuCmb.addItem(gpu.name, userData=gpu)
+
+        return f
+
+    def __createCloud(self):
+        def f():
+            if StateModel.instance().getState("cloud.type") == CloudType.RUNPOD:
+                self.openUrl("https://www.runpod.io/console/deploy?template=1a33vbssq9&type=gpu")
+        return f
 
 
     def _loadPresets(self):

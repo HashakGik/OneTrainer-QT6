@@ -19,7 +19,8 @@ class SampleController(BaseController):
 
     def _connectUIBehavior(self):
         self.connect(self.ui.sampleBtn.clicked, self.__startSample())
-        self._connectInvalidateCallback(self.__enableControls(True))
+
+        self.__enableControls(True)()
 
     def __sample(self):
         def f(progress_fn=None):

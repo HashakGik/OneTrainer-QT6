@@ -4,6 +4,10 @@ from modules.util.enum.TimeUnit import TimeUnit
 
 from modules.util.enum.GradientReducePrecision import GradientReducePrecision
 
+from modules.ui.models.StateModel import StateModel
+
+import PySide6.QtCore as QtC
+
 class GeneralController(BaseController):
     state_ui_connections = {
         "workspace_dir": "workspaceLed",
@@ -42,6 +46,49 @@ class GeneralController(BaseController):
                                title=QCA.translate("dialog_window", "Open Cache directory"))
         self._connectFileDialog(self.ui.debugBtn, self.ui.debugLed, is_dir=True, save=False,
                                title=QCA.translate("dialog_window", "Open Debug directory"))
+
+        self.connect(self.ui.workspaceLed.editingFinished, self.__changeWorkspace())
+        self.connect(self.ui.alwaysOnTensorboardCbx.toggled, self.__toggleTensorboard())
+
+        self.connect(self.ui.validateCbx.toggled, self.__updateValidate(), update_after_connect=True, initial_args=[self.ui.validateCbx.isChecked()])
+        self.connect(self.ui.tensorboardCbx.toggled, self.__updateTensorboard(), update_after_connect=True, initial_args=[self.ui.tensorboardCbx.isChecked()])
+        self.connect(self.ui.debugCbx.toggled, self.__updateDebug(), update_after_connect=True, initial_args=[self.ui.debugCbx.isChecked()])
+
+
+    def __updateValidate(self):
+        def f(enabled):
+            self.ui.validateLbl.setEnabled(enabled)
+            self.ui.validateSbx.setEnabled(enabled)
+            self.ui.validateCmb.setEnabled(enabled)
+        return f
+
+    def __updateTensorboard(self):
+        def f(enabled):
+            self.ui.alwaysOnTensorboardCbx.setEnabled(enabled)
+            self.ui.exposeTensorboardCbx.setEnabled(enabled)
+            self.ui.tensorboardLbl.setEnabled(enabled)
+            self.ui.tensorboardSbx.setEnabled(enabled)
+        return f
+
+    def __updateDebug(self):
+        def f(enabled):
+            self.ui.debugLbl.setEnabled(enabled)
+            self.ui.debugLed.setEnabled(enabled)
+            self.ui.debugBtn.setEnabled(enabled)
+        return f
+
+    def __changeWorkspace(self):
+        def f():
+            StateModel.instance().start_tensorboard()
+        return f
+
+    def __toggleTensorboard(self):
+        def f(enabled):
+            if enabled:
+                StateModel.instance().start_tensorboard()
+            else:
+                StateModel.instance().stop_tensorboard()
+        return f
 
     def _loadPresets(self):
         for e in GradientReducePrecision.enabled_values():

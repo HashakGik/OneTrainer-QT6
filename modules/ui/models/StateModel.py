@@ -1,9 +1,12 @@
 # modules/ui/ConfigList.py -> __load_available_config_names, __create_config, __add_config, __load_current_config, save_current_config
 # modules/ui/TopBar.py -> __save_new_config, __load_current_config, __save_config,
+import subprocess
 
 from modules.util.config.TrainConfig import TrainConfig, TrainEmbeddingConfig
 from modules.util.config.SecretsConfig import SecretsConfig
 from modules.ui.models.SingletonConfigModel import SingletonConfigModel
+
+from modules.util.enum.CloudType import CloudType
 
 from modules.util import path_util
 from modules.util.path_util import write_json_atomic
@@ -11,6 +14,8 @@ from modules.util.path_util import write_json_atomic
 import json
 import os
 import copy
+import sys
+from pathlib import Path
 
 import faulthandler
 from scalene import scalene_profiler # TODO: importing Scalene sets the application locale to ANSI-C, while QT6 uses UTF-8 by default. We could change locale to C to suppress warnings, but this may cause problems with some features...
@@ -20,6 +25,7 @@ class StateModel(SingletonConfigModel):
     def __init__(self):
         self.config = TrainConfig.default_values()
         self.is_profiling = False
+        self.tensorboard_subprocess = None
 
 
     def save_default(self):
@@ -102,3 +108,56 @@ class StateModel(SingletonConfigModel):
             scalene_profiler.stop()
         else:
             scalene_profiler.start()
+
+    def start_tensorboard(self):
+        if self.tensorboard_subprocess:
+            self.stop_tensorboard()
+
+        tensorboard_executable = os.path.join(os.path.dirname(sys.executable), "tensorboard")
+        tensorboard_log_dir = os.path.join(self.getState("workspace_dir"), "tensorboard")
+
+        os.makedirs(Path(tensorboard_log_dir).absolute(), exist_ok=True)
+
+        tensorboard_args = [
+            tensorboard_executable,
+            "--logdir",
+            tensorboard_log_dir,
+            "--port",
+            str(self.getState("tensorboard_port")),
+            "--samples_per_plugin=images=100,scalars=10000",
+        ]
+
+        if self.getState("tensorboard_expose"):
+            tensorboard_args.append("--bind_all")
+
+        try:
+            self.tensorboard_subprocess = subprocess.Popen(tensorboard_args)
+        except Exception:
+            self.tensorboard_subprocess = None
+
+    def stop_tensorboard(self):
+        if self.tensorboard_subprocess:
+            try:
+                self.tensorboard_subprocess.terminate()
+                self.tensorboard_subprocess.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self.tensorboard_subprocess.kill()
+            except Exception:
+                pass
+            finally:
+                self.tensorboard_subprocess = None
+
+    def enable_embeddings(self):
+        add_embs = len(self.getState("additional_embeddings"))
+        for idx in range(add_embs):
+            self.setState("additional_embeddings.{}.train".format(idx), True)
+
+    def get_gpus(self):
+        gpus = []
+
+        if self.getState("cloud.type") == CloudType.RUNPOD:
+            import runpod
+            runpod.api_key = self.getState("secrets.cloud.api_key")
+            gpus = runpod.get_gpus()
+
+        return gpus

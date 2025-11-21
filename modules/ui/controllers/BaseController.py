@@ -3,7 +3,7 @@ import functools
 import PySide6.QtWidgets as QtW
 import PySide6.QtCore as QtC
 
-from PySide6.QtCore import Slot, Qt, QMetaObject, QGenericArgument
+from PySide6.QtCore import Qt
 
 import re
 import webbrowser
@@ -14,13 +14,12 @@ from modules.ui.utils.SNLineEdit import SNLineEdit
 
 from modules.ui.models.StateModel import StateModel
 
-
-
 # TODO: CLEANUP:
 # 1) Naming convention is all over the place (camelCase, snake_case, inconsistent visibility __method vs _method vs method)
 # 2) Some callbacks are invoked as lambdas, others as self.__method() which returns a function f(). Choose one!
 # 4) Use self.openAlert to provide user feedback.
 # 5) Uniform error logging (sometimes it is print, others it uses logger.logging) and exceptions (print(e) vs full traceback)
+# 6) Mark every slot as @Slot for perfomance improvement
 
 # Abstract controller with some utility methods.
 class BaseController:
@@ -39,10 +38,9 @@ class BaseController:
 
         self._loadPresets()
 
+        self._connectStateUi(self.state_ui_connections, StateModel.instance(), signal=QtW.QApplication.instance().stateChanged, update_after_connect=True, **kwargs)
         self._connectUIBehavior()
         self._connectInputValidation()
-
-        self._connectStateUi(self.state_ui_connections, StateModel.instance(), signal=QtW.QApplication.instance().stateChanged, **kwargs)
 
         self._invalidateUI()
 
@@ -62,12 +60,6 @@ class BaseController:
     def _loadPresets(self):
         pass
 
-    def _connectInvalidateCallback(self, fn, *args):
-        if len(args) > 0:
-            self.invalidation_callbacks.append((fn, *args))
-        else:
-            self.invalidation_callbacks.append((fn, None))
-
     def _invalidateUI(self):
         for fn, *args in self.invalidation_callbacks:
             if len(args) > 0 and args[0] is not None:
@@ -75,11 +67,18 @@ class BaseController:
             else:
                 fn()
 
-    def connect(self, signal, slot, key="global"):
+    def connect(self, signal, slot, key="global", update_after_connect=False, initial_args=None):
         c = signal.connect(slot)
         if key not in self.connections:
             self.connections[key] = []
         self.connections[key].append(c)
+
+        # Schedule every update to be executed at the end of __init__
+        if update_after_connect:
+            if initial_args is None:
+                self.invalidation_callbacks.append((slot, None))
+            else:
+                self.invalidation_callbacks.append((slot, *initial_args))
 
     def disconnectAll(self):
         for k, v in self.connections.items():

@@ -260,8 +260,8 @@ class ConceptController(BaseController):
         self.connect(self.ui.prevBtn.clicked, self.__prevImage())
         self.connect(self.ui.nextBtn.clicked, self.__nextImage())
 
-        self._connectInvalidateCallback(self.__enableDownloadBtn(True))
-        self._connectInvalidateCallback(self.__enableScanBtn(True))
+        self.__enableDownloadBtn(True)()
+        self.__enableScanBtn(True)()
 
 
     def _loadPresets(self):

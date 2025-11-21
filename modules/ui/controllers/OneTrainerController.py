@@ -25,6 +25,11 @@ from modules.util.enum.ModelFlags import ModelFlags
 from PySide6.QtCore import QCoreApplication as QCA
 import PySide6.QtWidgets as QtW
 
+import PySide6.QtGui as QtG
+
+from modules.ui.utils.WorkerPool import WorkerPool
+from modules.ui.models.TrainingModel import TrainingModel
+
 
 # Main window.
 class OnetrainerController(BaseController):
@@ -40,6 +45,7 @@ class OnetrainerController(BaseController):
         self.save_window = SaveController(self.loader, parent=self)
         self.children = {}
         self.__createTabs()
+        self.training = False
 
         # TODO: AT STARTUP LOAD #.json!
 
@@ -101,19 +107,62 @@ class OnetrainerController(BaseController):
         self.connect(self.ui.saveConfigBtn.clicked, lambda: self.openWindow(self.save_window, fixed_size=True))
         self.connect(self.ui.exportBtn.clicked, lambda: self.__exportConfig())
 
-        self.connect(self.ui.trainingTypeCmb.activated, lambda _: self.__changeModel())
-        self.connect(self.ui.modelTypeCmb.activated, lambda _: self.__changeModel())
+        self.connect(self.ui.trainingTypeCmb.activated, self.__changeModel())
+        self.connect(self.ui.modelTypeCmb.activated, self.__changeModel())
 
         self.connect(self.ui.configCmb.activated, lambda idx: self.__loadConfig(self.ui.configCmb.currentData(), idx))
 
-        cb1 = self.__updateModel()
-        self.connect(self.ui.modelTypeCmb.activated, cb1)
+        self.connect(self.ui.modelTypeCmb.activated, self.__updateModel(), update_after_connect=True)
+        self.connect(QtW.QApplication.instance().stateChanged, self.__updateConfigs(), update_after_connect=True)
+        self.connect(QtW.QApplication.instance().stateChanged, self.__changeModel(), update_after_connect=True)
 
-        cb2 = self.__updateConfigs()
-        self.connect(QtW.QApplication.instance().stateChanged, cb2)
+        self.connect(self.ui.startBtn.clicked, self.__toggleTrain())
 
-        self._connectInvalidateCallback(cb1)
-        self._connectInvalidateCallback(cb2)
+        self.__enableControls("enabled")()
+
+    def __enableControls(self, state):
+        def f():
+            if state == "enabled": # Startup and successful termination.
+                self.training = False
+                self.ui.startBtn.setEnabled(True)
+                self.ui.startBtn.setText(QCA.translate("main_window", "Start Training"))
+                self.ui.startBtn.setPalette(self.ui.palette())
+                self.ui.stepPrg.setValue(0)
+                self.ui.epochPrg.setValue(0)
+            elif state == "running":
+                self.training = True
+                self.ui.startBtn.setEnabled(True)
+                self.ui.startBtn.setText(QCA.translate("main_window", "Stop Training"))
+                self.ui.startBtn.setPalette(QtG.QPalette(QtG.QColor("green")))
+            elif state == "stopping":
+                self.training = True
+                self.ui.startBtn.setEnabled(False)
+                self.ui.startBtn.setText(QCA.translate("main_window", "Stopping..."))
+                self.ui.startBtn.setPalette(QtG.QPalette(QtG.QColor("red")))
+            elif state == "cancelled": # Interrupted or errored termination. Do not update progress bars, as we might be interested in knowing in which epoch/step the error occurred.
+                self.training = False
+                self.ui.startBtn.setText(QCA.translate("main_window", "Start Training"))
+                self.ui.startBtn.setPalette(QtG.QPalette(QtG.QColor("darkred")))
+                self.ui.startBtn.setEnabled(True)
+        return f
+
+    def __updateStatus(self):
+        def f(data):
+            print(data)
+            if "status" in data:
+                self.ui.statusLbl.setText(data["status"])
+
+            if "step" in data and "max_steps" in data:
+                val = int(data["step"] / data["max_steps"] * self.ui.stepPrg.maximum()) if data["max_steps"] > 0 else 0
+                self.ui.stepPrg.setValue(val)
+            if "epoch" in data and "max_epochs" in data:
+                val = int(data["epoch"] / data["max_epochs"] * self.ui.epochPrg.maximum()) if data["max_epochs"] > 0 else 0
+                self.ui.epochPrg.setValue(val)
+
+            if "event" in data:
+                self.__enableControls(data["event"])()
+
+        return f
 
     def __loadConfig(self, config, idx=None):
         StateModel.instance().load_config(config)
@@ -124,15 +173,17 @@ class OnetrainerController(BaseController):
 
 
     def __changeModel(self):
-        model_type = self.ui.modelTypeCmb.currentData()
-        training_type = self.ui.trainingTypeCmb.currentData()
-        self.ui.tabWidget.setTabVisible(self.children["lora"]["index"], training_type == TrainingMethod.LORA)
-        self.ui.tabWidget.setTabVisible(self.children["embedding"]["index"], training_type == TrainingMethod.EMBEDDING)
+        def f():
+            model_type = self.ui.modelTypeCmb.currentData()
+            training_type = self.ui.trainingTypeCmb.currentData()
+            self.ui.tabWidget.setTabVisible(self.children["lora"]["index"], training_type == TrainingMethod.LORA)
+            self.ui.tabWidget.setTabVisible(self.children["embedding"]["index"], training_type == TrainingMethod.EMBEDDING)
 
-        # TODO: also training_type allowed values must change here...
+            # TODO: also training_type allowed values must change here...
 
-        QtW.QApplication.instance().modelChanged.emit(model_type, training_type)
-        self.connect(QtW.QApplication.instance().aboutToQuit, lambda: StateModel.instance().save_default()) # TODO: actually need to call __close() for tensorboard and workspace cleanup
+            QtW.QApplication.instance().modelChanged.emit(model_type, training_type)
+            self.connect(QtW.QApplication.instance().aboutToQuit, lambda: StateModel.instance().save_default()) # TODO: actually need to call __close() for tensorboard and workspace cleanup
+        return f
 
 
     def __exportConfig(self):
@@ -144,6 +195,28 @@ class OnetrainerController(BaseController):
             StateModel.instance().save_config(filename)
 
 
+    def __train(self):
+        def f(progress_fn=None):
+            TrainingModel.instance().train(progress_fn=progress_fn)
+        return f
+
+    def __toggleTrain(self):
+        def f():
+            if self.training:
+                self.__stopTrain()
+            else:
+                worker, name = WorkerPool.instance().createNamed(self.__train(), "train", inject_progress_callback=True)
+                # TODO: if already running, the pool returns None -> use worker instead of self.training?
+                worker.connect(init_fn=self.__enableControls("running"), result_fn=None,
+                               finished_fn=self.__enableControls("enabled"),
+                               errored_fn=self.__enableControls("cancelled"), aborted_fn=self.__enableControls("cancelled"),
+                               progress_fn=self.__updateStatus())
+                WorkerPool.instance().start(name)
+
+        return f
+
+    def __stopTrain(self):
+        TrainingModel.instance().stop_training()
 
     def _loadPresets(self):
         for e in ModelType.enabled_values(context="main_window"):

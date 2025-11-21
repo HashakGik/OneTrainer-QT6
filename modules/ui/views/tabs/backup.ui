@@ -71,7 +71,7 @@
     </widget>
    </item>
    <item row="1" column="4">
-    <widget class="QLabel" name="label_6">
+    <widget class="QLabel" name="rollingCountLbl">
      <property name="text">
       <string>Rolling Backup Count</string>
      </property>
@@ -169,7 +169,7 @@
     </widget>
    </item>
    <item row="5" column="0">
-    <widget class="QLabel" name="label_8">
+    <widget class="QLabel" name="skipLbl">
      <property name="text">
       <string>Skip First</string>
      </property>
@@ -192,7 +192,7 @@
     </widget>
    </item>
    <item row="6" column="0">
-    <widget class="QLabel" name="label_9">
+    <widget class="QLabel" name="savePrefixLbl">
      <property name="text">
       <string>Save Filename Prefix</string>
      </property>

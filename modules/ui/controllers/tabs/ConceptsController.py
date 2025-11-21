@@ -5,6 +5,7 @@ from modules.ui.controllers.windows.ConceptController import ConceptController a
 from modules.ui.controllers.widgets.ConceptController import ConceptController as WidgetConceptController
 
 from modules.ui.models.ConceptModel import ConceptModel
+from modules.ui.models.StateModel import StateModel
 
 import PySide6.QtWidgets as QtW
 
@@ -19,26 +20,19 @@ class ConceptsController(BaseController):
 
     def _connectUIBehavior(self):
         self.connect(self.ui.addConceptBtn.clicked, self.__appendConcept())
-
-
         self.connect(self.ui.disableConceptsBtn.clicked, self.__disableConcepts())
 
-        cb = self.__updateConfigs()
-        self.connect(QtW.QApplication.instance().stateChanged, cb)
-        self._connectInvalidateCallback(cb)
+        self.connect(QtW.QApplication.instance().stateChanged, self.__updateConfigs(), update_after_connect=True)
 
         cb2 = self.__saveConfig()
         self.connect(QtW.QApplication.instance().aboutToQuit, cb2)
         self.connect(QtW.QApplication.instance().conceptsChanged, cb2)
 
-        cb3 = self.__loadConfig()
-        self.connect(self.ui.presetCmb.textActivated, cb3)
-        self._connectInvalidateCallback(cb3, self.ui.presetCmb.currentText())
+        self.connect(self.ui.presetCmb.textActivated, self.__loadConfig(), update_after_connect=True, initial_args=[self.ui.presetCmb.currentText()])
 
-        cb4 = self.__updateConcepts()  # Requires self.concept_window
+        cb4 = self.__updateConcepts()
         self.connect(QtW.QApplication.instance().conceptsChanged, cb4)
-        self.connect(QtW.QApplication.instance().stateChanged, cb4)
-        self._connectInvalidateCallback(cb4)
+        self.connect(QtW.QApplication.instance().stateChanged, cb4, update_after_connect=True)
 
 
     def __updateConfigs(self):
@@ -53,6 +47,8 @@ class ConceptsController(BaseController):
             self.ui.presetCmb.clear()
             for k, v in configs:
                 self.ui.presetCmb.addItem(k, userData=v)
+
+            self.ui.presetCmb.setCurrentIndex(self.ui.presetCmb.findData(StateModel.instance().getState("concept_file_name")))
         return f
 
     def __loadConfig(self):
@@ -106,14 +102,3 @@ class ConceptsController(BaseController):
             QtW.QApplication.instance().conceptsChanged.emit()
 
         return f
-
-
-    # presetCmb -> Load/save json OK
-    # addConceptBtn -> New concept OK
-    # disableConceptsBtn -> Disable all concepts OK
-    # listWidget -> Container
-
-    # Child widget:
-    # cloneBtn / deleteBtn -> clone/delete OK
-    # conceptBtn -> Show image / open concept window / Emit openConcept(idx)
-    # enableCbx -> Show name / Enable
