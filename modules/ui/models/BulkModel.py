@@ -49,6 +49,7 @@ class BulkModel(SingletonConfigModel):
 
         self.pool = Pool()
 
+    @SingletonConfigModel.atomic
     def bulk_edit(self, read_only=False, preview_n=None, progress_fn=None):
         base_path = Path(self.getState("directory"))
         files = list(base_path.glob("*.txt"))

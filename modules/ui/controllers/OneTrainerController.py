@@ -145,7 +145,6 @@ class OnetrainerController(BaseController):
     def __updateStatus(self):
         @Slot(dict)
         def f(data):
-            print(data)
             if "status" in data:
                 self.ui.statusLbl.setText(data["status"])
 

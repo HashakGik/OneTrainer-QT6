@@ -74,51 +74,54 @@ class ConceptModel(SingletonConfigModel):
         self.config = []
         self.cancel_scan_flag = threading.Event()
 
+    @SingletonConfigModel.atomic
     def __len__(self):
         return len(self.config)
 
+    @SingletonConfigModel.atomic
     def get_random_seed(self):
         return ConceptConfig.default_values().seed
 
+    @SingletonConfigModel.atomic
     def get_concept_name(self, idx):
-        with self.critical_region():
-            name = self.config[idx].name
-            path = self.config[idx].path
+        name = self.config[idx].name
+        path = self.config[idx].path
 
-            if name is not None and name != "":
-                return name
-            elif path is not None and path != "":
-                return os.path.basename(path)
-            else:
-                return ""
+        if name is not None and name != "":
+            return name
+        elif path is not None and path != "":
+            return os.path.basename(path)
+        else:
+            return ""
 
+    @SingletonConfigModel.atomic
     def disable_concepts(self):
         pass # TODO
 
+    @SingletonConfigModel.atomic
     def create_new_concept(self):
-        with self.critical_region():
-            con_cfg = ConceptConfig.default_values()
-            self.config.append(con_cfg)
+        con_cfg = ConceptConfig.default_values()
+        self.config.append(con_cfg)
 
+    @SingletonConfigModel.atomic
     def clone_concept(self, idx):
-        with self.critical_region():
-            new_element = copy.deepcopy(self.config[idx])
-            self.config.append(new_element)
+        new_element = copy.deepcopy(self.config[idx])
+        self.config.append(new_element)
 
+    @SingletonConfigModel.atomic
     def delete_concept(self, idx):
-        with self.critical_region():
-            self.config.pop(idx)
+        self.config.pop(idx)
 
+    @SingletonConfigModel.atomic
     def save_config(self, path="training_concepts"):
         if not os.path.exists(path):
             os.mkdir(path)
 
         config_path = StateModel.instance().getState("concept_file_name") # IMPORTANT! The mutex is shared because it is defined in the base class, this must be called before the lock!
 
-        with self.critical_region():
-            write_json_atomic(config_path, [element.to_dict() for element in self.config])
+        write_json_atomic(config_path, [element.to_dict() for element in self.config])
 
-
+    @SingletonConfigModel.atomic
     def load_config(self, filename, path="training_concepts"):
         if not os.path.exists(path):
             os.mkdir(path)
@@ -129,16 +132,15 @@ class ConceptModel(SingletonConfigModel):
         config_file = path_util.canonical_join(path, "{}.json".format(filename))
         StateModel.instance().setState("concept_file_name", config_file)
 
-        with self.critical_region():
-            self.config = []
+        self.config = []
 
-            if os.path.exists(config_file):
+        if os.path.exists(config_file):
 
-                with open(config_file, "r") as f:
-                    loaded_config_json = json.load(f)
-                    for element_json in loaded_config_json:
-                        element = ConceptConfig.default_values().from_dict(element_json)
-                        self.config.append(element)
+            with open(config_file, "r") as f:
+                loaded_config_json = json.load(f)
+                for element_json in loaded_config_json:
+                    element = ConceptConfig.default_values().from_dict(element_json)
+                    self.config.append(element)
 
     @staticmethod
     def get_concept_path(path):
@@ -150,6 +152,7 @@ class ConceptModel(SingletonConfigModel):
         except Exception:
             return None
 
+    @SingletonConfigModel.atomic
     def get_preview_icon(self, idx):
         preview_path = "resources/icons/icon.png"
         glob_pattern = "**/*.*" if self.getState("{}.include_subdirectories".format(idx)) else "*.*"
@@ -204,6 +207,7 @@ class ConceptModel(SingletonConfigModel):
         except UnicodeDecodeError:
             return "[Invalid file encoding. This should not happen, please report this issue]"
 
+    @SingletonConfigModel.atomic
     def get_concept_stats(self, idx, advanced_checks, wait_time=60):
         path = self.getState("{}.path".format(idx))
         include_subdirectories = self.getState("{}.include_subdirectories".format(idx))
@@ -244,8 +248,6 @@ class ConceptModel(SingletonConfigModel):
                 formatted_stats[k] = "-"
             formatted_stats["aspect_buckets"] = {}
             return formatted_stats
-
-
 
         # File size.
         formatted_stats["file_size"] = str(int(concept_stats["file_size"] / 1048576)) + " MB"
@@ -363,6 +365,7 @@ class ConceptModel(SingletonConfigModel):
         aspect_string = f'{aspect_fraction.denominator}:{aspect_fraction.numerator}'
         return aspect_string
 
+    @SingletonConfigModel.atomic
     def getImage(self, idx, image_id, show_augmentations=False):
         preview_image_path = "resources/icons/icon.png"
         file_index = -1

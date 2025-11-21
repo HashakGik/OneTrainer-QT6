@@ -17,6 +17,7 @@ class SingletonConfigModel:
     _frozenConfig = None
     _is_frozen = False
     mutex = threading.RLock() # QBasicMutex and QMutex are both non-reentrant. We need this to allow the same thread to enter the critical region multiple times without deadlocks.
+    log_mutex = threading.RLock()
 
     @classmethod
     def instance(cls):
@@ -25,14 +26,14 @@ class SingletonConfigModel:
         return cls._instance
 
     def log(self, severity, message):
-        with self.critical_region(): # It may make sense to use a DIFFERENT mutex for logging, to avoid blocking business logic!
-            print("{}: {}".format(severity, message)) # TODO: use logging.logger?
-            pass # TODO: replace every model message with a call to this.
+        self.log_mutex.acquire()
+        print("{}: {}".format(severity, message)) # TODO: use logging.logger, logging on file, other approach?
+        self.log_mutex.release()
 
-    # TODO: IMPORTANT!!! Multithreaded operations using getState (eg. scan dataset stats) will read different data than the one they were launched with if the GUI is changed while they are processing in the background!!!
-     # Models must access config only "with self.freezeState(): ...", this also allows to remove critical_region/atomic (unless the model is setting a state)
+    # Freezes internal state, forcing getState to read on a copy. setState, instead will still write on the actual data.
+    # Note that this does not prevent access from different threads, but since the copy is read-only, this is not a race condition.
     @contextmanager
-    def __freeze_state(self):
+    def freeze_state(self):
         try:
             try:
                 if self.mutex is not None:
@@ -136,7 +137,7 @@ class SingletonConfigModel:
             if self.mutex is not None:
                 self.mutex.release()
 
-    # Decorator @atomic for fully-region critical methods. # TODO: REFACTOR MODEL CLASSES TO USE @SingletonConfigModel.atomic AND with self.critical_region()
+    # Decorator @atomic for fully-region critical methods.
     def atomic(method):
         def f(self, *args, **kwargs):
             with self.critical_region():

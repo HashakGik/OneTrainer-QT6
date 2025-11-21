@@ -14,6 +14,7 @@ class ConvertModel(SingletonConfigModel):
     def __init__(self):
         self.config = ConvertModelArgs.default_values()
 
+    @SingletonConfigModel.atomic
     def convert_model(self):
         try:
             model_loader = create.create_model_loader(

@@ -27,75 +27,76 @@ class StateModel(SingletonConfigModel):
         self.is_profiling = False
         self.tensorboard_subprocess = None
 
-
+    @SingletonConfigModel.atomic
     def save_default(self):
         self.save_to_file("#")
         self.__save_secrets("secrets.json")
 
+    @SingletonConfigModel.atomic
     def save_config(self, filename):
-        with self.critical_region():
-            with open(filename, "w") as f:
-                json.dump(self.config.to_pack_dict(secrets=False), f, indent=4)
+        with open(filename, "w") as f:
+            json.dump(self.config.to_pack_dict(secrets=False), f, indent=4)
 
+    @SingletonConfigModel.atomic
     def load_config(self, filename):
-        with self.critical_region():
-            basename = os.path.basename(filename)
-            is_built_in_preset = basename.startswith("#") and basename != "#.json"
+        basename = os.path.basename(filename)
+        is_built_in_preset = basename.startswith("#") and basename != "#.json"
 
-            if os.path.exists(filename):
-                with open(filename, "r") as f:
-                    loaded_dict = json.load(f)
-                    default_config = TrainConfig.default_values()
-                    if is_built_in_preset:
-                        # always assume built-in configs are saved in the most recent version
-                        loaded_dict["__version"] = default_config.config_version
-                    loaded_config = default_config.from_dict(loaded_dict).to_unpacked_config()
+        if os.path.exists(filename):
+            with open(filename, "r") as f:
+                loaded_dict = json.load(f)
+                default_config = TrainConfig.default_values()
+                if is_built_in_preset:
+                    # always assume built-in configs are saved in the most recent version
+                    loaded_dict["__version"] = default_config.config_version
+                loaded_config = default_config.from_dict(loaded_dict).to_unpacked_config()
 
-                    if os.path.exists("secrets.json"):
-                        with open("secrets.json", "r") as f:
-                            secrets_dict = json.load(f)
-                            loaded_config.secrets = SecretsConfig.default_values().from_dict(secrets_dict)
+                if os.path.exists("secrets.json"):
+                    with open("secrets.json", "r") as f:
+                        secrets_dict = json.load(f)
+                        loaded_config.secrets = SecretsConfig.default_values().from_dict(secrets_dict)
 
-                    self.config.from_dict(loaded_config.to_dict())
+                self.config.from_dict(loaded_config.to_dict())
 
+    @SingletonConfigModel.atomic
     def save_to_file(self, name):
         name = path_util.safe_filename(name)
         path = path_util.canonical_join("training_presets", f"{name}.json")
 
-        with self.critical_region():
-            write_json_atomic(path, self.config.to_settings_dict(secrets=False))
+        write_json_atomic(path, self.config.to_settings_dict(secrets=False))
 
         return path
 
+    @SingletonConfigModel.atomic
     def __save_secrets(self, path):
-        with self.critical_region():
-            write_json_atomic(path, self.config.secrets.to_dict())
+        write_json_atomic(path, self.config.secrets.to_dict())
+
         return path
 
+    @SingletonConfigModel.atomic
     def setSchedulerParams(self, idx, key, value):
-        # TODO: Check that no two keys are shared?
-        with self.critical_region():
-            if len(self.config.scheduler_params) == idx:
-                self.config.scheduler_params.append({"key": key, "value": value})
-            elif len(self.config.scheduler_params) > idx:
-                self.config.scheduler_params[idx] = {"key": key, "value": value}
+        if len(self.config.scheduler_params) == idx:
+            self.config.scheduler_params.append({"key": key, "value": value})
+        elif len(self.config.scheduler_params) > idx:
+            self.config.scheduler_params[idx] = {"key": key, "value": value}
 
+    @SingletonConfigModel.atomic
     def create_new_embedding(self):
-        with self.critical_region():
-            emb_cfg = TrainEmbeddingConfig.default_values()
-            self.config.additional_embeddings.append(emb_cfg)
+        emb_cfg = TrainEmbeddingConfig.default_values()
+        self.config.additional_embeddings.append(emb_cfg)
 
+    @SingletonConfigModel.atomic
     def clone_embedding(self, idx):
-        with self.critical_region():
-            new_element = copy.deepcopy(self.config.additional_embeddings[idx])
-            new_element.uuid = self.get_random_uuid()
+        new_element = copy.deepcopy(self.config.additional_embeddings[idx])
+        new_element.uuid = self.get_random_uuid()
 
-            self.config.additional_embeddings.append(new_element)
+        self.config.additional_embeddings.append(new_element)
 
+    @SingletonConfigModel.atomic
     def delete_embedding(self, idx):
-        with self.critical_region():
-            self.config.additional_embeddings.pop(idx)
+        self.config.additional_embeddings.pop(idx)
 
+    @SingletonConfigModel.atomic
     def get_random_uuid(self):
         return TrainEmbeddingConfig.default_values().uuid
 
@@ -103,12 +104,14 @@ class StateModel(SingletonConfigModel):
         with open('stacks.txt', 'w') as f:
             faulthandler.dump_traceback(f)
 
+    @SingletonConfigModel.atomic
     def toggle_profiler(self):
         if self.is_profiling:
             scalene_profiler.stop()
         else:
             scalene_profiler.start()
 
+    @SingletonConfigModel.atomic
     def start_tensorboard(self):
         if self.tensorboard_subprocess:
             self.stop_tensorboard()
@@ -135,6 +138,7 @@ class StateModel(SingletonConfigModel):
         except Exception:
             self.tensorboard_subprocess = None
 
+    @SingletonConfigModel.atomic
     def stop_tensorboard(self):
         if self.tensorboard_subprocess:
             try:
@@ -147,11 +151,13 @@ class StateModel(SingletonConfigModel):
             finally:
                 self.tensorboard_subprocess = None
 
+    @SingletonConfigModel.atomic
     def enable_embeddings(self):
         add_embs = len(self.getState("additional_embeddings"))
         for idx in range(add_embs):
             self.setState("additional_embeddings.{}.train".format(idx), True)
 
+    @SingletonConfigModel.atomic
     def get_gpus(self):
         gpus = []
 

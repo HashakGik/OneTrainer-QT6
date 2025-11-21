@@ -137,11 +137,7 @@ class VideoModel(SingletonConfigModel):
             h1, w1, _ = frame.shape
         return x1, y1, w1, h1
 
-    # def __extract_clips_button(self, batch_mode: bool):
-    #     t = threading.Thread(target = self.__extract_clips_multi, args = [batch_mode])
-    #     t.daemon = True
-    #     t.start()
-
+    @SingletonConfigModel.atomic
     def extract_clips_multi(self, batch_mode: bool):
         if not pathlib.Path(self.getState("clips.output")).is_dir() or self.getState("clips.output") == "":
             print("Invalid output directory!")
@@ -321,6 +317,7 @@ class VideoModel(SingletonConfigModel):
     #     t.daemon = True
     #     t.start()
 
+    @SingletonConfigModel.atomic
     def extract_images_multi(self, batch_mode : bool):
         if not pathlib.Path(self.getState("images.output")).is_dir() or self.getState("images.output") == "":
             print("Invalid output directory!")
@@ -450,6 +447,7 @@ class VideoModel(SingletonConfigModel):
     #     t.daemon = True
     #     t.start()
 
+    @SingletonConfigModel.atomic
     def download_multi(self, batch_mode: bool):
         if not pathlib.Path(self.getState("download.output")).is_dir() or self.getState("download.output") == "":
             print("Invalid output directory!")

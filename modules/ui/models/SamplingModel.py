@@ -88,6 +88,7 @@ class SamplingModel(SingletonConfigModel):
             training_method=train_config.training_method,
         )
 
+    @SingletonConfigModel.atomic
     def sample(self, progress_fn=None):
         self.progress_fn = progress_fn
 

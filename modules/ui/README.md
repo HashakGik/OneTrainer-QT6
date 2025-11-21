@@ -24,8 +24,11 @@ Thread-safe access to model objects is mediated by a global QSimpleMutex, shared
 - Each model has a `self.config` attribute which can be accessed safely with `Whatever.instance().getState(var)` and `Whatever.instance().setState(var, value)` (or unsafely with `Whatever.instance().config.var`)
 - The `with self.critical_region()` context manager allows to wrap a block of code that may become inconsistent if interrupted (e.g., computing something based on two variables)
 - The `SingletonConfigModel.atomic` decorator wraps an entire method to prevent inconsistencies. Note that this does not mean that every other thread is frozen, only that access to model variables is delayed until the method exits.
+- The `with self.freeze_state()` context manager creates a read-only frozen copy, from which `self.getState()` will transparently read. This is useful for situations in which there are multiple variables to read, and the user may change UI elements while a function is operating in the background.
 
 Although most of the processing in OneTrainer is handled by a single thread, it is good practice to block shared resources for the least amount necessary (i.e., avoid wrapping everything with `@SingletonConfigModel.atomic`, which would negate any performance improvement of an event-based GUI engine such as QT6).
+For now, for debugging simplicity, I am using only `getState/setState` for methods reading a single variable, and `@SingletonConfigModel.atomic` in every other case, making model classes basically monitors.
+In the future, a principled approach would be to freeze the state for read-only functions, and use critical regions for blocks of write accesses.
 
 ### Controllers
 Controller classes are finite-state machines that initialize themselves with a specific sequence of events, and then react to external events (slots/signals).
@@ -33,10 +36,10 @@ Each controller is associated with a view (`self.ui`) and is optionally associat
 
 At construction, each controller executes these operations:
 1. `BaseController.__init__`: initializes the view
-2. `setup()`: setups additional attributes (e.g., references to model classes)
-3. `connectUIBehavior()`: forms static connections between signals and slots (e.g., button behaviors)
-4. `connectInputValidation()`: associates complex validation functions (QValidators, slots, or other mechanisms) to each control (simple validations are defined in view files)
-5. `loadPresets()`: for controls that contain variable data (e.g., QComboBox), loads the list of values (typically from a `modules.util.enum` class, or from files)
+2. `_setup()`: setups additional attributes (e.g., references to model classes)
+3. `_connectUIBehavior()`: forms static connections between signals and slots (e.g., button behaviors)
+4. `_connectInputValidation()`: associates complex validation functions (QValidators, slots, or other mechanisms) to each control (simple validations are defined in view files)
+5. `_loadPresets()`: for controls that contain variable data (e.g., QComboBox), loads the list of values (typically from a `modules.util.enum` class, or from files)
 6. Connect static controls according to `self.state_ui_connections` dict: connects ui elements to `StateModel` variables bidirectionally (every time a control is changed, the `TrainConfig` is updated, and every time `stateChanged` is emitted, the control is updated)  
 7. `self.__init__`: Additional controller-specific initializations (usually connections of dynamic controls)
 
@@ -89,6 +92,7 @@ The following are some basic notions for useful QT6 features.
 Signal-slot connections: QT's interactions are asynchronous and based on message passing. Each widget exposes two types of methods:
 - Signals are fired when a particular event occurs (e.g., a QPushButton is clicked) or when explicitly `emit()`ed. Some signals are associated with data (e.g., `QLineEdit.textChanged` also transmits the text in a string parameter).
 - Slots are functions receiving a signal and processing its data. For efficiency reasons, they should be annotated with a `@Slot(types)` decorator, but arbitrary python functions can act as slots, as long as their parameters match the signal.
+- The `@Slot` decorator does not accept the idiom `type|None`, you can either use "normal" functions, or decorate them with `@Slot(object)` for nullable parameters.
 
 A signal-slot connection can be created (`connect()`) and destroyed (`disconenct()`) dynamically.
 Every time a signal is emitted, all the slots connected to it are executed in the order they were connected.
@@ -114,7 +118,6 @@ Since `lupdate` is a static analyzer, it is important that each string can be in
 
 ## Decisions and Caveats
 - Since the original OneTrainer code was strongly coupled with the user interface, many model classes were rewritten from scratch, with a high chance of introducing bugs.
-- Controller's state machine is subject to change.
 - Enums in `modules/util/enum` have been extended with methods for GUI pretty-printing (`modules.util.enum.BaseEnum.BaseEnum` class), without altering their existing functionality
 - I have more or less arbitrarily decided that strings should all be translated with `QCoreApplication.translate()`, because it groups them by context (e.g. `QCoreApplication.translate(context="model_tab", sourceText="Data Type")`), allowing explicit disambiguation every time, and providing translators with a somewhat ordered xml (every string with the same context will be close together).
 - At the moment Enum values are non-translatable, because pretty printing often relies on string manipulation.

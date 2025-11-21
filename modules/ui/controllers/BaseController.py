@@ -15,10 +15,6 @@ from modules.ui.utils.SNLineEdit import SNLineEdit
 
 from modules.ui.models.StateModel import StateModel
 
-# TODO: CLEANUP:
-# 2) Use self._openAlert to provide user feedback.
-# 3) Uniform error logging (sometimes it is print, others it uses logger.logging) and exceptions (print(e) vs full traceback)
-
 # Abstract controller with some utility methods. Each controller is a Finite-State Machine executing:
 # super()__init__ -> _setup -> _loadPresets -> _connectStateUI -> _connectUIBehavior -> _connectInputValidation -> _invalidateUI -> self.__init__
 # After it is initialized, a controller reacts to external signals by using the slots connected with self._connect(), possibly with some helper methods.
@@ -64,7 +60,7 @@ class BaseController:
             for ui_name in ui_names:
                 ui_elem = self.ui.findChild(QtC.QObject, ui_name)
                 if ui_elem is None:
-                    print("ERROR: {} not found.".format(ui_name))
+                    self._log("error", "ERROR: {} not found.".format(ui_name))
                 else:
                     if isinstance(ui_elem, QtW.QCheckBox):
                         self._connect(ui_elem.stateChanged, self.__readCbx(ui_elem, var, model), group)
@@ -182,7 +178,7 @@ class BaseController:
         # TODO: if you prefer a GUI text area, print on it instead: https://stackoverflow.com/questions/24469662/how-to-redirect-logger-output-into-pyqt-text-widget
         # In that case it is important to register a global logger widget (e.g. on a window with different tabs for each severity level)
         # For high severity, maybe an alertbox can also be opened automatically
-        StateModel.instance().log(severity, message) # TODO: refactor every message in the controller to use this. Do something similar with SingletonConfigModel
+        StateModel.instance().log(severity, message)
 
     # Open a subwindow.
     def _openWindow(self, controller, fixed_size=False):

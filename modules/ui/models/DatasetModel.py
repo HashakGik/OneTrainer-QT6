@@ -42,8 +42,8 @@ class DatasetModel(SingletonConfigModel):
     def __init__(self):
         self.config = DatasetConfig.default_values()
 
+    @SingletonConfigModel.atomic
     def scan(self):
-        # TODO: is it safer to lock everything in a critical_region until the scan is done? Or is it reasonable to allow another thread to work on an old copy of files while scanning?
         path = self.getState("path")
         if path is not None:
             root = Path(path)
@@ -68,14 +68,14 @@ class DatasetModel(SingletonConfigModel):
                             results.append(entry.path[root_len:].replace("\\", "/"))
             self.setState("files", sorted(results, key=lambda x: self.natural_sort_key(x)))
 
+    @SingletonConfigModel.atomic
     def getFilteredFiles(self):
-        with self.critical_region():
-            path = self.config.path
-            unfiltered_files = self.config.files
-            file_filter = self.config.file_filter.strip()
-            file_filter_mode = self.config.file_filter_mode
-            caption_filter = self.config.caption_filter.strip()
-            caption_filter_mode = self.config.caption_filter_mode
+        path = self.config.path
+        unfiltered_files = self.config.files
+        file_filter = self.config.file_filter.strip()
+        file_filter_mode = self.config.file_filter_mode
+        caption_filter = self.config.caption_filter.strip()
+        caption_filter_mode = self.config.caption_filter_mode
 
         if file_filter == "" and caption_filter == "":
             return unfiltered_files
@@ -151,6 +151,7 @@ class DatasetModel(SingletonConfigModel):
 
         return [convert(c) for c in re.split(r"(\d+)", s)]
 
+    @SingletonConfigModel.atomic
     def getSample(self, path):
         image = None
         caption = None
@@ -172,6 +173,7 @@ class DatasetModel(SingletonConfigModel):
 
         return image, mask, caption
 
+
     def getMaskPath(self, path):
         basepath = self.getState("path")
         image_path = Path(basepath) / path
@@ -192,6 +194,7 @@ class DatasetModel(SingletonConfigModel):
         caption_path = image_path.with_suffix(".txt")
         caption_path.unlink(missing_ok=True)
 
+    @SingletonConfigModel.atomic
     def deleteSample(self, path):
         basepath = self.getState("path")
         image_path = Path(basepath) / path
@@ -202,9 +205,8 @@ class DatasetModel(SingletonConfigModel):
         mask_path.unlink(missing_ok=True)
         caption_path.unlink(missing_ok=True)
 
-        with self.critical_region():
-            if path in self.config.files:
-                self.config.files.remove(path)
+        if path in self.config.files:
+            self.config.files.remove(path)
 
 
     def __is_supported(self, filename):

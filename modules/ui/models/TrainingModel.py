@@ -23,94 +23,19 @@ class TrainingModel(SingletonConfigModel):
         self.config = None
         self.training_commands = None
 
-
-    # def __training_thread_function(self):
-    #     error_caught = False
-    #
-    #     self.training_callbacks = TrainCallbacks(
-    #         on_update_train_progress=self.on_update_train_progress,
-    #         on_update_status=self.on_update_status,
-    #     )
-    #
-    #     if self.train_config.cloud.enabled:
-    #         trainer = CloudTrainer(self.train_config, self.training_callbacks, self.training_commands, reattach=self.cloud_tab.reattach)
-    #     else:
-    #         ZLUDA.initialize_devices(self.train_config)
-    #         trainer = GenericTrainer(self.train_config, self.training_callbacks, self.training_commands)
-    #
-    #     try:
-    #         trainer.start()
-    #         if self.train_config.cloud.enabled:
-    #             self.ui_state.get_var("secrets.cloud").update(self.train_config.secrets.cloud)
-    #         trainer.train()
-    #     except Exception:
-    #         if self.train_config.cloud.enabled:
-    #             self.ui_state.get_var("secrets.cloud").update(self.train_config.secrets.cloud)
-    #         error_caught = True
-    #         traceback.print_exc()
-    #
-    #     trainer.end()
-    #
-    #     # clear gpu memory
-    #     del trainer
-    #
-    #     self.training_thread = None
-    #     self.training_commands = None
-    #     torch.clear_autocast_cache()
-    #     torch_gc()
-    #
-    #     if error_caught:
-    #         self.on_update_status("error: check the console for more information")
-    #     else:
-    #         self.on_update_status("stopped")
-    #
-    #     self.training_button.configure(text="Start Training", state="normal")
-    #
-    # def on_update_train_progress(self, train_progress: TrainProgress, max_sample: int, max_epoch: int):
-    #     self.set_step_progress(train_progress.epoch_step, max_sample)
-    #     self.set_epoch_progress(train_progress.epoch, max_epoch)
-    #
-    # def start_training(self):
-    #     if self.training_thread is None:
-    #         self.save_default()
-    #
-    #         self.training_button.configure(text="Stop Training", state="normal")
-    #
-    #         self.training_commands = TrainCommands()
-    #
-    #         self.training_thread = threading.Thread(target=self.__training_thread_function)
-    #         self.training_thread.start()
-    #     else:
-    #         self.training_button.configure(state="disabled")
-    #         self.on_update_status("stopping")
-    #         self.training_commands.stop()
-    #
-    # def save_default(self):
-    #     self.top_bar_component.save_default()
-    #     self.concepts_tab.save_current_config()
-    #     self.sampling_tab.save_current_config()
-    #     self.additional_embeddings_tab.save_current_config()
-    #
-    # def export_training(self):
-    #     file_path = filedialog.asksaveasfilename(filetypes=[
-    #         ("All Files", "*.*"),
-    #         ("json", "*.json"),
-    #     ], initialdir=".", initialfile="config.json")
-    #
-    #     if file_path:
-    #         with open(file_path, "w") as f:
-    #             json.dump(self.train_config.to_pack_dict(secrets=False), f, indent=4)
-    #
+    @SingletonConfigModel.atomic
     def sample_now(self):
         train_commands = self.training_commands
         if train_commands:
             train_commands.sample_default()
 
+    @SingletonConfigModel.atomic
     def backup_now(self):
         train_commands = self.training_commands
         if train_commands:
             train_commands.backup()
 
+    @SingletonConfigModel.atomic
     def save_now(self):
         train_commands = self.training_commands
         if train_commands:
@@ -120,7 +45,7 @@ class TrainingModel(SingletonConfigModel):
         # TODO
         pass
 
-
+    @SingletonConfigModel.atomic
     def train(self, progress_fn=None):
         self.progress_fn = progress_fn
 

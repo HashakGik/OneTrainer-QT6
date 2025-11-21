@@ -27,6 +27,7 @@ class MaskModel(SingletonConfigModel):
 
         self.masking_model = None
 
+    @SingletonConfigModel.atomic
     def create_masks(self, progress_fn=None):
         self.__load_masking_model(self.getState("model"))
 
