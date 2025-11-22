@@ -20,6 +20,8 @@ from pathlib import Path
 import faulthandler
 from scalene import scalene_profiler # TODO: importing Scalene sets the application locale to ANSI-C, while QT6 uses UTF-8 by default. We could change locale to C to suppress warnings, but this may cause problems with some features...
 
+import scripts.generate_debug_report
+import traceback
 
 class StateModel(SingletonConfigModel):
     def __init__(self):
@@ -167,3 +169,20 @@ class StateModel(SingletonConfigModel):
             gpus = runpod.get_gpus()
 
         return gpus
+
+    @SingletonConfigModel.atomic
+    def generate_debug_package(self, zip_name, progress_fn=None):
+        zip_path = Path(zip_name)
+
+        if progress_fn is not None:
+            progress_fn({"status": "Generating debug package..."})
+
+        try:
+            config_json_string = json.dumps(self.config.to_pack_dict(secrets=False))
+            scripts.generate_debug_report.create_debug_package(str(zip_path), config_json_string)
+            if progress_fn is not None:
+                progress_fn({"status": f"Debug package saved to {zip_path.name}"})
+        except Exception as e:
+            traceback.print_exc()
+            if progress_fn is not None:
+                progress_fn({"status": f"Error generating debug package: {e}"})

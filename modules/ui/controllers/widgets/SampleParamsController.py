@@ -2,11 +2,9 @@ from modules.ui.controllers.BaseController import BaseController
 
 from modules.util.enum.NoiseScheduler import NoiseScheduler
 
-from modules.ui.models.SampleModel import SampleModel
+from PySide6.QtCore import QCoreApplication as QCA
 
-from PySide6.QtCore import QCoreApplication as QCA, Slot
-
-import PySide6.QtWidgets as QtW
+import PySide6.QtGui as QtGui
 
 class SampleParamsController(BaseController):
     idx = 0
@@ -35,7 +33,7 @@ class SampleParamsController(BaseController):
             "height": "heightSbx",
             "frames": "framesSbx",
             "length": "lengthSbx",
-            "seed": "seedSbx",
+            "seed": "seedLed",
             "random_seed": "randomSeedCbx",
             "cfg_scale": "cfgSbx",
             "diffusion_steps": "stepsSbx",
@@ -55,6 +53,10 @@ class SampleParamsController(BaseController):
     def _loadPresets(self):
         for e in NoiseScheduler.enabled_values():
             self.ui.samplerCmb.addItem(e.pretty_print(), userData=e)
+
+    def _connectInputValidation(self):
+        # We use regular expressions, instead of QIntValidator, to avoid hitting the maximum value.
+        self.ui.seedLed.setValidator(QtGui.QRegularExpressionValidator("-1|0|[1-9]\d*", self.ui))
 
     ###Reactions###
 

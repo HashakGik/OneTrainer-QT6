@@ -262,7 +262,7 @@ class BaseController:
             elif isinstance(ui_elem, SNLineEdit): # IMPORTANT: keep this above base class!
                 ui_elem.setText(str(val))
             elif isinstance(ui_elem, QtW.QLineEdit):
-                ui_elem.setText(val)
+                ui_elem.setText(str(val))
         ui_elem.blockSignals(False)
 
     def _removeWorkingDir(self, txt):

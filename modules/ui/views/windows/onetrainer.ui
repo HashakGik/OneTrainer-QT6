@@ -220,7 +220,7 @@
           <string>Current status of the training run</string>
          </property>
          <property name="text">
-          <string>STATUS</string>
+          <string/>
          </property>
         </widget>
        </item>

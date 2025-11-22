@@ -28,6 +28,10 @@ class Worker(QRunnable, QObject):
 
     @Slot()
     def run(self):
+        # TODO: IMPORTANT ISSUE: If a worker crashes with CUDA OUT OF MEMORY, the entire application crashes with a SEGMENTATION FAULT!
+        # According to this: https://stackoverflow.com/questions/59837773/qtcore-qrunnable-causes-sigsev-pyqt5
+        # The problem may be that multiple inheritance may cause sometimes to access reserved memory
+        # TODO: if unavoidable, rewrite this class using multiprocessing.Pool
         try:
             self.initialized.emit()
             if self.inject_progress_callback:

@@ -5,6 +5,7 @@ from modules.ui.controllers.BaseController import BaseController
 from modules.ui.models.SampleModel import SampleModel
 
 import PySide6.QtWidgets as QtW
+import PySide6.QtGui as QtGui
 
 class SampleController(BaseController):
     def __init__(self, loader, sample_window, idx, parent=None):
@@ -22,12 +23,16 @@ class SampleController(BaseController):
             "{idx}.enabled": "enabledCbx",
             "{idx}.width": "widthSbx",
             "{idx}.height": "heightSbx",
-            "{idx}.seed": "seedSbx",
+            "{idx}.seed": "seedLed",
             "{idx}.prompt": "promptLed",
         }
 
         self._connectStateUI(self.dynamic_state_ui_connections, SampleModel.instance(),
                              signal=QtW.QApplication.instance().samplesChanged, update_after_connect=True, idx=self.idx)
+
+    def _connectInputValidation(self):
+        # We use regular expressions, instead of QIntValidator, to avoid hitting the maximum value.
+        self.ui.seedLed.setValidator(QtGui.QRegularExpressionValidator("-1|0|[1-9]\d*", self.ui))
 
     ###Reactions###
 

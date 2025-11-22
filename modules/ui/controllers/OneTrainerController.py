@@ -68,6 +68,8 @@ class OnetrainerController(BaseController):
         self._connect(QtW.QApplication.instance().savedConfig, self.__updateSelectedConfig())
 
         self._connect(self.ui.startBtn.clicked, self.__toggleTrain())
+        self._connect(self.ui.debugBtn.clicked, self.__startDebug())
+        self._connect(self.ui.tensorboardBtn.clicked, self.__openTensorboard())
 
         self.__enableControls("enabled")()
 
@@ -76,6 +78,37 @@ class OnetrainerController(BaseController):
             self.ui.modelTypeCmb.addItem(e.pretty_print(), userData=e)
 
     ###Reactions###
+
+    def __openTensorboard(self):
+        @Slot()
+        def f():
+            self._openUrl("http://localhost:" + str(StateModel.instance().getState("tensorboard_port")))
+        return f
+
+    def __startDebug(self):
+        @Slot()
+        def f():
+            diag = QtW.QFileDialog()
+            txt, _ = diag.getSaveFileName(parent=None,
+                                            dir="OneTrainer_debug_report.zip",
+                                            caption=QCA.translate("main_window", "Save Debug Package"),
+                                            filter=QCA.translate("filetype_filters", "Zip (*.zip)"))
+            if txt != "":
+                worker, name = WorkerPool.instance().createNamed(self.__generate_debug_package(txt), "generate_debug", inject_progress_callback=True)
+                if worker is not None:
+                    worker.connect(init_fn=self.__enableDebugControls(False), result_fn=None,
+                                   finished_fn=self.__enableDebugControls(True),
+                                   errored_fn=self.__enableDebugControls(True),
+                                   progress_fn=self.__updateStatus())
+                    WorkerPool.instance().start(name)
+            pass
+        return f
+
+    def __enableDebugControls(self, enabled):
+        @Slot()
+        def f():
+            self.ui.debugBtn.setEnabled(enabled)
+        return f
 
     def __updateSelectedConfig(self):
         @Slot(str)
@@ -191,6 +224,12 @@ class OnetrainerController(BaseController):
         return f
 
     ###Utils###
+
+    def __generate_debug_package(self, zip_path):
+        def f(progress_fn=None):
+            StateModel.instance().generate_debug_package(zip_path, progress_fn=progress_fn)
+
+        return f
 
     def __createTabs(self):
         for name, controller in [

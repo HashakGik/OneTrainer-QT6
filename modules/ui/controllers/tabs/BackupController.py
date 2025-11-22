@@ -1,5 +1,6 @@
 from PySide6.QtCore import QCoreApplication as QCA, Slot
 from modules.ui.controllers.BaseController import BaseController
+from modules.ui.utils.WorkerPool import WorkerPool
 
 from modules.util.enum.TimeUnit import TimeUnit
 
@@ -28,8 +29,8 @@ class BackupController(BaseController):
         self._connect(self.ui.rollingBackupCbx.toggled, self.__updateRollingBackup(), update_after_connect=True, initial_args=[self.ui.rollingBackupCbx.isChecked()])
         self._connect(self.ui.saveCmb.activated, self.__updateSave(), update_after_connect=True)
 
-        self._connect(self.ui.backupBtn.clicked, self.__backupNow())
-        self._connect(self.ui.saveBtn.clicked, self.__saveNow())
+        self._connect(self.ui.backupBtn.clicked, self.__startBackup())
+        self._connect(self.ui.saveBtn.clicked, self.__startSave())
 
     def _loadPresets(self):
         for e in TimeUnit.enabled_values():
@@ -40,16 +41,34 @@ class BackupController(BaseController):
 
     ###Reactions###
 
-    def __backupNow(self):
+    def __startBackup(self):
         @Slot()
         def f():
-            TrainingModel.instance().backup_now()
+            worker, name = WorkerPool.instance().createNamed(self.__backupNow(), "backup_operations",
+                                                             inject_progress_callback=True)
+            if worker is not None:
+                worker.connect(init_fn=self.__enableControls(False), result_fn=None,
+                               finished_fn=self.__enableControls(True))
+                WorkerPool.instance().start(name)
         return f
 
-    def __saveNow(self):
+    def __startSave(self):
         @Slot()
         def f():
-            TrainingModel.instance().save_now()
+            worker, name = WorkerPool.instance().createNamed(self.__saveNow(), "backup_operations",
+                                                             inject_progress_callback=True)
+            if worker is not None:
+                worker.connect(init_fn=self.__enableControls(False), result_fn=None,
+                               finished_fn=self.__enableControls(True))
+                WorkerPool.instance().start(name)
+
+        return f
+
+    def __enableControls(self, enabled):
+        @Slot()
+        def f():
+            self.ui.backupBtn.setEnabled(enabled)
+            self.ui.saveBtn.setEnabled(enabled)
         return f
 
     def __updateBackup(self):
@@ -84,4 +103,16 @@ class BackupController(BaseController):
             self.ui.skipLbl.setEnabled(enabled)
             self.ui.savePrefixLbl.setEnabled(enabled)
 
+        return f
+
+    ###Utils###
+
+    def __backupNow(self):
+        def f(progress_fn=None):
+            TrainingModel.instance().backup_now()
+        return f
+
+    def __saveNow(self):
+        def f(progress_fn=None):
+            TrainingModel.instance().save_now()
         return f

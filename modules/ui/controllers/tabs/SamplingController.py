@@ -38,7 +38,7 @@ class SamplingController(BaseController):
         # TODO: sampleNowBtn, manualSampleBtn
         # TODO: configCmb read/write/ on stateChanged reload
 
-        cb = self.__updateSamples() # Requires self.sample_window
+        cb = self.__updateSamples()
         self._connect(QtW.QApplication.instance().samplesChanged, cb)
         self._connect(QtW.QApplication.instance().stateChanged, cb, update_after_connect=True)
 
@@ -88,7 +88,7 @@ class SamplingController(BaseController):
         @Slot()
         def f():
             for c in self.children:
-                c.disconnectAll()
+                c._disconnectAll()
 
             self.ui.listWidget.clear()
             self.children = []
