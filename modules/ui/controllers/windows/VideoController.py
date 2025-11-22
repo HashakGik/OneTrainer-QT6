@@ -101,7 +101,7 @@ class VideoController(BaseController):
         def f():
             worker, name = WorkerPool.instance().createNamed(self.__extractClip(), "video_processing", batch_mode=False)
             if worker is not None:
-                worker.connect(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
+                worker.connectCallbacks(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
                                errored_fn=self.__enableButtons(True), aborted_fn=self.__enableButtons(True))
                 WorkerPool.instance().start(name)
         return f
@@ -111,7 +111,7 @@ class VideoController(BaseController):
         def f():
             worker, name = WorkerPool.instance().createNamed(self.__extractClip(), "video_processing", batch_mode=True)
             if worker is not None:
-                worker.connect(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
+                worker.connectCallbacks(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
                                errored_fn=self.__enableButtons(True), aborted_fn=self.__enableButtons(True))
                 WorkerPool.instance().start(name)
         return f
@@ -121,7 +121,7 @@ class VideoController(BaseController):
         def f():
             worker, name = WorkerPool.instance().createNamed(self.__extractImage(), "video_processing", batch_mode=False)
             if worker is not None:
-                worker.connect(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
+                worker.connectCallbacks(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
                                errored_fn=self.__enableButtons(True), aborted_fn=self.__enableButtons(True))
                 WorkerPool.instance().start(name)
         return f
@@ -131,7 +131,7 @@ class VideoController(BaseController):
         def f():
             worker, name = WorkerPool.instance().createNamed(self.__extractImage(), "video_processing", batch_mode=True)
             if worker is not None:
-                worker.connect(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
+                worker.connectCallbacks(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
                                errored_fn=self.__enableButtons(True), aborted_fn=self.__enableButtons(True))
                 WorkerPool.instance().start(name)
         return f
@@ -141,7 +141,7 @@ class VideoController(BaseController):
         def f():
             worker, name = WorkerPool.instance().createNamed(self.__download(), "video_processing", batch_mode=False)
             if worker is not None:
-                worker.connect(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
+                worker.connectCallbacks(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
                                errored_fn=self.__enableButtons(True), aborted_fn=self.__enableButtons(True))
                 WorkerPool.instance().start(name)
         return f
@@ -151,7 +151,7 @@ class VideoController(BaseController):
         def f():
             worker, name = WorkerPool.instance().createNamed(self.__download(), "video_processing", batch_mode=True)
             if worker is not None:
-                worker.connect(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
+                worker.connectCallbacks(init_fn=self.__enableButtons(False), result_fn=None, finished_fn=self.__enableButtons(True),
                                errored_fn=self.__enableButtons(True), aborted_fn=self.__enableButtons(True))
                 WorkerPool.instance().start(name)
         return f

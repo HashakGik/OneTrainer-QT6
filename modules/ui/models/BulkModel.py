@@ -47,12 +47,22 @@ class BulkModel(SingletonConfigModel):
             "regex_replace": "",
         }
 
-        self.pool = Pool()
+        self.pool = None
+
+    @SingletonConfigModel.atomic
+    def terminate_pool(self):
+        if self.pool is not None:
+            self.pool.terminate()
+            self.pool.join()
+            self.pool = None
 
     @SingletonConfigModel.atomic
     def bulk_edit(self, read_only=False, preview_n=None, progress_fn=None):
         base_path = Path(self.getState("directory"))
         files = list(base_path.glob("*.txt"))
+
+        if self.pool is None:
+            self.pool = Pool()
 
         if preview_n is not None and read_only:
             files = files[:preview_n]

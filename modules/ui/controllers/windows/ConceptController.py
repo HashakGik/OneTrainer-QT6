@@ -191,7 +191,7 @@ class ConceptController(BaseController):
         def f():
             worker, name = WorkerPool.instance().createNamed(self.__scanConcept(), "scan_concept", abort_flag=ConceptModel.instance().cancel_scan_flag, advanced_scanning=advanced_scanning)
             if worker is not None:
-                worker.connect(init_fn=self.__enableScanBtn(False), result_fn=None, finished_fn=self.__updateStats(), errored_fn=self.__enableScanBtn(True), aborted_fn=self.__enableScanBtn(True))
+                worker.connectCallbacks(init_fn=self.__enableScanBtn(False), result_fn=None, finished_fn=self.__updateStats(), errored_fn=self.__enableScanBtn(True), aborted_fn=self.__enableScanBtn(True))
                 WorkerPool.instance().start(name)
 
         return f
@@ -201,7 +201,7 @@ class ConceptController(BaseController):
         def f():
             worker, name = WorkerPool.instance().createNamed(self.__downloadConcept(), "download_concept")
             if worker is not None:
-                worker.connect(init_fn=self.__enableDownloadBtn(False), result_fn=None, finished_fn=self.__enableDownloadBtn(True),
+                worker.connectCallbacks(init_fn=self.__enableDownloadBtn(False), result_fn=None, finished_fn=self.__enableDownloadBtn(True),
                                errored_fn=self.__enableDownloadBtn(True), aborted_fn=self.__enableDownloadBtn(True))
                 WorkerPool.instance().start(name)
         return f

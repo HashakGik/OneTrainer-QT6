@@ -14,6 +14,8 @@ from modules.ui.controllers.tabs.LoraController import LoraController
 from modules.ui.controllers.tabs.EmbeddingsController import EmbeddingsController
 
 from modules.ui.controllers.windows.SaveController import SaveController
+from modules.ui.models.BulkModel import BulkModel
+from modules.ui.models.ImageModel import ImageModel
 
 from modules.ui.models.StateModel import StateModel
 
@@ -49,8 +51,6 @@ class OnetrainerController(BaseController):
         self.__createTabs()
         self.training = False
 
-        # TODO: AT STARTUP LOAD #.json!
-
     def _connectUIBehavior(self):
         self._connect(self.ui.wikiBtn.clicked, lambda: self._openUrl("https://github.com/Nerogar/OneTrainer/wiki"))
         self._connect(self.ui.saveConfigBtn.clicked, lambda: self._openWindow(self.save_window, fixed_size=True))
@@ -71,6 +71,7 @@ class OnetrainerController(BaseController):
         self._connect(self.ui.debugBtn.clicked, self.__startDebug())
         self._connect(self.ui.tensorboardBtn.clicked, self.__openTensorboard())
 
+        self.__loadConfig("training_presets/#.json")  # Load last config.
         self.__enableControls("enabled")()
 
     def _loadPresets(self):
@@ -94,9 +95,9 @@ class OnetrainerController(BaseController):
                                             caption=QCA.translate("main_window", "Save Debug Package"),
                                             filter=QCA.translate("filetype_filters", "Zip (*.zip)"))
             if txt != "":
-                worker, name = WorkerPool.instance().createNamed(self.__generate_debug_package(txt), "generate_debug", inject_progress_callback=True)
+                worker, name = WorkerPool.instance().createNamed(self.__generate_debug_package(txt), "generate_debug", poolless=True, inject_progress_callback=True)
                 if worker is not None:
-                    worker.connect(init_fn=self.__enableDebugControls(False), result_fn=None,
+                    worker.connectCallbacks(init_fn=self.__enableDebugControls(False), result_fn=None,
                                    finished_fn=self.__enableDebugControls(True),
                                    errored_fn=self.__enableDebugControls(True),
                                    progress_fn=self.__updateStatus())
@@ -144,7 +145,6 @@ class OnetrainerController(BaseController):
                 self.ui.trainingTypeCmb.addItem(QCA.translate("training_method", "Fine Tune VAE"), userData=TrainingMethod.FINE_TUNE_VAE)
 
             self.ui.trainingTypeCmb.activated.emit(0)
-
 
         return f
 
@@ -201,10 +201,17 @@ class OnetrainerController(BaseController):
             self.ui.tabWidget.setTabVisible(self.children["lora"]["index"], training_type == TrainingMethod.LORA)
             self.ui.tabWidget.setTabVisible(self.children["embedding"]["index"], training_type == TrainingMethod.EMBEDDING)
 
-            # TODO: also training_type allowed values must change here...
-
             QtW.QApplication.instance().modelChanged.emit(model_type, training_type)
-            self._connect(QtW.QApplication.instance().aboutToQuit, lambda: StateModel.instance().save_default()) # TODO: actually need to call __close() for tensorboard and workspace cleanup
+            self._connect(QtW.QApplication.instance().aboutToQuit, self.__onQuit())
+        return f
+
+    def __onQuit(self):
+        @Slot()
+        def f():
+            StateModel.instance().save_default()
+            StateModel.instance().stop_tensorboard()
+            ImageModel.instance().terminate_pool()
+            BulkModel.instance().terminate_pool()
         return f
 
     def __toggleTrain(self):
@@ -213,9 +220,9 @@ class OnetrainerController(BaseController):
             if self.training:
                 self.__stopTrain()
             else:
-                worker, name = WorkerPool.instance().createNamed(self.__train(), "train", inject_progress_callback=True)
+                worker, name = WorkerPool.instance().createNamed(self.__train(), "train", poolless=True, daemon=True, inject_progress_callback=True)
                 if worker is not None:
-                    worker.connect(init_fn=self.__enableControls("running"), result_fn=None,
+                    worker.connectCallbacks(init_fn=self.__enableControls("running"), result_fn=None,
                                    finished_fn=self.__enableControls("enabled"),
                                    errored_fn=self.__enableControls("cancelled"), aborted_fn=self.__enableControls("cancelled"),
                                    progress_fn=self.__updateStatus())

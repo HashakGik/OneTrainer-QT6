@@ -102,7 +102,6 @@ Important considerations:
 - If a slot modifies a UI element, it is possible that a new signal may be emitted, potentially causing infinite signal-slot calls. To avoid such cases, a slot should invoke `widget.blockSignals(True)` before changing its value.
 - QtCreator/QtDesigner allow to directly connect signals and slots with matching signatures (e.g., `QLineEdit.textChanged(str)` and `QLabel.text(str)` will automatically copy the text from the line edit to the label) from the UI editor, this is convenient, but there is the risk of forgetting to connect something, or connecting it twice (once in the UI editor and then again in python code) 
 
-
 Buddies: Events involving QLabels can be redirected to different controls (e.g., clicking on a label may activate a text box on its right), to improve the user experience.
 Buddies can be associated statically in `*.ui` files, or associated programmatically (e.g., when a label is created from python code).
 
@@ -115,6 +114,14 @@ Text masks and validators: Invalid QLineEdit input can be rejected automatically
 [Localization](https://doc.qt.io/qt-6/localization.html): Each string defined in `*.ui` files, as well as each string processed by QTranslator, `tr()` or `QCoreApplication.translate()` can be automatically extracted into an xml file by the `lupdate` tool, translated by native-language contributors, and loaded at runtime.
 Since `lupdate` is a static analyzer, it is important that each string can be inspected from the source file (i.e., `tr("A static string")` will be translatable, `my_var = "A not-so-static string"; tr(my_var)` will not).
 
+## Concurrent Execution Model
+The application uses multiple approaches for concurrent execution.
+- QT6 objects implicitly use the internal `QThreadPool` model. This is transparent from the programmer's perspective, but care must be taken in using Signals and Slots for every non-trivial communication mechanism
+- The `ImageModel` and `BulkModel` rely on the MapReduce paradigm, therefore are implemented with a standard `multiprocessing.Pool.map` approach. Note that since it internally relies on `pickle`, not every function can be run on it (namely, class methods and lambdas are not pickleable)
+- `WorkerPool` offers three execution mechanisms, all exposing the same Signal-Slot-based interface:
+  1. Anonymous `QRunnable` functions automatically handled by `QThreadPool`, which can be enqueued arbitrarily many times.
+  2. Named `QRunnable` functions automatically handled by `QThreadPool`, which are reentrant based on a name (if a `QRunnable` with the same name is already running, the new worker is not enqueued).
+  3. Traditional `threading.Thread` functions, manually launched. This addresses two limitations of `QRunnable`, at the expenses of sacrificing automatic load balancing: exceptions in the underlying C++ code can crash the application, and the absence of `join()`.
 
 ## Decisions and Caveats
 - Since the original OneTrainer code was strongly coupled with the user interface, many model classes were rewritten from scratch, with a high chance of introducing bugs.

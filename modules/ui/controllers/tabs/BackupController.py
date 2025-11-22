@@ -44,10 +44,10 @@ class BackupController(BaseController):
     def __startBackup(self):
         @Slot()
         def f():
-            worker, name = WorkerPool.instance().createNamed(self.__backupNow(), "backup_operations",
+            worker, name = WorkerPool.instance().createNamed(self.__backupNow(), "backup_operations", poolless=True, daemon=True,
                                                              inject_progress_callback=True)
             if worker is not None:
-                worker.connect(init_fn=self.__enableControls(False), result_fn=None,
+                worker.connectCallbacks(init_fn=self.__enableControls(False), result_fn=None,
                                finished_fn=self.__enableControls(True))
                 WorkerPool.instance().start(name)
         return f
@@ -55,10 +55,10 @@ class BackupController(BaseController):
     def __startSave(self):
         @Slot()
         def f():
-            worker, name = WorkerPool.instance().createNamed(self.__saveNow(), "backup_operations",
+            worker, name = WorkerPool.instance().createNamed(self.__saveNow(), "backup_operations", poolless=True, daemon=True,
                                                              inject_progress_callback=True)
             if worker is not None:
-                worker.connect(init_fn=self.__enableControls(False), result_fn=None,
+                worker.connectCallbacks(init_fn=self.__enableControls(False), result_fn=None,
                                finished_fn=self.__enableControls(True))
                 WorkerPool.instance().start(name)
 

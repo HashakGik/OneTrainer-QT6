@@ -22,8 +22,8 @@
      <widget class="QWidget" name="scrollAreaWidgetContents">
       <property name="geometry">
        <rect>
-        <x>-346</x>
-        <y>-188</y>
+        <x>0</x>
+        <y>0</y>
         <width>1271</width>
         <height>1561</height>
        </rect>
@@ -39,10 +39,7 @@
             </property>
             <layout class="QGridLayout" name="gridLayout_6">
              <item row="2" column="0">
-              <widget class="QLabel" name="label_24">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
+              <widget class="QLabel" name="unmaskedWeightLbl">
                <property name="text">
                 <string>Unmasked Weight</string>
                </property>
@@ -53,9 +50,6 @@
              </item>
              <item row="2" column="1">
               <widget class="QDoubleSpinBox" name="unmaskedWeightSbx">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
                <property name="toolTip">
                 <string>When masked training is enabled, specifies the loss weight of areas outside the masked region</string>
                </property>
@@ -65,10 +59,7 @@
               </widget>
              </item>
              <item row="4" column="0">
-              <widget class="QLabel" name="label_25">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
+              <widget class="QLabel" name="maskedPriorPreservationLbl">
                <property name="text">
                 <string>Masked Prior Preservation Weight</string>
                </property>
@@ -79,9 +70,6 @@
              </item>
              <item row="4" column="1">
               <widget class="QDoubleSpinBox" name="maskedPriorPreservationSbx">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
                <property name="toolTip">
                 <string>Preserves regions outside the mask using the original untrained model output as a target. Only available for LoRA training. If enabled, use a low unmasked weight</string>
                </property>
@@ -91,10 +79,7 @@
               </widget>
              </item>
              <item row="1" column="0">
-              <widget class="QLabel" name="label_23">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
+              <widget class="QLabel" name="unmaskedProbabilityLbl">
                <property name="text">
                 <string>Unmasked Probability</string>
                </property>
@@ -105,9 +90,6 @@
              </item>
              <item row="1" column="1">
               <widget class="QDoubleSpinBox" name="unmaskedProbabilitySbx">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
                <property name="toolTip">
                 <string>When masked training is enabled, specifies the number of training steps done on unmasked samples</string>
                </property>
@@ -121,9 +103,6 @@
              </item>
              <item row="5" column="0" colspan="2">
               <widget class="QCheckBox" name="customConditioningImageCbx">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When custom conditioning image is enabled, will use png postfix with -condlabel instead of automatically generated. It's suitable for special scenarios, such as object removal, allowing the model to learn a certain behavior concept&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -134,9 +113,6 @@
              </item>
              <item row="3" column="0" colspan="2">
               <widget class="QCheckBox" name="normalizeMaskedAreaCbx">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
                <property name="toolTip">
                 <string>When masked training is enabled, normalizes the loss for each sample based on the sizes of the masked region</string>
                </property>
@@ -1002,7 +978,7 @@
             </property>
             <layout class="QGridLayout" name="gridLayout_3">
              <item row="0" column="1">
-              <widget class="SNLineEdit" name="embeddingLearningRateLed">
+              <widget class="SNLineEdit" name="embeddingLearningRateLed" native="true">
                <property name="toolTip">
                 <string>The learning rate of embeddings. Overrides the base learning rate</string>
                </property>

@@ -1,7 +1,7 @@
 from PySide6.QtCore import QObject, QThreadPool, QRunnable, Signal, Slot
-import sys, traceback, uuid, inspect
+import sys, traceback, uuid, inspect, threading
 
-class Worker(QRunnable, QObject):
+class BaseWorker(QObject):
     initialized = Signal()
     finished = Signal(str)
     errored = Signal(tuple)
@@ -10,8 +10,7 @@ class Worker(QRunnable, QObject):
     progress = Signal(dict) # Arbitrary key-value pairs.
 
     def __init__(self, fn, name, abort_flag=None, inject_progress_callback=False, **kwargs):
-        QObject.__init__(self)
-        QRunnable.__init__(self)
+        super().__init__()
         self.fn = fn
         self.name = name
         self.abort_flag = abort_flag
@@ -26,12 +25,7 @@ class Worker(QRunnable, QObject):
             self.progress.emit(data)
         return f
 
-    @Slot()
-    def run(self):
-        # TODO: IMPORTANT ISSUE: If a worker crashes with CUDA OUT OF MEMORY, the entire application crashes with a SEGMENTATION FAULT!
-        # According to this: https://stackoverflow.com/questions/59837773/qtcore-qrunnable-causes-sigsev-pyqt5
-        # The problem may be that multiple inheritance may cause sometimes to access reserved memory
-        # TODO: if unavoidable, rewrite this class using multiprocessing.Pool
+    def _threadWrapper(self):
         try:
             self.initialized.emit()
             if self.inject_progress_callback:
@@ -55,7 +49,7 @@ class Worker(QRunnable, QObject):
         finally:
             self.finished.emit(self.name)
 
-    def connect(self, init_fn=None, result_fn=None, finished_fn=None, errored_fn=None, aborted_fn=None, progress_fn=None):
+    def connectCallbacks(self, init_fn=None, result_fn=None, finished_fn=None, errored_fn=None, aborted_fn=None, progress_fn=None):
         if init_fn is not None:
             self.connections["initialized"].append(self.initialized.connect(init_fn))
         if result_fn is not None:
@@ -74,6 +68,39 @@ class Worker(QRunnable, QObject):
             for v2 in v:
                 v2.disconnect()
         self.connections = {"initialized": [], "result": [], "errored": [], "finished": [], "aborted": [], "progress": []}
+
+
+# Thread Worker based on QRunnable (it cannot be joined, but it is automatically enqueued on QT6's QThreadPool, balancing loads automatically.
+# IMPORTANT: For severe exceptions (e.g., CUDA errors) it may crash the entire application with SIGSEGV.
+# According to this: https://stackoverflow.com/questions/59837773/qtcore-qrunnable-causes-sigsev-pyqt5
+# The problem may be that multiple inheritance may cause sometimes to access reserved memory
+class RunnableWorker(QRunnable, BaseWorker):
+    def __init__(self, fn, name, abort_flag=None, inject_progress_callback=False, **kwargs):
+        BaseWorker.__init__(self, fn, name, abort_flag=abort_flag, inject_progress_callback=inject_progress_callback, **kwargs)
+        QRunnable.__init__(self)
+
+    @Slot()
+    def run(self):
+        self._threadWrapper()
+
+# Thread Worker based on threading.Thread, it is a manually managed thread, with join capabilities.
+# It *should* survive severe exceptions, as it is a native python implementation.
+class PoolLessWorker(BaseWorker):
+    def __init__(self, fn, name, abort_flag=None, inject_progress_callback=False, daemon=False, **kwargs):
+        BaseWorker.__init__(self, fn, name, abort_flag=abort_flag, inject_progress_callback=inject_progress_callback, **kwargs)
+
+        self._thread = threading.Thread(target=self._threadWrapper, daemon=daemon)
+
+    def start(self):
+        self._thread.start()
+
+    def join(self, timeout=None):
+        self._thread.join(timeout)
+
+    def isAlive(self):
+        return self._thread.is_alive()
+
+
 
 # Simple worker pool class. It allows to enqueue arbitrary functions executed on a QThreadPool. All the function parameters must be passed BY NAME (kwargs).
 # If a job is associated with a name (createNamed()), its execution is reentrant (i.e., attempting to run the same job multiple times, will execute it only once).
@@ -100,31 +127,41 @@ class WorkerPool:
         self.pool = QThreadPool()
         self.named_workers = {} # This worker's list refuses to append a new worker with the same name.
         self.anonymous_workers = {} # This worker's list can grow arbitrarily.
+        self.poolless_workers = {}
 
     def __len__(self):
         return len(self.anonymous_workers) + len(self.named_workers)
 
     def createAnonymous(self, fn, abort_flag=None, **kwargs):
         id = str(uuid.uuid4())
-        worker = Worker(fn, id, abort_flag=abort_flag, **kwargs)
-        worker.connect(finished_fn=self.__removeFinished(is_named=False))
+        worker = RunnableWorker(fn, id, abort_flag=abort_flag, **kwargs)
+        worker.connectCallbacks(finished_fn=self.__removeFinished(is_named=False))
         self.anonymous_workers[id] = worker
         return worker, id
 
-    def createNamed(self, fn, name, abort_flag=None, **kwargs):
+    def createNamed(self, fn, name, poolless=False, daemon=False, abort_flag=None, **kwargs):
         if name not in self.named_workers:
-            worker = Worker(fn, name, abort_flag=abort_flag, **kwargs)
-            worker.connect(finished_fn=self.__removeFinished(is_named=True))
-            self.named_workers[name] = worker
+            if poolless:
+                worker = PoolLessWorker(fn, name, abort_flag=abort_flag, daemon=daemon, **kwargs)
+                worker.connectCallbacks(finished_fn=self.__removeFinished(is_named=True))
+                self.poolless_workers[name] = worker
+            else:
+                worker = RunnableWorker(fn, name, abort_flag=abort_flag, **kwargs)
+                worker.connectCallbacks(finished_fn=self.__removeFinished(is_named=True))
+                self.named_workers[name] = worker
             return worker, name
         else:
             return None, None
+
 
     def start(self, worker_id):
         ok = False
         if worker_id in self.named_workers:
             ok = True
             self.pool.start(self.named_workers[worker_id])
+        elif worker_id in self.poolless_workers:
+            ok = True
+            self.poolless_workers[worker_id].start()
         elif worker_id in self.anonymous_workers:
             ok = True
             self.pool.start(self.anonymous_workers[worker_id])
@@ -134,7 +171,10 @@ class WorkerPool:
     def __removeFinished(self, is_named):
         def f(name):
             if is_named:
-                self.named_workers.pop(name)
+                if name in self.named_workers:
+                    self.named_workers.pop(name)
+                elif name in self.poolless_workers:
+                    self.poolless_workers.pop(name)
             else:
                 self.anonymous_workers.pop(name)
         return f

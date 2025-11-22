@@ -50,7 +50,7 @@ class MaskController(BaseController):
         def f():
             worker, name = WorkerPool.instance().createNamed(self.__createMask(), "create_mask", inject_progress_callback=True)
             if worker is not None:
-                worker.connect(init_fn=self.__enableControls(False), result_fn=None,
+                worker.connectCallbacks(init_fn=self.__enableControls(False), result_fn=None,
                                finished_fn=self.__enableControls(True),
                                errored_fn=self.__enableControls(True), aborted_fn=self.__enableControls(True),
                                progress_fn=self._updateProgress(self.ui.progressBar))

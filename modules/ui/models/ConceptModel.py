@@ -178,12 +178,9 @@ class ConceptModel(SingletonConfigModel):
         return image
 
     def download_dataset(self, idx):
-        # TODO: if this handles the exception, it will return successfully. If exception is deferred to WorkerPool, instead, it will emit the errored signal.
-        try:
-            huggingface_hub.login(token=StateModel.instance().getState("secrets.huggingface_token"), new_session=False)
-            huggingface_hub.snapshot_download(repo_id=self.getState("{}.path".format(idx)), repo_type="dataset")
-        except Exception:
-            traceback.print_exc()
+        # Exception handled by WorkerPool.
+        huggingface_hub.login(token=StateModel.instance().getState("secrets.huggingface_token"), new_session=False)
+        huggingface_hub.snapshot_download(repo_id=self.getState("{}.path".format(idx)), repo_type="dataset")
 
 
     def get_preview_prompt(self, filename, show_augmentations):

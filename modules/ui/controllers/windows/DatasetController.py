@@ -193,7 +193,7 @@ class DatasetController(BaseController):
 
             worker, name = WorkerPool.instance().createNamed(self.__scan(), name="open_dataset", dir=dir)
             if worker is not None:
-                worker.connect(finished_fn=self.__updateDataset())
+                worker.connectCallbacks(finished_fn=self.__updateDataset())
                 WorkerPool.instance().start(name)
 
         return f

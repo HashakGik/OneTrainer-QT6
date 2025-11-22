@@ -42,8 +42,13 @@ class TrainingModel(SingletonConfigModel):
             train_commands.save()
 
     def reattach(self):
-        # TODO
-        pass
+        pass  # TODO: self.cloud_tab.reattach
+
+        # self.reattach = True
+        # try:
+        #     self.parent.start_training()
+        # finally:
+        #     self.reattach = False
 
     @SingletonConfigModel.atomic
     def train(self, progress_fn=None):
@@ -67,7 +72,6 @@ class TrainingModel(SingletonConfigModel):
             trainer = GenericTrainer(train_config, self.training_callbacks, self.training_commands)
 
         try:
-            # TODO: if config is invalid, loops forever.
             trainer.start()
             if train_config.cloud.enabled:
                 self.__on_update_secrets(train_config.secrets.cloud)
@@ -98,14 +102,6 @@ class TrainingModel(SingletonConfigModel):
         if self.progress_fn is not None:
             self.progress_fn({"status": status})
 
-    def __on_reattach(self):
-        pass # TODO: self.cloud_tab.reattach
-
-        # self.reattach = True
-        # try:
-        #     self.parent.start_training()
-        # finally:
-        #     self.reattach = False
 
     def __on_update_secrets(self, cloud):
         pass # TODO:

@@ -159,7 +159,7 @@ class ImageModel(SingletonConfigModel):
             "alpha_bg_color": "#ffffff",
         }
 
-        self.pool = Pool()
+        self.pool = None
         self.abort_flag = threading.Event()
         self.progress_fn = None
 
@@ -168,12 +168,21 @@ class ImageModel(SingletonConfigModel):
         directory = self.getState("directory")
         self.progress_fn = progress_fn
 
+        if self.pool is None:
+            self.pool = Pool()
+
         if os.path.isdir(directory):
             path = Path(directory)
             files = [f for f in path.iterdir() if f.is_file()]
             print(f"Found {len(files)} files in {directory}")
 
             self.__run_operations(files)
+
+    def terminate_pool(self):
+        if self.pool is not None:
+            self.pool.terminate()
+            self.pool.join()
+            self.pool = None
 
     def __run_operations(self, files):
         operations = []
@@ -324,7 +333,7 @@ class ImageModel(SingletonConfigModel):
                     # TODO: from what I understand, the original intended behavior was to undo EVERY renaming, in case of an OSError.
                     # I think a best-effort strategy is more reasonable: if a single sample fails, rollback only its files (image, caption and masks), and stop there.
                     # This is because if you get an error during renaming, either there are permission issues (on some files), or the directory is no longer writeable/mounted (and in that case rollbacking would fail, and we would be in an inconsistent state anyway).
-                    # The only goal of the rollback mechanism is to attempt to guarantee that no (image, caption, mask) association is lost due to partial renamings.
+                    # The only goal of the rollback mechanism is to attempt to guarantee that no (image, caption, mask) triplet association is lost due to partial renamings.
                     outfiles = []
 
                     renaming = []

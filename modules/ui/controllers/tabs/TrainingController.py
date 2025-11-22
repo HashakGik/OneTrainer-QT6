@@ -174,9 +174,13 @@ class TrainingController(BaseController):
                  StateModel.instance().getState("training_method")])
 
 
-        cb = self.__enableCustomScheduler()  # This must be connected after __updateModel, otherwise it will not enable/disable custom parameters correctly
+        cb = self.__enableCustomScheduler()  # This must be connected after __updateModel, otherwise it will not enable/disable custom parameters correctly.
         self._connect(self.ui.schedulerCmb.activated, cb)
         self._connect(QtW.QApplication.instance().stateChanged, cb, update_after_connect=True)
+
+        cb2 = self.__enableMaskedTraining()
+        self._connect(self.ui.maskedTrainingCbx.toggled, cb2, update_after_connect=True)
+        self._connect(QtW.QApplication.instance().stateChanged, cb2)
 
         self._connect(self.ui.optimizerBtn.clicked, lambda: self._openWindow(self.optimizer_window, fixed_size=True))
         self._connect(self.ui.optimizerCmb.activated, self.__updateOptimizer())
@@ -184,7 +188,6 @@ class TrainingController(BaseController):
         # At the beginning invalidate the gui.
         self.optimizer_window.ui.optimizerCmb.setCurrentIndex(self.ui.optimizerCmb.currentIndex())
 
-        # TODO: MASKED TRAINING ENABLE
 
     def _connectInputValidation(self):
         self.ui.resolutionLed.setValidator(QtGui.QRegularExpressionValidator("\d+(x\d+(,\d+x\d+)*)?", self.ui))
@@ -318,6 +321,20 @@ class TrainingController(BaseController):
 
         return f
 
+    def __enableMaskedTraining(self):
+        @Slot()
+        def f():
+            enabled = self.ui.maskedTrainingCbx.isChecked()
+            self.ui.unmaskedProbabilityLbl.setEnabled(enabled)
+            self.ui.unmaskedProbabilitySbx.setEnabled(enabled)
+            self.ui.unmaskedWeightLbl.setEnabled(enabled)
+            self.ui.unmaskedWeightSbx.setEnabled(enabled)
+            self.ui.normalizeMaskedAreaCbx.setEnabled(enabled)
+            self.ui.maskedPriorPreservationLbl.setEnabled(enabled)
+            self.ui.maskedPriorPreservationSbx.setEnabled(enabled)
+            self.ui.customConditioningImageCbx.setEnabled(enabled)
+
+        return f
 
     def __validateNoisingStrength(self, direction):
         @Slot(float)
@@ -348,7 +365,7 @@ class TrainingController(BaseController):
                 if previousRow == total_rows - 1 and previousColumn == 1:
                     self.ui.tableWidget.insertRow(total_rows)
                     self.ui.tableWidget.editItem(self.ui.tableWidget.item(total_rows, 0))
-                    self.ui.tableWidget.setCurrentCell(total_rows, 0) # TODO: it inserts correctly a new cell, but tab selection returns to the first cell
+                    self.ui.tableWidget.setCurrentCell(total_rows, 0) # TODO: it inserts correctly a new cell, but tab selection returns to the first cell.
 
         return f
 
