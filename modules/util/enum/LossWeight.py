@@ -19,3 +19,10 @@ class LossWeight(BaseEnum):
             LossWeight.DEBIASED_ESTIMATION: 'Debiased Estimation',
             LossWeight.SIGMA: 'Sigma',
         }[self]
+
+    @staticmethod
+    def is_enabled(value, context=None):
+        if context == "flow_matching":
+            return value in [LossWeight.CONSTANT, LossWeight.SIGMA]
+        else:
+            return value in [LossWeight.CONSTANT, LossWeight.P2, LossWeight.MIN_SNR_GAMMA, LossWeight.DEBIASED_ESTIMATION]

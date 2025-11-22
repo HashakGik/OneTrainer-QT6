@@ -67,6 +67,8 @@ class TrainingController(BaseController):
         "custom_conditioning_image": "customConditioningImageCbx",
         "mse_strength": "mseSbx",
         "mae_strength": "maeSbx",
+        "huber_strength": "huberStrengthSbx",
+        "huber_delta": "huberDeltaSbx",
         "log_cosh_strength": "logcoshSbx",
         "vb_loss_strength": "vbLossSbx",
         "loss_weight_fn": "lossWeightFunctionCmb",
@@ -108,6 +110,7 @@ class TrainingController(BaseController):
         "text_encoder_2.stop_training_after_unit": "te2StopTrainingCmb",
         "text_encoder_2.learning_rate": "te2LearningRateLed",
         "text_encoder_2_layer_skip": "te2ClipSkipSbx",
+        "text_encoder_2_sequence_length": "te2SeqLenSbx",
 
         "text_encoder_3.include": "te3IncludeCbx",
         "text_encoder_3.train": "te3TrainCbx",
@@ -133,12 +136,17 @@ class TrainingController(BaseController):
         "unet.learning_rate": "unetLearningRateLed",
         "rescale_noise_scheduler_to_zero_terminal_snr": "unetRescaleCbx",
 
-        "prior.train": ["transformerTrainCbx", "priorTrainCbx"],
-        "prior.stop_training_after": ["transformerStopSbx", "priorStopSbx"],
-        "prior.stop_training_after_unit": ["transformerStopCmb", "priorStopCmb"],
-        "prior.learning_rate": ["transformerLearningRateLed", "priorLearningRateLed"],
-        "prior.attention_mask": "transformerAttnMaskCbx",
-        "prior.guidance_scale": "transformerGuidanceSbx",
+        "prior.train": "priorTrainCbx",
+        "prior.stop_training_after": "priorStopSbx",
+        "prior.stop_training_after_unit": "priorStopCmb",
+        "prior.learning_rate": "priorLearningRateLed",
+
+        "transformer.train": "transformerTrainCbx",
+        "transformer.stop_training_after": "transformerStopSbx",
+        "transformer.stop_training_after_unit": "transformerStopCmb",
+        "transformer.learning_rate": "transformerLearningRateLed",
+        "transformer.attention_mask": "transformerAttnMaskCbx",
+        "transformer.guidance_scale": "transformerGuidanceSbx",
 
         "custom_learning_rate_scheduler": "schedulerClassLed",
     }
@@ -207,9 +215,6 @@ class TrainingController(BaseController):
         for e in LossScaler.enabled_values():
             self.ui.lossScalerCmb.addItem(e.pretty_print(), userData=e)
 
-        for e in LossWeight.enabled_values():
-            self.ui.lossWeightFunctionCmb.addItem(e.pretty_print(), userData=e)
-
         for e in GradientCheckpointingMethod.enabled_values():
             self.ui.gradientCheckpointingCmb.addItem(e.pretty_print(), userData=e)
 
@@ -276,6 +281,15 @@ class TrainingController(BaseController):
             for k, v in presets.items():
                 self.ui.layerFilterCmb.addItem(k, userData=v)
             self.ui.layerFilterCmb.addItem("custom", userData=[])
+
+            self.ui.lossWeightFunctionCmb.clear()
+            for e in LossWeight.enabled_values("flow_matching" if model_type.is_flow_matching() else ""):
+                self.ui.lossWeightFunctionCmb.addItem(e.pretty_print(), userData=e)
+
+            self.ui.gammaSbx.setVisible(not model_type.is_flow_matching())
+
+            self.ui.te2SeqLenLbl.setVisible(ModelFlags.OVERRIDE_SEQUENCE_LENGTH_TE2 in flags)
+            self.ui.te2SeqLenSbx.setVisible(ModelFlags.OVERRIDE_SEQUENCE_LENGTH_TE2 in flags)
 
             self.ui.te1Gbx.setVisible(ModelFlags.TE1 in flags)
             self.ui.te2Gbx.setVisible(ModelFlags.TE2 in flags)

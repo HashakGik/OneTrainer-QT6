@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>959</width>
-    <height>426</height>
+    <width>937</width>
+    <height>538</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,9 +23,9 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>0</y>
-        <width>1271</width>
-        <height>1561</height>
+        <y>-648</y>
+        <width>1294</width>
+        <height>1660</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_9">
@@ -140,64 +140,41 @@
              <string>Regularization</string>
             </property>
             <layout class="QGridLayout" name="gridLayout_7">
-             <item row="4" column="1">
-              <widget class="QComboBox" name="lossWeightFunctionCmb">
+             <item row="8" column="1">
+              <widget class="QComboBox" name="lossScalerCmb">
                <property name="toolTip">
-                <string>Choice of loss weight function. Can help the model learn details more accurately</string>
+                <string>Selects the type of loss scaling to use during training. Functionally equated as: Loss * selection</string>
+               </property>
+              </widget>
+             </item>
+             <item row="5" column="1">
+              <widget class="QDoubleSpinBox" name="vbLossSbx">
+               <property name="toolTip">
+                <string>Variational lower-bound strength for custom loss settings. Should be set to 1 for variational diffusion models</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QDoubleSpinBox" name="maeSbx">
+               <property name="toolTip">
+                <string>Mean Absolute Error strength for custom loss settings. Strengths should generally sum to 1</string>
+               </property>
+              </widget>
+             </item>
+             <item row="7" column="1">
+              <widget class="QDoubleSpinBox" name="gammaSbx">
+               <property name="toolTip">
+                <string>Inverse strength of loss weighting. Range: 1-20, only applies to Min SNR and P2</string>
                </property>
               </widget>
              </item>
              <item row="5" column="0">
-              <widget class="QLabel" name="label_30">
+              <widget class="QLabel" name="vbLossLbl">
                <property name="text">
-                <string>Gamma</string>
+                <string>VB Strength</string>
                </property>
                <property name="buddy">
-                <cstring>gammaSbx</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="0">
-              <widget class="QLabel" name="label_28">
-               <property name="text">
-                <string>Log-Cosh Strength</string>
-               </property>
-               <property name="buddy">
-                <cstring>logcoshSbx</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="1">
-              <widget class="QDoubleSpinBox" name="logcoshSbx">
-               <property name="toolTip">
-                <string>Log - Hyperbolic cosine Error strength for custom loss settings</string>
-               </property>
-              </widget>
-             </item>
-             <item row="4" column="0">
-              <widget class="QLabel" name="label_29">
-               <property name="text">
-                <string>Loss Weight Function</string>
-               </property>
-               <property name="buddy">
-                <cstring>lossWeightFunctionCmb</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="label_27">
-               <property name="text">
-                <string>MAE Strength</string>
-               </property>
-               <property name="buddy">
-                <cstring>maeSbx</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="6" column="1">
-              <widget class="QComboBox" name="lossScalerCmb">
-               <property name="toolTip">
-                <string>Selects the type of loss scaling to use during training. Functionally equated as: Loss * selection</string>
+                <cstring>vbLossSbx</cstring>
                </property>
               </widget>
              </item>
@@ -211,7 +188,44 @@
                </property>
               </widget>
              </item>
+             <item row="0" column="1">
+              <widget class="QDoubleSpinBox" name="mseSbx">
+               <property name="toolTip">
+                <string>Mean Squared Error strength for custom loss settings. Strengths should generally sum to 1</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="0">
+              <widget class="QLabel" name="label_28">
+               <property name="text">
+                <string>Log-Cosh Strength</string>
+               </property>
+               <property name="buddy">
+                <cstring>logcoshSbx</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="7" column="0">
+              <widget class="QLabel" name="label_30">
+               <property name="text">
+                <string>Gamma</string>
+               </property>
+               <property name="buddy">
+                <cstring>gammaSbx</cstring>
+               </property>
+              </widget>
+             </item>
              <item row="6" column="0">
+              <widget class="QLabel" name="label_29">
+               <property name="text">
+                <string>Loss Weight Function</string>
+               </property>
+               <property name="buddy">
+                <cstring>lossWeightFunctionCmb</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="8" column="0">
               <widget class="QLabel" name="label_31">
                <property name="text">
                 <string>Loss Scaler</string>
@@ -221,41 +235,61 @@
                </property>
               </widget>
              </item>
-             <item row="1" column="1">
-              <widget class="QDoubleSpinBox" name="maeSbx">
+             <item row="4" column="1">
+              <widget class="QDoubleSpinBox" name="logcoshSbx">
                <property name="toolTip">
-                <string>Mean Absolute Error strength for custom loss settings. MAE + MSE Strengths generally should sum to 1</string>
+                <string>Log - Hyperbolic cosine Error strength for custom loss settings. Strengths should generally sum to 1</string>
                </property>
               </widget>
              </item>
-             <item row="0" column="1">
-              <widget class="QDoubleSpinBox" name="mseSbx">
-               <property name="toolTip">
-                <string>Mean Squared Error strength for custom loss settings. MAE + MSE Strengths generally should sum to 1</string>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_22">
+               <property name="text">
+                <string>Huber Strength</string>
+               </property>
+               <property name="buddy">
+                <cstring>huberStrengthSbx</cstring>
                </property>
               </widget>
              </item>
-             <item row="5" column="1">
-              <widget class="QDoubleSpinBox" name="gammaSbx">
+             <item row="6" column="1">
+              <widget class="QComboBox" name="lossWeightFunctionCmb">
                <property name="toolTip">
-                <string>Inverse strength of loss weighting. Range: 1-20, only applies to Min SNR and P2</string>
+                <string>Choice of loss weight function. Can help the model learn details more accurately</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_27">
+               <property name="text">
+                <string>MAE Strength</string>
+               </property>
+               <property name="buddy">
+                <cstring>maeSbx</cstring>
                </property>
               </widget>
              </item>
              <item row="3" column="0">
-              <widget class="QLabel" name="vbLossLbl">
+              <widget class="QLabel" name="label_23">
                <property name="text">
-                <string>VB Strength</string>
+                <string>Huber Delta</string>
                </property>
                <property name="buddy">
-                <cstring>vbLossSbx</cstring>
+                <cstring>huberDeltaSbx</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QDoubleSpinBox" name="huberStrengthSbx">
+               <property name="toolTip">
+                <string>Huber loss strength for custom loss settings. Less sensitive to outliers than MSE. Strengths should generally sum to 1</string>
                </property>
               </widget>
              </item>
              <item row="3" column="1">
-              <widget class="QDoubleSpinBox" name="vbLossSbx">
+              <widget class="QDoubleSpinBox" name="huberDeltaSbx">
                <property name="toolTip">
-                <string>Variational lower-bound strength for custom loss settings. Should be set to 1 for variational diffusion models</string>
+                <string>Delta parameter for huber loss</string>
                </property>
               </widget>
              </item>
@@ -397,13 +431,60 @@
                </property>
               </widget>
              </item>
-             <item row="7" column="1" colspan="2">
-              <widget class="QLabel" name="label_48">
+             <item row="6" column="1">
+              <widget class="QLabel" name="label_51">
                <property name="text">
-                <string>Text Encoder 2 Learning Rate</string>
+                <string>Stop Training After</string>
                </property>
                <property name="buddy">
-                <cstring>te2LearningRateLed</cstring>
+                <cstring>te2StopTrainingSbx</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="5" column="1">
+              <widget class="QLabel" name="label_49">
+               <property name="text">
+                <string>Dropout Probability</string>
+               </property>
+               <property name="buddy">
+                <cstring>te2DropoutSbx</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="7" column="3">
+              <widget class="SNLineEdit" name="te2LearningRateLed" native="true">
+               <property name="toolTip">
+                <string>The learning rate of the text encoder 2. Overrides the base learning rate</string>
+               </property>
+              </widget>
+             </item>
+             <item row="8" column="3">
+              <widget class="QSpinBox" name="te2ClipSkipSbx">
+               <property name="toolTip">
+                <string>The number of additional clip layers to skip. 0 = the model default</string>
+               </property>
+              </widget>
+             </item>
+             <item row="6" column="3">
+              <widget class="QComboBox" name="te2StopTrainingCmb"/>
+             </item>
+             <item row="8" column="1">
+              <widget class="QLabel" name="te2ClipSkipLbl">
+               <property name="text">
+                <string>Text Encoder 2 Clip Skip</string>
+               </property>
+               <property name="buddy">
+                <cstring>te2ClipSkipSbx</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="1" colspan="3">
+              <widget class="QCheckBox" name="te2TrainEmbCbx">
+               <property name="toolTip">
+                <string>Enables training embeddings for the text encoder 2 model</string>
+               </property>
+               <property name="text">
+                <string>Train Text Encoder 2 Embedding</string>
                </property>
               </widget>
              </item>
@@ -417,6 +498,16 @@
                </property>
               </widget>
              </item>
+             <item row="7" column="1" colspan="2">
+              <widget class="QLabel" name="label_48">
+               <property name="text">
+                <string>Text Encoder 2 Learning Rate</string>
+               </property>
+               <property name="buddy">
+                <cstring>te2LearningRateLed</cstring>
+               </property>
+              </widget>
+             </item>
              <item row="6" column="2">
               <widget class="QSpinBox" name="te2StopTrainingSbx">
                <property name="toolTip">
@@ -424,16 +515,6 @@
                </property>
                <property name="maximum">
                 <number>999999999</number>
-               </property>
-              </widget>
-             </item>
-             <item row="5" column="1">
-              <widget class="QLabel" name="label_49">
-               <property name="text">
-                <string>Dropout Probability</string>
-               </property>
-               <property name="buddy">
-                <cstring>te2DropoutSbx</cstring>
                </property>
               </widget>
              </item>
@@ -450,50 +531,20 @@
                </property>
               </widget>
              </item>
-             <item row="6" column="3">
-              <widget class="QComboBox" name="te2StopTrainingCmb"/>
-             </item>
-             <item row="4" column="1" colspan="3">
-              <widget class="QCheckBox" name="te2TrainEmbCbx">
-               <property name="toolTip">
-                <string>Enables training embeddings for the text encoder 2 model</string>
-               </property>
+             <item row="9" column="1">
+              <widget class="QLabel" name="te2SeqLenLbl">
                <property name="text">
-                <string>Train Text Encoder 2 Embedding</string>
-               </property>
-              </widget>
-             </item>
-             <item row="6" column="1">
-              <widget class="QLabel" name="label_51">
-               <property name="text">
-                <string>Stop Training After</string>
+                <string>Text Encoder 2 Sequence Length</string>
                </property>
                <property name="buddy">
-                <cstring>te2StopTrainingSbx</cstring>
+                <cstring>te2SeqLenSbx</cstring>
                </property>
               </widget>
              </item>
-             <item row="8" column="1">
-              <widget class="QLabel" name="te2ClipSkipLbl">
-               <property name="text">
-                <string>Text Encoder 2 Clip Skip</string>
-               </property>
-               <property name="buddy">
-                <cstring>te2ClipSkipSbx</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="8" column="3">
-              <widget class="QSpinBox" name="te2ClipSkipSbx">
-               <property name="toolTip">
-                <string>The number of additional clip layers to skip. 0 = the model default</string>
-               </property>
-              </widget>
-             </item>
-             <item row="7" column="3">
-              <widget class="SNLineEdit" name="te2LearningRateLed" native="true">
-               <property name="toolTip">
-                <string>The learning rate of the text encoder 2. Overrides the base learning rate</string>
+             <item row="9" column="3">
+              <widget class="QSpinBox" name="te2SeqLenSbx">
+               <property name="maximum">
+                <number>512</number>
                </property>
               </widget>
              </item>
@@ -1013,13 +1064,6 @@
              <string>Trainable Layers</string>
             </property>
             <layout class="QGridLayout" name="gridLayout_4">
-             <item row="2" column="0">
-              <widget class="QCheckBox" name="layerFilterRegexCbx">
-               <property name="text">
-                <string>Use Regex</string>
-               </property>
-              </widget>
-             </item>
              <item row="0" column="0">
               <widget class="QLabel" name="label_13">
                <property name="text">
@@ -1033,8 +1077,20 @@
              <item row="0" column="1">
               <widget class="QComboBox" name="layerFilterCmb"/>
              </item>
-             <item row="1" column="0">
-              <widget class="QLineEdit" name="layerFilterLed"/>
+             <item row="1" column="0" colspan="2">
+              <widget class="QLineEdit" name="layerFilterLed">
+               <property name="toolTip">
+                <string>Select a preset defining which layers to train, or select 'Custom' to define your own.
+A blank 'custom' field or 'Full' will train all layers</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0" colspan="2">
+              <widget class="QCheckBox" name="layerFilterRegexCbx">
+               <property name="text">
+                <string>Use Regex</string>
+               </property>
+              </widget>
              </item>
             </layout>
            </widget>
@@ -1767,6 +1823,7 @@
   <tabstop>optimizerCmb</tabstop>
   <tabstop>optimizerBtn</tabstop>
   <tabstop>schedulerCmb</tabstop>
+  <tabstop>schedulerClassLed</tabstop>
   <tabstop>tableWidget</tabstop>
   <tabstop>warmupStepsSbx</tabstop>
   <tabstop>minFactorSbx</tabstop>
@@ -1797,6 +1854,8 @@
   <tabstop>customConditioningImageCbx</tabstop>
   <tabstop>mseSbx</tabstop>
   <tabstop>maeSbx</tabstop>
+  <tabstop>huberStrengthSbx</tabstop>
+  <tabstop>huberDeltaSbx</tabstop>
   <tabstop>logcoshSbx</tabstop>
   <tabstop>vbLossSbx</tabstop>
   <tabstop>lossWeightFunctionCmb</tabstop>
@@ -1816,6 +1875,7 @@
   <tabstop>te2StopTrainingSbx</tabstop>
   <tabstop>te2StopTrainingCmb</tabstop>
   <tabstop>te2ClipSkipSbx</tabstop>
+  <tabstop>te2SeqLenSbx</tabstop>
   <tabstop>te3IncludeCbx</tabstop>
   <tabstop>te3TrainCbx</tabstop>
   <tabstop>te3TrainEmbCbx</tabstop>
@@ -1842,7 +1902,6 @@
   <tabstop>priorTrainCbx</tabstop>
   <tabstop>priorStopSbx</tabstop>
   <tabstop>priorStopCmb</tabstop>
-  <tabstop>embeddingLearningRateLed</tabstop>
   <tabstop>embeddingNormCbx</tabstop>
   <tabstop>layerFilterCmb</tabstop>
   <tabstop>layerFilterLed</tabstop>

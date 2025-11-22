@@ -51,6 +51,7 @@ class ModelFlags(Flag):
     DISABLE_CLIP_SKIP = auto()
     VIDEO_TRAINING = auto()
     DISABLE_TE4_LAYER_SKIP = auto()
+    OVERRIDE_SEQUENCE_LENGTH_TE2 = auto()
 
     # Training method flags.
     CAN_TRAIN_EMBEDDING = auto()
@@ -102,7 +103,7 @@ class ModelFlags(Flag):
                 flags |= ModelFlags.ALLOW_LEGACY_SAFETENSORS
 
         elif model_type.is_flux():
-            flags = (ModelFlags.OVERRIDE_TRANSFORMER | ModelFlags.TE1 | ModelFlags.TE2 | ModelFlags.VAE |
+            flags = (ModelFlags.OVERRIDE_TRANSFORMER | ModelFlags.TE1 | ModelFlags.TE2 | ModelFlags.VAE | ModelFlags.OVERRIDE_SEQUENCE_LENGTH_TE2 |
                      ModelFlags.ALLOW_SAFETENSORS | ModelFlags.TRANSFORMER | ModelFlags.TE_INCLUDE | ModelFlags.GUIDANCE_SCALE | ModelFlags.DYNAMIC_TIMESTEP_SHIFTING)
             if training_method == TrainingMethod.FINE_TUNE:
                 flags |= ModelFlags.ALLOW_DIFFUSERS
