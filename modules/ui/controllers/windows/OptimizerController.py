@@ -3,513 +3,8 @@ from PySide6.QtCore import QCoreApplication as QCA, Slot
 import PySide6.QtWidgets as QtW
 
 from modules.ui.utils.SNLineEdit import SNLineEdit
-from modules.util.enum.Optimizer import Optimizer
 
 from modules.ui.models.StateModel import StateModel
-
-# TODO: FOR SOME REASON THIS GIVES IMPORT ERROR (circular import: modules.optimizer.utils -> modules.utils.create -> modules.modelSetup.ChromaEmbeddingSetup -> modules.util.optimizer_util)
-# from modules.util.optimizer_util import (
-    # OPTIMIZER_DEFAULT_PARAMETERS,
-    # #change_optimizer,
-    # load_optimizer_defaults,
-    # #update_optimizer_config,
-# )
-# TODO: for demonstration purpose, I am  temporarily copying OPTIMIZER_DEFAULT_PARAMETERS here:
-OPTIMIZER_DEFAULT_PARAMETERS = {
-    Optimizer.ADAFACTOR: {
-        "eps": 1e-30,
-        "eps2": 1e-3,
-        "clip_threshold": 1.0,
-        "decay_rate": -0.8,
-        "beta1": None,
-        "weight_decay": 0.0,
-        "scale_parameter": False,
-        "relative_step": False,
-        "warmup_init": False,
-        "stochastic_rounding": True,
-        "fused_back_pass": False,
-    },
-    Optimizer.ADAGRAD: {
-        "lr_decay": 0,
-        "weight_decay": 0,
-        "initial_accumulator_value": 0,
-        "eps": 1e-10,
-        "optim_bits": 32,
-        "min_8bit_size": 4096,
-        "percentile_clipping": 100,
-        "block_wise": True,
-    },
-    Optimizer.ADAGRAD_8BIT: {
-        "lr_decay": 0,
-        "weight_decay": 0,
-        "initial_accumulator_value": 0,
-        "eps": 1e-10,
-        "optim_bits": 8,
-        "min_8bit_size": 4096,
-        "percentile_clipping": 100,
-        "block_wise": True,
-        "fused_back_pass": False,
-    },
-    Optimizer.ADAM_8BIT: {
-        "beta1": 0.9,
-        "beta2": 0.999,
-        "eps": 1e-8,
-        "weight_decay": 0,
-        "amsgrad": False,
-        "optim_bits": 32,
-        "min_8bit_size": 4096,
-        "percentile_clipping": 100,
-        "block_wise": True,
-        "is_paged": False,
-    },
-    Optimizer.ADAMW_8BIT: {
-        "beta1": 0.9,
-        "beta2": 0.999,
-        "eps": 1e-8,
-        "weight_decay": 1e-2,
-        "amsgrad": False,
-        "optim_bits": 32,
-        "min_8bit_size": 4096,
-        "percentile_clipping": 100,
-        "block_wise": True,
-        "is_paged": False,
-    },
-    Optimizer.AdEMAMix_8BIT: {
-        "beta1": 0.9,
-        "beta2": 0.999,
-        "beta3": 0.9999,
-        "eps": 1e-8,
-        "alpha": 5,
-        "weight_decay": 1e-2,
-        "min_8bit_size": 4096,
-        "is_paged": False,
-    },
-    Optimizer.AdEMAMix: {
-        "beta1": 0.9,
-        "beta2": 0.999,
-        "beta3": 0.9999,
-        "eps": 1e-8,
-        "alpha": 5,
-        "weight_decay": 1e-2,
-        "optim_bits": 32,
-        "min_8bit_size": 4096,
-        "is_paged": False,
-    },
-    Optimizer.ADOPT: {
-        "beta1": 0.9,
-        "beta2": 0.9999,
-        "weight_decay": 0.0,
-        "decoupled_decay": False,
-        "fixed_decay": False,
-        "cautious": False,
-        "eps": 1e-6,
-    },
-    Optimizer.LAMB: {
-        "bias_correction": True,
-        "beta1": 0.9,
-        "beta2": 0.999,
-        "eps": 1e-8,
-        "weight_decay": 0,
-        "amsgrad": False,
-        "adam_w_mode": True,
-        "optim_bits": 32,
-        "min_8bit_size": 4096,
-        "percentile_clipping": 100,
-        "block_wise": False,
-        "max_unorm": 1.0,
-    },
-    Optimizer.LAMB_8BIT: {
-        "bias_correction": True,
-        "beta1": 0.9,
-        "beta2": 0.999,
-        "eps": 1e-8,
-        "weight_decay": 0,
-        "amsgrad": False,
-        "adam_w_mode": True,
-        "min_8bit_size": 4096,
-        "percentile_clipping": 100,
-        "block_wise": False,
-        "max_unorm": 1.0,
-    },
-    Optimizer.LARS: {
-        "momentum": 0,
-        "dampening": 0,
-        "weight_decay": 0,
-        "nesterov": False,
-        "optim_bits": 32,
-        "min_8bit_size": 4096,
-        "percentile_clipping": 100,
-        "max_unorm": 0.02,
-    },
-    Optimizer.LARS_8BIT: {
-        "momentum": 0,
-        "dampening": 0,
-        "weight_decay": 0,
-        "nesterov": False,
-        "min_8bit_size": 4096,
-        "percentile_clipping": 100,
-        "max_unorm": 0.02,
-    },
-    Optimizer.LION_8BIT: {
-        "beta1": 0.9,
-        "beta2": 0.999,
-        "weight_decay": 0,
-        "min_8bit_size": 4096,
-        "percentile_clipping": 100,
-        "block_wise": True,
-        "is_paged": False,
-    },
-    Optimizer.RMSPROP: {
-        "alpha": 0.99,
-        "eps": 1e-8,
-        "weight_decay": 0,
-        "momentum": 0,
-        "centered": False,
-        "optim_bits": 32,
-        "min_8bit_size": 4096,
-        "percentile_clipping": 100,
-        "block_wise": True,
-    },
-    Optimizer.RMSPROP_8BIT: {
-        "alpha": 0.99,
-        "eps": 1e-8,
-        "weight_decay": 0,
-        "momentum": 0,
-        "centered": False,
-        "min_8bit_size": 4096,
-        "percentile_clipping": 100,
-        "block_wise": True,
-    },
-    Optimizer.SGD_8BIT: {
-        "momentum": 0,
-        "dampening": 0,
-        "weight_decay": 0,
-        "nesterov": False,
-        "min_8bit_size": 4096,
-        "percentile_clipping": 100,
-        "block_wise": True,
-    },
-    Optimizer.SCHEDULE_FREE_ADAMW: {
-        "beta1": 0.9,
-        "beta2": 0.999,
-        "eps": 1e-8,
-        "weight_decay": 1e-2,
-        "r": 0.0,
-        "weight_lr_power": 2.0,
-        "foreach": False,
-    },
-    Optimizer.SCHEDULE_FREE_SGD: {
-        "momentum": 0,
-        "weight_decay": 1e-2,
-        "r": 0.0,
-        "weight_lr_power": 2.0,
-        "foreach": False,
-    },
-    Optimizer.PRODIGY: {
-        "beta1": 0.9,
-        "beta2": 0.999,
-        "beta3": None,
-        "eps": 1e-8,
-        "weight_decay": 0,
-        "decouple": True,
-        "use_bias_correction": False,
-        "safeguard_warmup": False,
-        "d0": 1e-6,
-        "d_coef": 1.0,
-        "growth_rate": float('inf'),
-        "fsdp_in_use": False,
-        "slice_p": 11,
-    },
-    Optimizer.PRODIGY_PLUS_SCHEDULE_FREE: {
-        "beta1": 0.9,
-        "beta2": 0.99,
-        "beta3": None,
-        "weight_decay": 0.0,
-        "weight_decay_by_lr": True,
-        "use_bias_correction": False,
-        "d0": 1e-6,
-        "d_coef": 1.0,
-        "prodigy_steps": 0,
-        "use_speed": False,
-        "eps": 1e-8,
-        "split_groups": True,
-        "split_groups_mean": False,
-        "factored": True,
-        "factored_fp32": True,
-        "fused_back_pass": False,
-        "use_stableadamw": True,
-        "use_cautious": False,
-        "use_grams": False,
-        "use_adopt": False,
-        "use_focus": False,
-        "d_limiter": True,
-        "stochastic_rounding": True,
-        "use_schedulefree": True,
-        "use_orthograd": False,
-    },
-    Optimizer.DADAPT_ADA_GRAD: {
-        "momentum": 0,
-        "log_every": 0,
-        "weight_decay": 0.0,
-        "eps": 0.0,
-        "d0": 1e-6,
-        "growth_rate": float('inf'),
-    },
-    Optimizer.DADAPT_ADAN: {
-        "beta1": 0.98,
-        "beta2": 0.92,
-        "beta3": 0.99,
-        "eps": 1e-8,
-        "weight_decay": 0.02,
-        "no_prox": False,
-        "log_every": 0,
-        "d0": 1e-6,
-        "growth_rate": float('inf'),
-    },
-    Optimizer.DADAPT_ADAM: {
-        "beta1": 0.9,
-        "beta2": 0.999,
-        "eps": 1e-8,
-        "weight_decay": 0,
-        "log_every": 0,
-        "decouple": False,
-        "use_bias_correction": False,
-        "d0": 1e-6,
-        "growth_rate": float('inf'),
-        "fsdp_in_use": False,
-    },
-    Optimizer.DADAPT_SGD: {
-        "momentum": 0.0,
-        "weight_decay": 0,
-        "log_every": 0,
-        "d0": 1e-6,
-        "growth_rate": float('inf'),
-        "fsdp_in_use": False,
-    },
-    Optimizer.DADAPT_LION: {
-        "beta1": 0.9,
-        "beta2": 0.999,
-        "weight_decay": 0.0,
-        "log_every": 0,
-        "d0": 1e-6,
-        "fsdp_in_use": False,
-    },
-    Optimizer.ADAM: {
-        "beta1": 0.9,
-        "beta2": 0.999,
-        "eps": 1e-8,
-        "weight_decay": 0,
-        "amsgrad": False,
-        "foreach": False,
-        "maximize": False,
-        "capturable": False,
-        "differentiable": False,
-        "fused": True,
-        "stochastic_rounding": False,
-        "fused_back_pass": False,
-    },
-    Optimizer.ADAMW: {
-        "beta1": 0.9,
-        "beta2": 0.999,
-        "eps": 1e-8,
-        "weight_decay": 1e-2,
-        "amsgrad": False,
-        "foreach": False,
-        "maximize": False,
-        "capturable": False,
-        "differentiable": False,
-        "fused": True,
-        "stochastic_rounding": False,
-        "fused_back_pass": False,
-    },
-    Optimizer.SGD: {
-        "momentum": 0,
-        "dampening": 0,
-        "weight_decay": 0,
-        "nesterov": False,
-        "foreach": False,
-        "maximize": False,
-        "differentiable": False,
-    },
-    Optimizer.LION: {
-        "beta1": 0.9,
-        "beta2": 0.99,
-        "weight_decay": 0.0,
-        "use_triton": False,
-    },
-    Optimizer.CAME: {
-        "beta1": 0.9,
-        "beta2": 0.999,
-        "beta3": 0.9999,
-        "eps": 1e-30,
-        "eps2": 1e-16,
-        "weight_decay": 1e-2,
-        "stochastic_rounding": False,
-        "use_cautious": False,
-        "fused_back_pass": False,
-    },
-    Optimizer.CAME_8BIT: {
-        "beta1": 0.9,
-        "beta2": 0.999,
-        "beta3": 0.9999,
-        "eps": 1e-30,
-        "eps2": 1e-16,
-        "weight_decay": 1e-2,
-        "stochastic_rounding": False,
-        "fused_back_pass": False,
-        "min_8bit_size": 16384,
-        "quant_block_size": 2048
-    },
-    Optimizer.ADAMW_ADV: {
-        "beta1": 0.9,
-        "beta2": 0.99,
-        "eps": 1e-8,
-        "weight_decay": 0.0,
-        "use_bias_correction": True,
-        "nnmf_factor": False,
-        "stochastic_rounding": True,
-        "fused_back_pass": False,
-        "use_atan2": False,
-        "cautious_mask": False,
-        "grams_moment": False,
-        "orthogonal_gradient": False,
-        "use_AdEMAMix": False,
-        "beta3_ema": 0.9999,
-        "alpha": 5,
-    },
-    Optimizer.ADOPT_ADV: {
-        "beta1": 0.9,
-        "beta2": 0.9999,
-        "eps": 1e-6,
-        "weight_decay": 0.0,
-        "nnmf_factor": False,
-        "stochastic_rounding": True,
-        "fused_back_pass": False,
-        "use_atan2": False,
-        "cautious_mask": False,
-        "grams_moment": False,
-        "orthogonal_gradient": False,
-        "use_AdEMAMix": False,
-        "beta3_ema": 0.9999,
-        "alpha": 5,
-        "Simplified_AdEMAMix": False,
-        "alpha_grad": 100.0,
-    },
-    Optimizer.PRODIGY_ADV: {
-        "beta1": 0.9,
-        "beta2": 0.99,
-        "beta3": None,
-        "eps": 1e-8,
-        "weight_decay": 0.0,
-        "nnmf_factor": False,
-        "stochastic_rounding": True,
-        "fused_back_pass": False,
-        "d0": 1e-6,
-        "d_coef": 1.0,
-        "growth_rate": float('inf'),
-        "slice_p": 11,
-        "prodigy_steps": 0,
-        "use_atan2": False,
-        "cautious_mask": False,
-        "grams_moment": False,
-        "orthogonal_gradient": False,
-        "use_AdEMAMix": False,
-        "beta3_ema": 0.9999,
-        "alpha": 5,
-        "Simplified_AdEMAMix": False,
-        "alpha_grad": 100.0,
-    },
-    Optimizer.SIMPLIFIED_AdEMAMix: {
-        "beta1": 0.99,
-        "beta2": 0.99,
-        "eps": 1e-8,
-        "weight_decay": 0.0,
-        "alpha_grad": 100.0,
-        "beta1_warmup": None,
-        "min_beta1": 0.9,
-        "use_bias_correction": True,
-        "nnmf_factor": False,
-        "stochastic_rounding": True,
-        "fused_back_pass": False,
-        "orthogonal_gradient": False,
-    },
-    Optimizer.LION_ADV: {
-        "beta1": 0.9,
-        "beta2": 0.99,
-        "weight_decay": 0.0,
-        "clip_threshold": None,
-        "nnmf_factor": False,
-        "stochastic_rounding": True,
-        "fused_back_pass": False,
-        "cautious_mask": False,
-        "orthogonal_gradient": False,
-    },
-    Optimizer.LION_PRODIGY_ADV: {
-        "beta1": 0.9,
-        "beta2": 0.99,
-        "beta3": None,
-        "weight_decay": 0.0,
-        "clip_threshold": None,
-        "nnmf_factor": False,
-        "stochastic_rounding": True,
-        "fused_back_pass": False,
-        "d0": 1e-6,
-        "d_coef": 1.0,
-        "growth_rate": float('inf'),
-        "slice_p": 11,
-        "cautious_mask": False,
-        "orthogonal_gradient": False,
-    },
-    Optimizer.ADABELIEF: {
-        "beta1": 0.9,
-        "beta2": 0.999,
-        "eps": 1e-16,
-        "weight_decay": 0,
-        "amsgrad": False,
-        "decoupled_decay": True,
-        "fixed_decay": False,
-        "rectify": True,
-        "degenerated_to_sgd": True,
-    },
-    Optimizer.TIGER: {
-        "beta1": 0.965,
-        "weight_decay": 0.01,
-        "decoupled_decay": True,
-        "fixed_decay": False,
-    },
-    Optimizer.AIDA: {
-        "beta1": 0.9,
-        "beta2": 0.999,
-        "k": 2,
-        "xi": 1e-20,
-        "weight_decay": 0.0,
-        "decoupled_decay": False,
-        "fixed_decay": False,
-        "rectify": False,
-        "n_sma_threshold": 5,
-        "degenerated_to_sgd": True,
-        "ams_bound": False,
-        "r": 0.95,
-        "adanorm": False,
-        "adam_debias": False,
-        "eps": 1e-8,
-    },
-    Optimizer.YOGI: {
-        "beta1": 0.9,
-        "beta2": 0.999,
-        "weight_decay": 0.0,
-        "decoupled_decay": True,
-        "fixed_decay": False,
-        "r": 0.95,
-        "adanorm": False,
-        "adam_debias": False,
-        "initial_accumulator": 1e-6,
-        "eps": 1e-3,
-    },
-}
-
-
-
 
 class OptimizerController(BaseController):
     # @formatter:off
@@ -585,7 +80,6 @@ class OptimizerController(BaseController):
         "use_cautious": {"title": QCA.translate("optimizer_parameter", "use_cautious"), "tooltip": QCA.translate("optimizer_parameter_tooltip", "Use cautious method"), "type": "bool"},
         "use_grams": {"title": QCA.translate("optimizer_parameter", "use_grams"), "tooltip": QCA.translate("optimizer_parameter_tooltip", "Use grams method"), "type": "bool"},
         "use_adopt": {"title": QCA.translate("optimizer_parameter", "use_adopt"), "tooltip": QCA.translate("optimizer_parameter_tooltip", "Use adopt method"), "type": "bool"},
-        "use_focus": {"title": QCA.translate("optimizer_parameter", "use_focus"), "tooltip": QCA.translate("optimizer_parameter_tooltip", "Use focus method"), "type": "bool"},
         "d_limiter": {"title": QCA.translate("optimizer_parameter", "d_limiter"), "tooltip": QCA.translate("optimizer_parameter_tooltip", "Prevent over-estimated LRs when gradients and EMA are still stabilizing"), "type": "bool"},
         "use_schedulefree": {"title": QCA.translate("optimizer_parameter", "use_schedulefree"), "tooltip": QCA.translate("optimizer_parameter_tooltip", "Use Schedulefree method"), "type": "bool"},
         "use_orthograd": {"title": QCA.translate("optimizer_parameter", "use_orthograd"), "tooltip": QCA.translate("optimizer_parameter_tooltip", "Use orthograd method"), "type": "bool"},
@@ -600,6 +94,9 @@ class OptimizerController(BaseController):
         "min_beta1": {"title": QCA.translate("optimizer_parameter", "Minimum Beta1"), "tooltip": QCA.translate("optimizer_parameter_tooltip", "Starting beta1 value for warmup scheduling. Used only when beta1 warmup is enabled. Lower values allow faster initial adaptation, while higher values provide more smoothing. The final beta1 value is specified in the beta1 parameter."), "type": "float"},
         "Simplified_AdEMAMix": {"title": QCA.translate("optimizer_parameter", "Simplified AdEMAMix"), "tooltip": QCA.translate("optimizer_parameter_tooltip", "Enables a simplified, single-EMA variant of AdEMAMix. Instead of blending two moving averages (fast and slow momentum), this version combines the raw current gradient (controlled by 'Grad α') directly with a single theory-based momentum. This makes the optimizer highly responsive to recent gradient information, which can accelerate training in all batch size scenarios when tuned correctly."), "type": "bool"},
         "alpha_grad": {"title": QCA.translate("optimizer_parameter", "Grad α"), "tooltip": QCA.translate("optimizer_parameter_tooltip", "Controls the mixing coefficient between raw gradients and momentum gradients in Simplified AdEMAMix. Higher values (e.g., 10-100) emphasize recent gradients, suitable for small batch sizes to reduce noise. Lower values (e.g., 0-1) emphasize historical gradients, suitable for large batch sizes for stability. Setting to 0 uses only momentum gradients without raw gradient contribution."), "type": "float"},
+        'kourkoutas_beta': {'title': QCA.translate("optimizer_parameter", 'Kourkoutas Beta'), 'tooltip': QCA.translate("optimizer_parameter_tooltip", 'Enables a layer-wise dynamic β₂ adaptation. This feature makes the optimizer more responsive to "spiky" gradients by lowering β₂ during periods of high variance, and more stable during calm periods by raising β₂ towards its maximum. It can significantly improve training stability and final loss.'), 'type': 'bool'},
+        'k_warmup_steps': {'title': QCA.translate("optimizer_parameter", 'K-β Warmup Steps'), 'tooltip': QCA.translate("optimizer_parameter_tooltip", 'When using Kourkoutas Beta, the number of initial training steps during which the dynamic β₂ logic is held off. In this period, β₂ is set to its fixed value to allow for initial training stability before the adaptive mechanism activates.'), 'type': 'int'},
+        'schedulefree_c': {'title': QCA.translate("optimizer_parameter", 'Schedule free averaging strength'), 'tooltip': QCA.translate("optimizer_parameter_tooltip", 'Larger values = more responsive (shorter averaging window); smaller values = smoother (longer window). Set to 0 to disable and use the original Schedule-Free rule. Short small batches (≈6-12); long/large-batch (≈50-200).'), 'type': 'float'},
     }
 
     # Quick way of connecting controls without redefining every single one of them.
@@ -608,6 +105,10 @@ class OptimizerController(BaseController):
     }
 
     def __init__(self, loader, parent=None):
+        # Deferred import to avoid a circular import error.
+        from modules.util.optimizer_util import OPTIMIZER_DEFAULT_PARAMETERS
+        self.OPTIMIZER_DEFAULT_PARAMETERS = OPTIMIZER_DEFAULT_PARAMETERS
+
         super().__init__(loader, "modules/ui/views/windows/optimizer.ui", name=None, parent=parent)
 
     ###FSM###
@@ -643,10 +144,12 @@ class OptimizerController(BaseController):
     def __loadDefaults(self):
         def f():
             optimizer = self.ui.optimizerCmb.currentData()
-            for k, v in OPTIMIZER_DEFAULT_PARAMETERS[optimizer].items():
-                StateModel.instance().setState("optimizer.{}".format(k), v)
-            QtW.QApplication.instance().stateChanged.emit()
-            QtW.QApplication.instance().optimizerChanged.emit(optimizer)
+            if optimizer is not None:
+                for k, v in self.OPTIMIZER_DEFAULT_PARAMETERS[optimizer].items():
+                    StateModel.instance().setState("optimizer.{}".format(k), v)
+
+                QtW.QApplication.instance().stateChanged.emit()
+                QtW.QApplication.instance().optimizerChanged.emit(optimizer)
         return f
 
     def _connectUIBehavior(self):
@@ -683,18 +186,30 @@ class OptimizerController(BaseController):
     def __updateOptimizerControls(self, optimizer):
         # QGridLayout has no direct children, therefore, we must retrieve them in a different way.
         for k, v in self.optimizer_params.items():
+            if k in self.OPTIMIZER_DEFAULT_PARAMETERS[optimizer]:
+                val = StateModel.instance().getState("optimizer.{}".format(k))
+            else:
+                val = None
             if v["type"] == "bool":
                 wdg = self.ui.findChild(QtW.QCheckBox, "{}Cbx".format(k))
                 if wdg is not None:
-                    wdg.setVisible(k in OPTIMIZER_DEFAULT_PARAMETERS[optimizer])
+                    wdg.setVisible(k in self.OPTIMIZER_DEFAULT_PARAMETERS[optimizer])
+                    if val is not None:
+                        wdg.setChecked(bool(val))
             else:
                 wdg = self.ui.findChild(QtW.QLabel, "{}Lbl".format(k))
                 if wdg is not None:
-                    wdg.setVisible(k in OPTIMIZER_DEFAULT_PARAMETERS[optimizer])
+                    wdg.setVisible(k in self.OPTIMIZER_DEFAULT_PARAMETERS[optimizer])
                 if v["type"] == "int":
                     wdg = self.ui.findChild(QtW.QSpinBox, "{}Sbx".format(k))
+                    if wdg is not None:
+                        wdg.setVisible(k in self.OPTIMIZER_DEFAULT_PARAMETERS[optimizer])
+                        if val is not None:
+                            wdg.setValue(int(val))
                 else:
                     wdg = self.ui.findChild(SNLineEdit, "{}Led".format(k))
-                if wdg is not None:
-                    wdg.setVisible(k in OPTIMIZER_DEFAULT_PARAMETERS[optimizer])
+                    if wdg is not None:
+                        wdg.setVisible(k in self.OPTIMIZER_DEFAULT_PARAMETERS[optimizer])
+                        if val is not None:
+                            wdg.setText(str(val))
 

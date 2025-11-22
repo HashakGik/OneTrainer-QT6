@@ -12,6 +12,7 @@ class DataType(BaseEnum):
     TFLOAT_32 = 'TFLOAT_32'
     INT_8 = 'INT_8'
     NFLOAT_4 = 'NFLOAT_4'
+    GGUF = 'GGUF'
 
     def pretty_print(self):
         return {
@@ -23,11 +24,11 @@ class DataType(BaseEnum):
             DataType.TFLOAT_32: 'TFloat32',
             DataType.INT_8: 'Int8',
             DataType.NFLOAT_4: 'NFloat4',
+            DataType.GGUF: 'GGUF'
         }[self]
 
     @staticmethod
     def is_enabled(value, context=None):
-        # TODO
         if context == "embeddings":
             return value in [DataType.FLOAT_32, DataType.BFLOAT_16]
         elif context == "lora":
@@ -45,6 +46,16 @@ class DataType(BaseEnum):
                 DataType.BFLOAT_16,
                 DataType.FLOAT_8,
                 DataType.NFLOAT_4
+            ]
+        elif context == "transformer_dtype":
+            return value in [
+                DataType.FLOAT_32,
+                DataType.BFLOAT_16,
+                DataType.FLOAT_16,
+                DataType.FLOAT_8,
+                # DataType.INT_8,  # TODO: reactivate when the int8 implementation is fixed in bitsandbytes: https://github.com/bitsandbytes-foundation/bitsandbytes/issues/1332
+                DataType.NFLOAT_4,
+                DataType.GGUF
             ]
         else: # model_dtypes
             return value in [

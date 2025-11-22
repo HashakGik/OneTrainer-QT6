@@ -284,7 +284,7 @@ class TrainingController(BaseController):
 
             self.ui.unetGbx.setVisible(ModelFlags.UNET in flags)
             self.ui.transformerGbx.setVisible(ModelFlags.TRANSFORMER in flags)
-            self.ui.priorGbx.setVisible(ModelFlags.TRAIN_PRIOR in flags)
+            self.ui.priorGbx.setVisible(ModelFlags.TRAIN_TRANSFORMER in flags)
 
             self.ui.generalizedOffsetNoiseCbx.setVisible(ModelFlags.GENERALIZED_OFFSET_NOISE in flags)
 

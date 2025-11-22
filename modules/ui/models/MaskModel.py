@@ -7,7 +7,7 @@ from modules.module.MaskByColor import MaskByColor
 from modules.module.RembgHumanModel import RembgHumanModel
 from modules.module.RembgModel import RembgModel
 
-from modules.util.torch_util import default_device
+from modules.util.torch_util import default_device, torch_gc
 
 from modules.util.enum.GenerateMasksModel import GenerateMasksModel, GenerateMasksAction
 
@@ -53,16 +53,28 @@ class MaskModel(SingletonConfigModel):
         if model == GenerateMasksModel.CLIPSEG:
             if self.masking_model is None or not isinstance(self.masking_model, ClipSegModel):
                 print("loading ClipSeg model, this may take a while")
+                self.release_model()
                 self.masking_model = ClipSegModel(default_device, torch.float32)
         elif model == GenerateMasksModel.REMBG:
             if self.masking_model is None or not isinstance(self.masking_model, RembgModel):
                 print("loading Rembg model, this may take a while")
+                self.release_model()
                 self.masking_model = RembgModel(default_device, torch.float32)
         elif model == GenerateMasksModel.REMBG_HUMAN:
             if self.masking_model is None or not isinstance(self.masking_model, RembgHumanModel):
                 print("loading Rembg-Human model, this may take a while")
+                self.release_model()
                 self.masking_model = RembgHumanModel(default_device, torch.float32)
         elif model == GenerateMasksModel.COLOR:
             if self.masking_model is None or not isinstance(self.masking_model, MaskByColor):
+                self.release_model()
                 self.masking_model = MaskByColor(default_device, torch.float32)
 
+    def release_model(self):
+        """Release all models from VRAM"""
+        freed = False
+        if self.masking_model is not None:
+            self.masking_model = None
+            freed = True
+        if freed:
+            torch_gc()

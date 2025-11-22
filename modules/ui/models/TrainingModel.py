@@ -60,11 +60,11 @@ class TrainingModel(SingletonConfigModel):
     def train(self, progress_fn=None):
         self.progress_fn = progress_fn
 
-        with self.critical_region():
-            StateModel.instance().save_default()
-            train_config = TrainConfig.default_values().from_dict(StateModel.instance().config.to_dict())
+        StateModel.instance().save_default()
+        train_config = TrainConfig.default_values().from_dict(StateModel.instance().config.to_dict())
 
         self.training_commands = TrainCommands()
+        torch_gc()
 
         self.training_callbacks = TrainCallbacks(
             on_update_train_progress=self.__on_update_train_progress, # NOT CALLED BY THE MODEL?

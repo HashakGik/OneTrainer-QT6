@@ -22,6 +22,8 @@ class ModelFlags(Flag):
     UNET = auto()
     PRIOR = auto()
     OVERRIDE_PRIOR = auto()
+    TRANSFORMER = auto()
+    OVERRIDE_TRANSFORMER = auto()
     OVERRIDE_TE4 = auto()
     TE1 = auto()
     TE2 = auto()
@@ -38,7 +40,7 @@ class ModelFlags(Flag):
     ALLOW_LEGACY_SAFETENSORS = auto()
 
     # Training-only flags.
-    TRANSFORMER = auto()
+    TRAIN_TRANSFORMER = auto()
     TRAIN_PRIOR = auto()
     GENERALIZED_OFFSET_NOISE = auto()
     TE_INCLUDE = auto()
@@ -66,7 +68,7 @@ class ModelFlags(Flag):
                 flags |= ModelFlags.ALLOW_LEGACY_SAFETENSORS
 
         elif model_type.is_stable_diffusion_3():
-            flags = ModelFlags.PRIOR | ModelFlags.TE1 | ModelFlags.TE2 | ModelFlags.TE3 | ModelFlags.VAE | ModelFlags.ALLOW_SAFETENSORS | ModelFlags.TE_INCLUDE | ModelFlags.TRANSFORMER
+            flags = ModelFlags.TE1 | ModelFlags.TE2 | ModelFlags.TE3 | ModelFlags.VAE | ModelFlags.ALLOW_SAFETENSORS | ModelFlags.TE_INCLUDE | ModelFlags.TRANSFORMER
             if training_method == TrainingMethod.FINE_TUNE:
                 flags |= ModelFlags.ALLOW_DIFFUSERS
             if training_method == TrainingMethod.LORA:
@@ -80,7 +82,11 @@ class ModelFlags(Flag):
                 flags |= ModelFlags.ALLOW_LEGACY_SAFETENSORS
 
         elif model_type.is_wuerstchen():
-            flags = ModelFlags.PRIOR | ModelFlags.TE1 | ModelFlags.TRAIN_PRIOR
+            flags = ModelFlags.PRIOR | ModelFlags.TE1 | ModelFlags.TRAIN_TRANSFORMER | ModelFlags.DEC
+            if model_type.is_stable_cascade():
+                flags |= ModelFlags.OVERRIDE_PRIOR
+            else:
+                flags |= ModelFlags.DEC_TE
             if training_method == TrainingMethod.FINE_TUNE:
                 flags |= ModelFlags.ALLOW_DIFFUSERS
             if training_method != TrainingMethod.FINE_TUNE or model_type.is_stable_cascade():
@@ -89,14 +95,14 @@ class ModelFlags(Flag):
                 flags |= ModelFlags.ALLOW_LEGACY_SAFETENSORS
 
         elif model_type.is_pixart():
-            flags = ModelFlags.PRIOR | ModelFlags.TE1 | ModelFlags.VAE | ModelFlags.ALLOW_SAFETENSORS | ModelFlags.TRAIN_PRIOR | ModelFlags.VB_LOSS
+            flags = ModelFlags.TRANSFORMER | ModelFlags.TE1 | ModelFlags.VAE | ModelFlags.ALLOW_SAFETENSORS | ModelFlags.TRAIN_TRANSFORMER | ModelFlags.VB_LOSS
             if training_method == TrainingMethod.FINE_TUNE:
                 flags |= ModelFlags.ALLOW_DIFFUSERS
             if training_method == TrainingMethod.LORA:
                 flags |= ModelFlags.ALLOW_LEGACY_SAFETENSORS
 
         elif model_type.is_flux():
-            flags = (ModelFlags.PRIOR | ModelFlags.OVERRIDE_PRIOR | ModelFlags.TE1 | ModelFlags.TE2 | ModelFlags.VAE |
+            flags = (ModelFlags.OVERRIDE_TRANSFORMER | ModelFlags.TE1 | ModelFlags.TE2 | ModelFlags.VAE |
                      ModelFlags.ALLOW_SAFETENSORS | ModelFlags.TRANSFORMER | ModelFlags.TE_INCLUDE | ModelFlags.GUIDANCE_SCALE | ModelFlags.DYNAMIC_TIMESTEP_SHIFTING)
             if training_method == TrainingMethod.FINE_TUNE:
                 flags |= ModelFlags.ALLOW_DIFFUSERS
@@ -104,7 +110,7 @@ class ModelFlags(Flag):
                 flags |= ModelFlags.ALLOW_LEGACY_SAFETENSORS
 
         elif model_type.is_chroma():
-            flags = (ModelFlags.PRIOR | ModelFlags.OVERRIDE_PRIOR | ModelFlags.TE1 | ModelFlags.VAE | ModelFlags.ALLOW_SAFETENSORS |
+            flags = (ModelFlags.OVERRIDE_TRANSFORMER | ModelFlags.TE1 | ModelFlags.VAE | ModelFlags.ALLOW_SAFETENSORS |
                      ModelFlags.DISABLE_FORCE_ATTN_MASK | ModelFlags.TRANSFORMER)
             if training_method == TrainingMethod.FINE_TUNE:
                 flags |= ModelFlags.ALLOW_DIFFUSERS
@@ -112,7 +118,7 @@ class ModelFlags(Flag):
                 flags |= ModelFlags.ALLOW_LEGACY_SAFETENSORS
 
         elif model_type.is_qwen():
-            flags = (ModelFlags.PRIOR | ModelFlags.OVERRIDE_PRIOR | ModelFlags.TE1 | ModelFlags.VAE | ModelFlags.ALLOW_SAFETENSORS |
+            flags = (ModelFlags.OVERRIDE_TRANSFORMER | ModelFlags.TE1 | ModelFlags.VAE | ModelFlags.ALLOW_SAFETENSORS |
                      ModelFlags.DISABLE_FORCE_ATTN_MASK | ModelFlags.TRANSFORMER | ModelFlags.DYNAMIC_TIMESTEP_SHIFTING | ModelFlags.DISABLE_CLIP_SKIP)
             if training_method == TrainingMethod.FINE_TUNE:
                 flags |= ModelFlags.ALLOW_DIFFUSERS
@@ -120,7 +126,7 @@ class ModelFlags(Flag):
                 flags |= ModelFlags.ALLOW_LEGACY_SAFETENSORS
 
         elif model_type.is_sana():
-            flags = ModelFlags.PRIOR | ModelFlags.TE1 | ModelFlags.VAE | ModelFlags.TRAIN_PRIOR
+            flags = ModelFlags.TRANSFORMER | ModelFlags.TE1 | ModelFlags.VAE | ModelFlags.TRAIN_TRANSFORMER
             if training_method == TrainingMethod.FINE_TUNE:
                 flags |= ModelFlags.ALLOW_DIFFUSERS
             else:
@@ -129,7 +135,7 @@ class ModelFlags(Flag):
                 flags |= ModelFlags.ALLOW_LEGACY_SAFETENSORS
 
         elif model_type.is_hunyuan_video():
-            flags = (ModelFlags.PRIOR | ModelFlags.TE1 | ModelFlags.TE2 | ModelFlags.VAE | ModelFlags.ALLOW_SAFETENSORS |
+            flags = (ModelFlags.TE1 | ModelFlags.TE2 | ModelFlags.VAE | ModelFlags.ALLOW_SAFETENSORS |
                      ModelFlags.TE_INCLUDE | ModelFlags.VIDEO_TRAINING | ModelFlags.TRANSFORMER | ModelFlags.GUIDANCE_SCALE)
             if training_method == TrainingMethod.FINE_TUNE:
                 flags |= ModelFlags.ALLOW_DIFFUSERS
@@ -137,7 +143,7 @@ class ModelFlags(Flag):
                 flags |= ModelFlags.ALLOW_LEGACY_SAFETENSORS
 
         elif model_type.is_hi_dream():
-            flags = (ModelFlags.PRIOR | ModelFlags.OVERRIDE_TE4 | ModelFlags.TE1 | ModelFlags.TE2 | ModelFlags.TE3 | ModelFlags.TE4 | ModelFlags.VAE | ModelFlags.ALLOW_SAFETENSORS |
+            flags = (ModelFlags.OVERRIDE_TE4 | ModelFlags.TE1 | ModelFlags.TE2 | ModelFlags.TE3 | ModelFlags.TE4 | ModelFlags.VAE | ModelFlags.ALLOW_SAFETENSORS |
                      ModelFlags.TRANSFORMER | ModelFlags.VIDEO_TRAINING | ModelFlags.DISABLE_TE4_LAYER_SKIP | ModelFlags.TE_INCLUDE)
             if training_method == TrainingMethod.FINE_TUNE:
                 flags |= ModelFlags.ALLOW_DIFFUSERS

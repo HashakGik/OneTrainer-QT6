@@ -15,7 +15,9 @@ from modules.ui.controllers.tabs.EmbeddingsController import EmbeddingsControlle
 
 from modules.ui.controllers.windows.SaveController import SaveController
 from modules.ui.models.BulkModel import BulkModel
+from modules.ui.models.CaptionModel import CaptionModel
 from modules.ui.models.ImageModel import ImageModel
+from modules.ui.models.MaskModel import MaskModel
 
 from modules.ui.models.StateModel import StateModel
 
@@ -212,6 +214,8 @@ class OnetrainerController(BaseController):
         def f():
             StateModel.instance().save_default()
             StateModel.instance().stop_tensorboard()
+            CaptionModel.instance().release_model()
+            MaskModel.instance().release_model()
             ImageModel.instance().terminate_pool()
             BulkModel.instance().terminate_pool()
         return f

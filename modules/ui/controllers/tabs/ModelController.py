@@ -39,6 +39,9 @@ class ModelController(BaseController):
         "vae.model_name": "vaeLed",
         "effnet_encoder.model_name": "effnetLed",
         "decoder.model_name": "decLed",
+        "compile": "compileTransformerCbx",
+        "transformer.model_name": "transformerLed",
+        "transformer.weight_dtype": "transformerDTypeCmb",
     }
 
     def __init__(self, loader, parent=None):
@@ -56,13 +59,21 @@ class ModelController(BaseController):
                                filters=QCA.translate("filetype_filters",
                                                      "Safetensors (*.safetensors);;Diffusers (model_index.json);;Checkpoints (*.ckpt, *.pt, *.bin);;All Files (*.*)"))
 
+        self._connectFileDialog(self.ui.transformerBtn, self.ui.transformerLed, is_dir=False, save=False,
+                                title=QCA.translate("dialog_window", "Open model"),
+                                filters=QCA.translate("filetype_filters",
+                                                      "Safetensors (*.safetensors);;Diffusers (model_index.json);;Checkpoints (*.ckpt, *.pt, *.bin);;GGUF (*.gguf);;All Files (*.*)"))
 
-        self._connectFileDialog(self.ui.modelOutputBtn, self.ui.modelOutputLed, is_dir=False, save=True, # TODO: the filter of this one must be based on output format!!!
+        self._connectFileDialog(self.ui.modelOutputBtn, self.ui.modelOutputLed, is_dir=False, save=True,
                                title=QCA.translate("dialog_window", "Save output model"),
                                filters=QCA.translate("filetype_filters",
-                                                     "Safetensors (*.safetensors);;Diffusers (model_index.json);;Checkpoints (*.ckpt, *.pt, *.bin);;All Files (*.*)"))  # TODO: Maybe refactor filters in ENUM?
+                                                     "Safetensors (*.safetensors);;Diffusers (model_index.json);;Checkpoints (*.ckpt, *.pt, *.bin);;All Files (*.*)"))
 
         self._connect(QtW.QApplication.instance().modelChanged, self.__updateModel(), update_after_connect=True, initial_args=[StateModel.instance().getState("model_type"), StateModel.instance().getState("training_method")])
+
+    def _connectInputValidation(self):
+        self._connect(self.ui.transformerLed.editingFinished, self.__forceGGUF(from_line_edit=True))
+        self._connect(self.ui.transformerDTypeCmb.activated, self.__forceGGUF(from_line_edit=False))
 
     def _loadPresets(self):
         for e in ConfigPart.enabled_values():
@@ -77,7 +88,23 @@ class ModelController(BaseController):
         for e in DataType.enabled_values(context="output_dtype"):
             self.ui.outputDTypeCmb.addItem(e.pretty_print(), userData=e)
 
+        for e in DataType.enabled_values(context="transformer_dtype"):
+            self.ui.transformerDTypeCmb.addItem(e.pretty_print(), userData=e)
+
     ###Reactions###
+
+    def __forceGGUF(self, from_line_edit=False):
+        @Slot()
+        def f():
+            if from_line_edit:
+                if self.ui.transformerLed.text().endswith(".gguf"):
+                    self.ui.transformerDTypeCmb.setCurrentIndex(self.ui.transformerDTypeCmb.findData(DataType.GGUF))
+                else:
+                    self.ui.transformerDTypeCmb.setCurrentIndex(0)
+            else:
+                if self.ui.transformerDTypeCmb.currentData() == DataType.GGUF and not self.ui.transformerLed.text().endswith(".gguf"):
+                    self.ui.transformerLed.setText("")
+        return f
 
     def __updateModel(self):
         @Slot(ModelType, TrainingMethod)
@@ -98,6 +125,9 @@ class ModelController(BaseController):
 
             self.ui.priorDTypeLbl.setVisible(ModelFlags.PRIOR in flags)
             self.ui.priorDTypeCmb.setVisible(ModelFlags.PRIOR in flags)
+
+            self.ui.transformerDTypeLbl.setVisible(ModelFlags.TRANSFORMER in flags)
+            self.ui.transformerDTypeCmb.setVisible(ModelFlags.TRANSFORMER in flags)
 
             self.ui.te1DTypeLbl.setVisible(ModelFlags.TE1 in flags)
             self.ui.te1DTypeCmb.setVisible(ModelFlags.TE1 in flags)
@@ -120,6 +150,9 @@ class ModelController(BaseController):
             self.ui.effnetDTypeLbl.setVisible(ModelFlags.EFFNET in flags)
             self.ui.effnetDTypeCmb.setVisible(ModelFlags.EFFNET in flags)
 
+            self.ui.decLbl.setVisible(ModelFlags.DEC in flags)
+            self.ui.decLed.setVisible(ModelFlags.DEC in flags)
+            self.ui.decBtn.setVisible(ModelFlags.DEC in flags)
             self.ui.decDTypeLbl.setVisible(ModelFlags.DEC in flags)
             self.ui.decDTypeCmb.setVisible(ModelFlags.DEC in flags)
             self.ui.vqganDTypeLbl.setVisible(ModelFlags.DEC in flags)
@@ -131,6 +164,10 @@ class ModelController(BaseController):
             self.ui.priorLbl.setVisible(ModelFlags.OVERRIDE_PRIOR in flags)
             self.ui.priorLed.setVisible(ModelFlags.OVERRIDE_PRIOR in flags)
             self.ui.priorBtn.setVisible(ModelFlags.OVERRIDE_PRIOR in flags)
+
+            self.ui.transformerLbl.setVisible(ModelFlags.OVERRIDE_TRANSFORMER in flags)
+            self.ui.transformerLed.setVisible(ModelFlags.OVERRIDE_TRANSFORMER in flags)
+            self.ui.transformerBtn.setVisible(ModelFlags.OVERRIDE_TRANSFORMER in flags)
 
             self.ui.te4Lbl.setVisible(ModelFlags.OVERRIDE_TE4 in flags)
             self.ui.te4Led.setVisible(ModelFlags.OVERRIDE_TE4 in flags)

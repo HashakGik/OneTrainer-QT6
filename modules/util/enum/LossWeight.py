@@ -7,6 +7,10 @@ class LossWeight(BaseEnum):
     DEBIASED_ESTIMATION = 'DEBIASED_ESTIMATION'
     SIGMA = 'SIGMA'
 
+    def supports_flow_matching(self) -> bool:
+        return self == LossWeight.CONSTANT \
+            or self == LossWeight.SIGMA
+
     def pretty_print(self):
         return {
             LossWeight.CONSTANT: 'Constant',

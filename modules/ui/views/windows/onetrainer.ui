@@ -74,7 +74,7 @@
        <item>
         <widget class="QPushButton" name="saveConfigBtn">
          <property name="text">
-          <string>Save Current Config</string>
+          <string>Save Config</string>
          </property>
         </widget>
        </item>

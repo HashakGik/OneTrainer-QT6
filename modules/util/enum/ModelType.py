@@ -37,18 +37,18 @@ class ModelType(BaseEnum):
 
     def pretty_print(self):
         return {
-            ModelType.STABLE_DIFFUSION_15: "Stable Diffusion 1.5",
-            ModelType.STABLE_DIFFUSION_15_INPAINTING: "Stable Diffusion 1.5 Inpainting",
-            ModelType.STABLE_DIFFUSION_20: "Stable Diffusion 2.0",
-            #ModelType.STABLE_DIFFUSION_20_BASE: "Stable Diffusion 2.0 Base",
-            ModelType.STABLE_DIFFUSION_20_INPAINTING: "Stable Diffusion 2.0 Inpainting",
-            #ModelType.STABLE_DIFFUSION_20_DEPTH: "Stable Diffusion 2.0 Depth",
-            ModelType.STABLE_DIFFUSION_21: "Stable Diffusion 2.1",
-            #ModelType.STABLE_DIFFUSION_21_BASE: "Stable Diffusion 2.1 Base",
-            ModelType.STABLE_DIFFUSION_3: "Stable Diffusion 3",
-            ModelType.STABLE_DIFFUSION_35: "Stable Diffusion 3.5",
-            ModelType.STABLE_DIFFUSION_XL_10_BASE: "Stable Diffusion XL 1.0 Base",
-            ModelType.STABLE_DIFFUSION_XL_10_BASE_INPAINTING: "Stable Diffusion XL 1.0 Base Inpainting",
+            ModelType.STABLE_DIFFUSION_15: "SD1.5",
+            ModelType.STABLE_DIFFUSION_15_INPAINTING: "SD1.5 Inpainting",
+            ModelType.STABLE_DIFFUSION_20: "SD2.0",
+            #ModelType.STABLE_DIFFUSION_20_BASE: "SD2.0 Base",
+            ModelType.STABLE_DIFFUSION_20_INPAINTING: "SD2.0 Inpainting",
+            #ModelType.STABLE_DIFFUSION_20_DEPTH: "SD2.0 Depth",
+            ModelType.STABLE_DIFFUSION_21: "SD2.1",
+            #ModelType.STABLE_DIFFUSION_21_BASE: "SD2.1 Base",
+            ModelType.STABLE_DIFFUSION_3: "SD3",
+            ModelType.STABLE_DIFFUSION_35: "SD3.5",
+            ModelType.STABLE_DIFFUSION_XL_10_BASE: "SDXL 1.0 Base",
+            ModelType.STABLE_DIFFUSION_XL_10_BASE_INPAINTING: "SDXL 1.0 Base Inpainting",
             ModelType.WUERSTCHEN_2: "Wuerstchen v2",
             ModelType.STABLE_CASCADE_1: "Stable Cascade",
             ModelType.PIXART_ALPHA: "PixArt Alpha",
@@ -205,6 +205,15 @@ class ModelType(BaseEnum):
 
     def is_stable_cascade(self):
         return self == ModelType.STABLE_CASCADE_1
+
+    def is_flow_matching(self) -> bool:
+        return self.is_stable_diffusion_3() \
+            or self.is_flux() \
+            or self.is_chroma() \
+            or self.is_qwen() \
+            or self.is_sana() \
+            or self.is_hunyuan_video() \
+            or self.is_hi_dream()
 
 
 class PeftType(BaseEnum):
