@@ -13,6 +13,7 @@ import time
 import threading
 import math
 
+from modules.util.enum.ConceptType import ConceptType
 from modules.util.path_util import write_json_atomic
 from modules.util import concept_stats, path_util
 from modules.util.image_util import load_image
@@ -95,8 +96,30 @@ class ConceptModel(SingletonConfigModel):
             return ""
 
     @SingletonConfigModel.atomic
-    def disable_concepts(self):
-        pass # TODO
+    def toggle_concepts(self):
+        some_enabled = self.some_concepts_enabled()
+
+        for c in self.config:
+            c.enabled = not some_enabled
+
+    @SingletonConfigModel.atomic
+    def get_filtered_concepts(self, query="", type=ConceptType.ALL, show_disabled=True):
+        filtered_concepts = []
+        for c in self.config:
+            if show_disabled or c.enabled:
+                if type == ConceptType.ALL or c.type == type:
+                    if query == "" or query.strip() in c.name:
+                        filtered_concepts.append(c)
+
+        return filtered_concepts
+
+
+    @SingletonConfigModel.atomic
+    def some_concepts_enabled(self):
+        out = False
+        for c in self.config:
+            out |= c.enabled
+        return out
 
     @SingletonConfigModel.atomic
     def create_new_concept(self):

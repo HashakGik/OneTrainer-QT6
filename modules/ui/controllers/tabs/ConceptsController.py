@@ -9,6 +9,9 @@ from modules.ui.models.StateModel import StateModel
 
 import PySide6.QtWidgets as QtW
 
+from modules.util.enum.ConceptType import ConceptType
+
+
 class ConceptsController(BaseController):
     children = []
     def __init__(self, loader, parent=None):
@@ -21,7 +24,7 @@ class ConceptsController(BaseController):
 
     def _connectUIBehavior(self):
         self._connect(self.ui.addConceptBtn.clicked, self.__appendConcept())
-        self._connect(self.ui.disableConceptsBtn.clicked, self.__disableConcepts())
+        self._connect(self.ui.toggleBtn.clicked, self.__toggleConcepts())
 
         self._connect(QtW.QApplication.instance().stateChanged, self.__updateConfigs(), update_after_connect=True)
 
@@ -34,6 +37,15 @@ class ConceptsController(BaseController):
         cb4 = self.__updateConcepts()
         self._connect(QtW.QApplication.instance().conceptsChanged, cb4)
         self._connect(QtW.QApplication.instance().stateChanged, cb4, update_after_connect=True)
+
+        self._connect(self.ui.clearBtn.clicked, self.__clearFilters())
+        self._connect(self.ui.searchLed.textChanged, lambda: QtW.QApplication.instance().conceptsChanged.emit()) # TODO: choose: editingFinished requires focus to leave the control, textChanged triggers an update for each character.
+        self._connect(self.ui.typeCmb.activated, lambda: QtW.QApplication.instance().conceptsChanged.emit())
+        self._connect(self.ui.showDisabledCbx.toggled, lambda: QtW.QApplication.instance().conceptsChanged.emit())
+
+    def _loadPresets(self):
+        for e in ConceptType.enabled_values(context="all"):
+            self.ui.typeCmb.addItem(e.pretty_print(), userData=e)
 
     ###Reactions###
 
@@ -74,11 +86,21 @@ class ConceptsController(BaseController):
             QtW.QApplication.instance().conceptsChanged.emit()
         return f
 
-    def __disableConcepts(self):
+    def __toggleConcepts(self):
         @Slot()
         def f():
-            ConceptModel.instance().disable_concepts()
+            ConceptModel.instance().toggle_concepts()
             QtW.QApplication.instance().conceptsChanged.emit()
+        return f
+
+    def __clearFilters(self):
+        def f():
+            self.ui.searchLed.setText("")
+            self.ui.typeCmb.setCurrentIndex(self.ui.typeCmb.findData(ConceptType.ALL))
+            self.ui.showDisabledCbx.setChecked(True)
+
+            QtW.QApplication.instance().conceptsChanged.emit()
+
         return f
 
     def __updateConcepts(self):
@@ -90,11 +112,15 @@ class ConceptsController(BaseController):
             self.ui.listWidget.clear()
             self.children = []
 
-            for idx, _ in enumerate(ConceptModel.instance().getState("")):
+            for idx, _ in enumerate(ConceptModel.instance().get_filtered_concepts(self.ui.searchLed.text(), self.ui.typeCmb.currentData(), self.ui.showDisabledCbx.isChecked())):
                wdg = WidgetConceptController(self.loader, self.concept_window, idx, parent=self)
                self.children.append(wdg)
                self._appendWidget(self.ui.listWidget, wdg, self_delete_fn=self.__deleteConcept(idx), self_clone_fn=self.__cloneConcept(idx))
 
+            if ConceptModel.instance().some_concepts_enabled():
+                self.ui.toggleBtn.setText(QCA.translate("main_window_tabs", "Disable All"))
+            else:
+                self.ui.toggleBtn.setText(QCA.translate("main_window_tabs", "Enable All"))
         return f
 
     def __cloneConcept(self, idx):

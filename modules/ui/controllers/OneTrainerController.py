@@ -74,6 +74,8 @@ class OnetrainerController(BaseController):
         self.__loadConfig("training_presets/#.json")  # Load last config.
         self.__enableControls("enabled")()
 
+        # TODO: on stateChanged, the training type (finetune/lora/embedding) is reset, instead of loading the last value...
+
     def _loadPresets(self):
         for e in ModelType.enabled_values(context="main_window"):
             self.ui.modelTypeCmb.addItem(e.pretty_print(), userData=e)

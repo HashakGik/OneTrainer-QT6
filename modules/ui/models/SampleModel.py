@@ -36,9 +36,18 @@ class SampleModel(SingletonConfigModel):
         self.config.pop(idx)
 
     @SingletonConfigModel.atomic
-    def disable_samples(self):
+    def toggle_samples(self):
+        some_enabled = self.some_samples_enabled()
+
         for smp in self.config:
-            smp.enabled = False
+            smp.enabled = not some_enabled
+
+    @SingletonConfigModel.atomic
+    def some_samples_enabled(self):
+        out = False
+        for smp in self.config:
+            out |= smp.enabled
+        return out
 
     @SingletonConfigModel.atomic
     def save_config(self, path="training_samples"):

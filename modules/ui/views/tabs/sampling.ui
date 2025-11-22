@@ -15,9 +15,9 @@
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="2" column="14">
-    <widget class="QPushButton" name="disableBtn">
+    <widget class="QPushButton" name="toggleBtn">
      <property name="text">
-      <string>Disable</string>
+      <string>Enable</string>
      </property>
     </widget>
    </item>
@@ -198,8 +198,9 @@
   <tabstop>manualSampleBtn</tabstop>
   <tabstop>nonEmaCbx</tabstop>
   <tabstop>tensorboardCbx</tabstop>
+  <tabstop>configCmb</tabstop>
   <tabstop>addSampleBtn</tabstop>
-  <tabstop>disableBtn</tabstop>
+  <tabstop>toggleBtn</tabstop>
   <tabstop>listWidget</tabstop>
  </tabstops>
  <resources/>

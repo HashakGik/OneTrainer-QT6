@@ -41,12 +41,18 @@ class TrainingModel(SingletonConfigModel):
         if train_commands:
             train_commands.save()
 
+    @SingletonConfigModel.atomic
+    def sample_now(self):
+        train_commands = self.training_commands
+        if train_commands:
+            train_commands.sample_default()
+
     def reattach(self):
         pass  # TODO: self.cloud_tab.reattach
 
         # self.reattach = True
         # try:
-        #     self.parent.start_training()
+        #     self.parent.start_training() # In the original implementation this is a thread launching whattì here is train()
         # finally:
         #     self.reattach = False
 

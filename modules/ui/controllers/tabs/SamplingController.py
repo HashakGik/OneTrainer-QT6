@@ -3,6 +3,8 @@ from modules.ui.controllers.BaseController import BaseController
 
 from modules.ui.controllers.widgets.SampleController import SampleController
 from modules.ui.controllers.windows.NewSampleController import NewSampleController
+from modules.ui.models.TrainingModel import TrainingModel
+from modules.ui.utils.WorkerPool import WorkerPool
 
 from modules.util.enum.TimeUnit import TimeUnit
 from modules.util.enum.ImageFormat import ImageFormat
@@ -33,21 +35,28 @@ class SamplingController(BaseController):
 
     def _connectUIBehavior(self):
         self._connect(self.ui.addSampleBtn.clicked, self.__appendSample())
-        self._connect(self.ui.disableBtn.clicked, self.__disableSamples())
+        self._connect(self.ui.toggleBtn.clicked, self.__toggleSamples())
 
-        # TODO: sampleNowBtn, manualSampleBtn
-        # TODO: configCmb read/write/ on stateChanged reload
+        # TODO: manualSampleBtn -> if training is running Opens Sampling tool and injects training commands (ie. lets the currently training model produce an arbitrary sample)
+
+
+        self._connect(QtW.QApplication.instance().stateChanged, self.__updateConfigs(), update_after_connect=True)
 
         cb = self.__updateSamples()
         self._connect(QtW.QApplication.instance().samplesChanged, cb)
         self._connect(QtW.QApplication.instance().stateChanged, cb, update_after_connect=True)
 
-        self._connect(self.ui.configCmb.textActivated, self.__loadConfig(), update_after_connect=True, initial_args=[self.ui.configCmb.currentText()])
-        self._connect(QtW.QApplication.instance().stateChanged, self.__updateConfigs(), update_after_connect=True)
+        cb2 = self.__loadConfig()
+        self._connect(self.ui.configCmb.textActivated, cb2, update_after_connect=True, initial_args=[self.ui.configCmb.currentText()])
+        self._connect(QtW.QApplication.instance().stateChanged, cb2)
+
 
         cb4 = self.__saveConfig()
         self._connect(QtW.QApplication.instance().aboutToQuit, cb4)
         self._connect(QtW.QApplication.instance().samplesChanged, cb4)
+
+        self._connect(self.ui.sampleNowBtn.clicked, self.__startSample())
+
 
     def _loadPresets(self):
         for e in TimeUnit.enabled_values():
@@ -58,8 +67,9 @@ class SamplingController(BaseController):
     ###Reactions###
 
     def __loadConfig(self):
-        @Slot(str)
-        def f(filename):
+        def f(filename=None):
+            if filename is None:
+                filename = self.ui.configCmb.currentText()
             SampleModel.instance().load_config(filename)
             QtW.QApplication.instance().samplesChanged.emit()
         return f
@@ -98,6 +108,11 @@ class SamplingController(BaseController):
                self.children.append(wdg)
                self._appendWidget(self.ui.listWidget, wdg, self_delete_fn=self.__deleteSample(idx), self_clone_fn=self.__cloneSample(idx))
 
+            if SampleModel.instance().some_samples_enabled():
+                self.ui.toggleBtn.setText(QCA.translate("main_window_tabs", "Disable All"))
+            else:
+                self.ui.toggleBtn.setText(QCA.translate("main_window_tabs", "Enable All"))
+
         return f
 
     def __appendSample(self):
@@ -107,10 +122,10 @@ class SamplingController(BaseController):
             QtW.QApplication.instance().samplesChanged.emit()
         return f
 
-    def __disableSamples(self):
+    def __toggleSamples(self):
         @Slot()
         def f():
-            SampleModel.instance().disable_samples()
+            SampleModel.instance().toggle_samples()
             QtW.QApplication.instance().samplesChanged.emit()
         return f
 
@@ -128,4 +143,29 @@ class SamplingController(BaseController):
             SampleModel.instance().delete_sample(idx)
             QtW.QApplication.instance().samplesChanged.emit()
 
+        return f
+
+    def __startSample(self):
+        @Slot()
+        def f():
+            worker, name = WorkerPool.instance().createNamed(self.__sampleNow(), "sampling_operations", poolless=True, daemon=True,
+                                                             inject_progress_callback=True)
+            if worker is not None:
+                worker.connectCallbacks(init_fn=self.__enableControls(False), result_fn=None,
+                               finished_fn=self.__enableControls(True))
+                WorkerPool.instance().start(name)
+
+        return f
+
+    def __enableControls(self, enabled):
+        @Slot()
+        def f():
+            self.ui.sampleNowBtn.setEnabled(enabled)
+        return f
+
+    ###Utils###
+
+    def __sampleNow(self):
+        def f(progress_fn=None):
+            TrainingModel.instance().sample_now()
         return f

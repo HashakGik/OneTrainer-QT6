@@ -14,7 +14,11 @@ class LoraController(BaseController):
         "lora_decompose_norm_epsilon": "normCbx",
         "lora_decompose_output_axis": "outputAxisCbx",
         "lora_weight_dtype": "weightDTypeCmb",
-        "bundle_additional_embeddings": "bundleCbx"
+        "bundle_additional_embeddings": "bundleCbx",
+        "oft_block_size": "oftBlockSizeSbx",
+        "oft_coft": "coftCbx",
+        "coft_eps": "coftLed",
+        "oft_block_share": "blockShareCbx",
     }
 
     def __init__(self, loader, parent=None):
@@ -24,10 +28,10 @@ class LoraController(BaseController):
 
     def _connectUIBehavior(self):
         self._connectFileDialog(self.ui.baseModelBtn, self.ui.baseModelLed, is_dir=False, save=False,
-                               title=QCA.translate("dialog_window", "Open LoRA/LoHA base model"),
-                               filters=QCA.translate("filetype_filters", "Safetensors (*.safetensors);;Diffusers (model_index.json);;Checkpoints (*.ckpt, *.pt, *.bin);;All Files (*.*)")) # TODO: Maybe refactor filters in ENUM?
+                               title=QCA.translate("dialog_window", "Open LoRA/LoHA/OFT 2 base model"),
+                               filters=QCA.translate("filetype_filters", "Safetensors (*.safetensors);;Diffusers (model_index.json);;Checkpoints (*.ckpt, *.pt, *.bin);;All Files (*.*)"))
 
-        self._connect(self.ui.typeCmb.activated, self.__updateLora(), update_after_connect=True)
+        self._connect(self.ui.typeCmb.activated, self.__updateType(), update_after_connect=True)
         self._connect(self.ui.decomposeCbx.toggled, self.__updateDora(), update_after_connect=True, initial_args=[self.ui.decomposeCbx.isChecked()])
 
     def _connectInputValidation(self):
@@ -51,8 +55,18 @@ class LoraController(BaseController):
             self.ui.outputAxisCbx.setEnabled(enabled)
         return f
 
-    def __updateLora(self):
+    def __updateType(self):
         @Slot()
         def f():
-            self.ui.doraFrm.setEnabled(self.ui.typeCmb.currentData() == PeftType.LORA)
+            self.ui.doraFrm.setVisible(self.ui.typeCmb.currentData() == PeftType.LORA)
+            self.ui.oftFrm.setVisible(self.ui.typeCmb.currentData() == PeftType.OFT_2)
+
+            self.ui.oftBlockSizeLbl.setVisible(self.ui.typeCmb.currentData() == PeftType.OFT_2)
+            self.ui.oftBlockSizeSbx.setVisible(self.ui.typeCmb.currentData() == PeftType.OFT_2)
+
+            self.ui.rankLbl.setVisible(self.ui.typeCmb.currentData() != PeftType.OFT_2)
+            self.ui.rankSbx.setVisible(self.ui.typeCmb.currentData() != PeftType.OFT_2)
+
+            self.ui.alphaLbl.setVisible(self.ui.typeCmb.currentData() != PeftType.OFT_2)
+            self.ui.alphaSbx.setVisible(self.ui.typeCmb.currentData() != PeftType.OFT_2)
         return f

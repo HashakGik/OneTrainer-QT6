@@ -19,7 +19,6 @@ class GeneralController(BaseController):
         "dataloader_threads": "dataloaderSbx",
         "train_device": "trainDeviceLed",
         "multi_gpu": "multiGpuCbx",
-        "sequential_model_setup": "sequentialCbx",
         "gradient_reduce_precision": "gradientReduceCmb",
         "async_gradient_reduce": "asyncGradientCbx",
         "temp_device": "tempDeviceLed",

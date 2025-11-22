@@ -210,9 +210,11 @@ class ModelType(BaseEnum):
 class PeftType(BaseEnum):
     LORA = 'LORA'
     LOHA = 'LOHA'
+    OFT_2 = 'OFT_2'
 
     def pretty_print(self):
         return {
             PeftType.LORA: "LoRA",
             PeftType.LOHA: "LoHA",
+            PeftType.OFT_2: "OFT 2",
         }[self]
